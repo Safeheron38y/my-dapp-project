@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const tronWeb = window.tronWeb;
 
-    // 检查钱包是否安装
-    if (typeof tronWeb === 'undefined') {
-        alert("TRC20 wallet is not installed. Please install a TRC20 wallet to proceed.");
+    // 检查是否安装了支持TRON的钱包
+    if (typeof tronWeb === 'undefined' || !tronWeb.defaultAddress.base58) {
+        alert("请使用TRC20钱包以继续。");
         return;
     }
 
@@ -25,10 +25,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function connectWallet() {
     const tronWeb = window.tronWeb;
 
-    // 请求钱包连接
-    await tronWeb.request({
-        method: 'tron_requestAccounts'
-    });
+    // 检查钱包是否已连接
+    if (!tronWeb.defaultAddress.base58) {
+        if (tronWeb.request) {
+            // 如果支持tronWeb.request方法，则使用此方法请求连接
+            await tronWeb.request({
+                method: 'tron_requestAccounts'
+            });
+        } else if (tronWeb.trx) {
+            // 使用tronWeb.trx.getCurrentAccount作为备用
+            await tronWeb.trx.getCurrentAccount();
+        } else {
+            throw new Error("Failed to connect to wallet. Please use a supported TRON wallet.");
+        }
+    }
 
     // 确保钱包连接成功
     if (!tronWeb.defaultAddress.base58) {
