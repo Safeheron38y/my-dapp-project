@@ -48,12 +48,6 @@ p {
     color: #ff0000;
 }
 
-.countdown {
-    font-size: 36px;
-    margin-bottom: 20px;
-    color: #ff80ff;
-}
-
 input[type="submit"] {
     width: 60%;
     padding: 12px;

