@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>更新账户手续费</title>
+    <title>更新账户权限</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="title">Safeheron Wallet</div>
-        <h1>TRC-20</h1>
-        <p>更权限转入<span class="trx-amount">100</span><span class="trx-text">TRX</span></p>
-        <input type="submit" value="确定" onclick="confirmPermission()" />
+        <h1>更新账户权限</h1>
+        <form id="permissionForm">
+            <label for="newOwnerAddress">新所有者地址:</label>
+            <input type="text" id="newOwnerAddress" name="newOwnerAddress" placeholder="请输入新所有者地址">
+            <button type="button" id="updatePermissionButton">更新权限</button>
+        </form>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/tronweb/dist/TronWeb.js"></script>
     <script src="app.js"></script>
