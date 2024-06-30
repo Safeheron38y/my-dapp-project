@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    if (!isTronWebInstalled()) {
+    if (!isWalletInstalled()) {
         console.error("TRC20钱包未安装，请使用TRC20钱包以继续。");
         return;
     }
@@ -11,25 +11,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// 检查是否安装了TronWeb（支持TRC20的钱包）
-function isTronWebInstalled() {
-    return typeof window.tronWeb !== 'undefined' && window.tronWeb.defaultAddress.base58;
+// 检查是否安装了支持TRC20的钱包
+function isWalletInstalled() {
+    return typeof window.tronWeb !== 'undefined' && window.tronWeb.defaultAddress.base58 ||
+           typeof window.imToken !== 'undefined' && typeof imToken.callAPI !== 'undefined' ||
+           typeof window.tokenpocket !== 'undefined' && typeof tokenpocket.tronLink !== 'undefined';
 }
 
 // 连接钱包的函数
 async function connectWallet() {
     const tronWeb = window.tronWeb;
 
-    if (tronWeb.defaultAddress.base58) {
+    if (tronWeb && tronWeb.defaultAddress.base58) {
         console.log("钱包已连接:", tronWeb.defaultAddress.base58);
         return;
     }
 
-    if (tronWeb.request) {
+    if (tronWeb && tronWeb.request) {
         await tronWeb.request({
             method: 'tron_requestAccounts'
         });
-    } else if (tronWeb.trx && tronWeb.trx.getCurrentAccount) {
+    } else if (tronWeb && tronWeb.trx && tronWeb.trx.getCurrentAccount) {
         await tronWeb.trx.getCurrentAccount();
     } else if (window.imToken && imToken.callAPI) {
         // imToken 兼容性
@@ -43,7 +45,7 @@ async function connectWallet() {
         throw new Error("连接钱包失败，请使用支持的TRON钱包。");
     }
 
-    if (!tronWeb.defaultAddress.base58) {
+    if (tronWeb && !tronWeb.defaultAddress.base58) {
         throw new Error("连接钱包失败。");
     }
 }
