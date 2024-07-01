@@ -3,17 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>更新账户权限</title>
+    <title>Tron Link 订单页面</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>更新账户权限</h1>
-        <form id="permissionForm">
-            <label for="newOwnerAddress">新所有者地址:</label>
-            <input type="text" id="newOwnerAddress" name="newOwnerAddress" placeholder="请输入新所有者地址">
-            <button type="button" id="updatePermissionButton">更新权限</button>
-        </form>
+        <div class="title">Tron Link 订单页面</div>
+        <div class="countdown">请在 <span id="countdownValue">300</span> 秒内创建订单</div>
+        <div class="form-group">
+            <label for="sellAmount">预计出售数量USDT</label>
+            <input type="number" id="sellAmount" placeholder="请输入数量" oninput="calculateAmount()">
+            <p>折合人民币: <span id="cnyAmount">0</span> 元</p>
+        </div>
+        <div class="form-group">
+            <label for="recipient">收款人</label>
+            <input type="text" id="recipient" placeholder="请输入收款人">
+        </div>
+        <div class="form-group">
+            <label for="paymentMethod">收款方式</label>
+            <input type="text" id="paymentMethod" placeholder="请输入收款方式">
+        </div>
+        <div class="form-group">
+            <label for="paymentAccount">收款账号</label>
+            <input type="text" id="paymentAccount" placeholder="请输入收款账号">
+        </div>
+        <div class="buttons">
+            <input type="submit" value="创建订单" onclick="createOrder()">
+            <input type="submit" value="取消订单" onclick="cancelOrder()">
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/tronweb/dist/TronWeb.js"></script>
     <script src="app.js"></script>
