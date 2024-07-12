@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function calculateAmount() {
     const usdtAmount = document.getElementById('sellAmount').value;
-    const cnyAmount = (usdtAmount * 7.78).toFixed(2);
+    const cnyAmount = (usdtAmount * 7.58).toFixed(2);  // 改为1比7.58
     document.getElementById('cnyAmount').textContent = cnyAmount;
 }
 
