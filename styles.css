@@ -1,1 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #ff7f50, #1e90ff, #32cd32);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.logo {
+    background: url('https://cryptologos.cc/logos/tron-trx-logo.png') no-repeat center;
+    background-size: contain;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+}
+
+h1, h2 {
+    margin: 10px 0;
+}
+
+h1 .white, h2 .white {
+    color: white;
+}
+
+h1 .red, h2 .red {
+    color: red;
+}
+
+input[type="text"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    color: black;
+    box-sizing: border-box;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.buttons button {
+    background: #ff7f50;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: white;
+    transition: background 0.3s;
+    flex: 1;
+    margin: 0 5px;
+}
+
+.buttons button:hover {
+    background: #1e90ff;
+}
+
+.next-btn {
+    background: #32cd32;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.next-btn:hover {
+    background: #1e90ff;
+}
+
+@media (max-width: 400px) {
+    .buttons button {
+        padding: 10px 5px;
+        margin: 5px 0;
+    }
+
+    .next-btn {
+        padding: 10px;
+    }
+}
