@@ -1,123 +1,188 @@
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
     height: 100vh;
-    background: #6a11cb;
 }
 
 .container {
-    width: 90%;
-    max-width: 600px;
-    padding: 20px;
-    background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-radius: 15px;
-    box-sizing: border-box;
-    position: relative;
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 24px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
-.usdt-text {
-    color: #333;
-    font-weight: bold;
-}
-
-label {
-    display: block;
-    margin-top: 10px;
-    color: #555;
-    font-weight: bold;
-}
-
-input, select, button {
+    background-color: #f5f5f5;
     width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
+    max-width: 420px;
+    padding: 20px;
     box-sizing: border-box;
-    font-weight: bold;
-}
-
-input:focus, select:focus {
-    border-color: #6a11cb;
-    outline: none;
-}
-
-.output {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
-    align-items: center;
-    border: 2px solid #ddd;
-    padding: 10px;
+    flex-direction: column;
     border-radius: 10px;
-    margin-top: 5px;
-    box-sizing: border-box;
-    background: #f1f1f1;
-    color: #333;
-    font-weight: bold;
-}
-
-.output span {
-    flex: 1;
-}
-
-.buttons {
-    display: flex;
+    height: calc(100% - 20px);
     justify-content: space-between;
     margin-top: 20px;
 }
 
-.button {
-    background-color: #6a11cb;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    transition: background-color 0.3s;
-    font-weight: bold;
+.navbar {
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+    text-align: center;
+    color: black; /* 修改文本颜色 */
+    font-size: 18px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
 
-.button:hover {
-    background-color: #4c0099;
+h1 {
+    font-size: 18px;
+    color: #333;
+    margin: 0;
+    padding-top: 10px;
 }
 
-.order-preview {
-    margin-top: 20px;
-    background: #f9f9f9;
-    border: 2px solid #ddd;
-    padding: 10px;
+p {
+    color: #999;
+    font-size: 14px;
+    margin: 0;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    color: #999;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
     border-radius: 10px;
     box-sizing: border-box;
-    font-weight: bold;
+    font-size: 16px;
+    background-color: #ffffff;
     color: #333;
 }
 
-.customer-service {
-    margin-top: 20px;
+.amount-note-wrapper {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+}
+
+.amount-note-wrapper input#amount {
+    border: none;
+    outline: none;
+    font-size: 24px;
+    background-color: #ffffff;
+    color: #333;
+    padding: 0;
+}
+
+.amount-note-wrapper input#note {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #999;
+    padding: 10px 0 0 0;
+}
+
+.amount-note-wrapper .unit {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #999;
+    font-size: 14px;
+}
+
+.divider {
+    border-top: 1px solid #ddd;
+    margin: 10px 0;
+    width: calc(100% - 30px);
+    align-self: center;
+}
+
+.fee-label {
+    font-size: 14px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.fee {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.fee-amount {
+    color: #333;
+    font-size: 14px;
+}
+
+.fee-trx {
+    color: #999;
+    font-size: 14px;
+}
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background-color: #007BFF;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
     text-align: center;
-    font-weight: bold;
-    color: #333;
+    margin-top: auto;
+    transition: transform 0.2s ease-in-out;
 }
 
-@media (max-width: 600px) {
-    .buttons {
-        flex-direction: column;
-    }
+.btn:active {
+    transform: scale(0.95);
+}
 
-    .button {
-        margin-bottom: 10px;
-    }
+/* 删除数量输入框的加减按钮 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input#note {
+    position: relative;
+}
+
+input#note::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #ddd;
+    width: calc(100% - 30px);
+    margin: 10px 15px;
 }
