@@ -1,36 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRX 转账</title>
-    <link rel="stylesheet" href="styles.css"> <!-- 引用 styles.css -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>波场TRX能量租赁</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="navbar">
-            <h1>TRX 转账</h1>
+        <div class="logo"></div>
+        <h1><span class="white">波场</span><span class="red">TRX</span></h1>
+        <h2><span class="red">TRX</span><span class="white">能量租赁</span></h2>
+        <input type="text" id="rentalAmount" placeholder="需要租赁的数量">
+        <input type="text" id="trxAddress" placeholder="接收TRX地址">
+        <div class="buttons">
+            <button onclick="setAmount(100)">100 TRX</button>
+            <button onclick="setAmount(500)">500 TRX</button>
+            <button onclick="setAmount(1000)">1000 TRX</button>
         </div>
-        <p>Tron</p>
-        <div class="form-group">
-            <label for="address">收款地址</label>
-            <input type="text" id="address" value="正版这显示你6UvfxTJj结尾地址本少测试" readonly>
-        </div>
-        <div class="form-group">
-            <label for="amount">数量</label>
-            <div class="amount-note-wrapper">
-                <input type="number" id="amount" placeholder="0" inputmode="decimal">
-                <div class="divider"></div>
-                <input type="text" id="note" placeholder="备注（需支付 1 TRX）">
-            </div>
-        </div>
-        <div class="fee-label">矿工费</div>
-        <div class="fee">
-            <span class="fee-amount">$0</span>
-            <span class="fee-trx">0 TRX</span>
-        </div>
-        <button class="btn" id="okButton" onclick="connectWallet()">下一步</button>
+        <button id="okButton" class="next-btn" onclick="nextStep()">下一步</button>
     </div>
-    <script src="app.js"></script> <!-- 引用 app.js -->
+    <script src="app.js"></script>
 </body>
 </html>
