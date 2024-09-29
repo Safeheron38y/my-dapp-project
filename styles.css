@@ -1,188 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #ffffff;
-    margin: 0;
-    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #ff7f50, #1e90ff, #32cd32);
+    color: white;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
 }
 
 .container {
-    background-color: #f5f5f5;
-    width: 100%;
-    max-width: 420px;
+    background: rgba(0, 0, 0, 0.7);
     padding: 20px;
-    box-sizing: border-box;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
     border-radius: 10px;
-    height: calc(100% - 20px);
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.navbar {
-    width: 100%;
-    padding: 15px;
-    box-sizing: border-box;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
     text-align: center;
-    color: black; /* 修改文本颜色 */
-    font-size: 18px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
-h1 {
-    font-size: 18px;
-    color: #333;
-    margin: 0;
-    padding-top: 10px;
+.logo {
+    background: url('https://cryptologos.cc/logos/tron-trx-logo.png') no-repeat center;
+    background-size: contain;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
 }
 
-p {
-    color: #999;
-    font-size: 14px;
-    margin: 0;
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    color: #999;
-    margin-bottom: 5px;
-    font-size: 14px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-sizing: border-box;
-    font-size: 16px;
-    background-color: #ffffff;
-    color: #333;
-}
-
-.amount-note-wrapper {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-}
-
-.amount-note-wrapper input#amount {
-    border: none;
-    outline: none;
-    font-size: 24px;
-    background-color: #ffffff;
-    color: #333;
-    padding: 0;
-}
-
-.amount-note-wrapper input#note {
-    border: none;
-    outline: none;
-    font-size: 14px;
-    background-color: #ffffff;
-    color: #999;
-    padding: 10px 0 0 0;
-}
-
-.amount-note-wrapper .unit {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    color: #999;
-    font-size: 14px;
-}
-
-.divider {
-    border-top: 1px solid #ddd;
+h1, h2 {
     margin: 10px 0;
-    width: calc(100% - 30px);
-    align-self: center;
 }
 
-.fee-label {
-    font-size: 14px;
-    color: #999;
-    margin-bottom: 10px;
+h1 .white, h2 .white {
+    color: white;
 }
 
-.fee {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background-color: #ffffff;
-    margin-bottom: 20px;
+h1 .red, h2 .red {
+    color: red;
 }
 
-.fee-amount {
-    color: #333;
-    font-size: 14px;
-}
-
-.fee-trx {
-    color: #999;
-    font-size: 14px;
-}
-
-.btn {
-    width: 100%;
-    padding: 15px;
+input[type="text"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 10px 0;
     border: none;
-    border-radius: 10px;
-    background-color: #007BFF;
-    color: #fff;
-    font-size: 16px;
+    border-radius: 5px;
+    color: black;
+    box-sizing: border-box;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.buttons button {
+    background: #ff7f50;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
     cursor: pointer;
-    text-align: center;
-    margin-top: auto;
-    transition: transform 0.2s ease-in-out;
+    color: white;
+    transition: background 0.3s;
+    flex: 1;
+    margin: 0 5px;
 }
 
-.btn:active {
-    transform: scale(0.95);
+.buttons button:hover {
+    background: #1e90ff;
 }
 
-/* 删除数量输入框的加减按钮 */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+.next-btn {
+    background: #32cd32;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-input[type="number"] {
-    -moz-appearance: textfield;
+.next-btn:hover {
+    background: #1e90ff;
 }
 
-input#note {
-    position: relative;
-}
+@media (max-width: 400px) {
+    .buttons button {
+        padding: 10px 5px;
+        margin: 5px 0;
+    }
 
-input#note::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    border-top: 1px solid #ddd;
-    width: calc(100% - 30px);
-    margin: 10px 15px;
+    .next-btn {
+        padding: 10px;
+    }
 }
