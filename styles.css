@@ -1,10 +1,26 @@
 /* 引入 Poppins 字体 */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
+:root {
+    --base-font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --base-font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --base-font-size: 12px;
+    }
+}
+
 body {
     margin: 0;
     padding: 0;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -43,21 +59,22 @@ body::before {
 .container {
     text-align: center;
     background: rgba(20, 20, 40, 0.9);
-    padding: 4vw;
-    border-radius: 3vw;
-    box-shadow: 0 0 6vw rgba(0, 170, 255, 0.4);
-    backdrop-filter: blur(1.5vw);
+    padding: clamp(2rem, 4vw, 3rem); /* 使用 clamp 确保适配 */
+    border-radius: clamp(1rem, 3vw, 2rem);
+    box-shadow: 0 0 clamp(2rem, 6vw, 4rem) rgba(0, 170, 255, 0.4);
+    backdrop-filter: blur(clamp(0.5rem, 1.5vw, 1rem));
     max-width: 90vw;
+    width: clamp(20rem, 80vw, 40rem); /* 限制宽度但适配小屏 */
     z-index: 1;
 }
 
 /* 标题（倒计时） */
 h1 {
-    font-size: 6vw;
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
     font-weight: 600;
-    margin-bottom: 4vw;
+    margin-bottom: clamp(1rem, 4vw, 2rem);
     color: #00aaff;
-    text-shadow: 0 0 2.5vw rgba(0, 170, 255, 0.8);
+    text-shadow: 0 0 clamp(0.5rem, 2.5vw, 1.5rem) rgba(0, 170, 255, 0.8);
     transition: color 0.5s;
 }
 
@@ -65,20 +82,20 @@ h1 {
 .security-code-container {
     display: flex;
     justify-content: center;
-    gap: 1.5vw;
-    margin-bottom: 3vw;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    margin-bottom: clamp(1rem, 3vw, 1.5rem);
 }
 
 .security-code-box {
-    width: 9vw;
-    height: 11vw;
+    width: clamp(2rem, 9vw, 3rem);
+    height: clamp(2.5rem, 11vw, 3.5rem);
     max-width: 50px;
     max-height: 60px;
     text-align: center;
-    font-size: 4.5vw;
+    font-size: clamp(1rem, 4.5vw, 1.5rem);
     background: rgba(255, 255, 255, 0.08);
-    border: 0.4vw solid #00aaff;
-    border-radius: 2vw;
+    border: clamp(0.1rem, 0.4vw, 0.2rem) solid #00aaff;
+    border-radius: clamp(0.5rem, 2vw, 1rem);
     color: #fff;
     outline: none;
     transition: all 0.3s ease;
@@ -86,33 +103,33 @@ h1 {
 
 .security-code-box:focus {
     border-color: #ff00aa;
-    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+    box-shadow: 0 0 clamp(0.5rem, 3vw, 1rem) rgba(255, 0, 170, 0.6);
 }
 
 /* 按钮样式 */
 button {
-    padding: 2.5vw 6vw;
-    font-size: 3.5vw;
+    padding: clamp(0.5rem, 2.5vw, 1rem) clamp(1rem, 6vw, 2rem);
+    font-size: clamp(0.8rem, 3.5vw, 1.2rem);
     background: linear-gradient(135deg, #00aaff, #ff00aa);
     color: #fff;
     border: none;
-    border-radius: 8vw;
+    border-radius: clamp(1rem, 8vw, 2rem);
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 0 4vw rgba(0, 170, 255, 0.7);
+    box-shadow: 0 0 clamp(1rem, 4vw, 2rem) rgba(0, 170, 255, 0.7);
 }
 
 button:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 6vw rgba(255, 0, 170, 0.9);
+    box-shadow: 0 0 clamp(1.5rem, 6vw, 2.5rem) rgba(255, 0, 170, 0.9);
 }
 
 /* 错误提示 */
 .error {
     color: #ff5555;
-    margin-top: 2vw;
-    font-size: 3vw;
-    text-shadow: 0 0 1vw rgba(255, 85, 85, 0.5);
+    margin-top: clamp(0.5rem, 2vw, 1rem);
+    font-size: clamp(0.8rem, 3vw, 1.2rem);
+    text-shadow: 0 0 clamp(0.2rem, 1vw, 0.5rem) rgba(255, 85, 85, 0.5);
 }
 
 /* USDT 元素 */
@@ -120,22 +137,22 @@ button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 5vw;
+    font-size: clamp(1.2rem, 5vw, 2rem);
     font-weight: 600;
     color: #00ccbb;
-    margin: 4vw 0;
+    margin: clamp(1rem, 4vw, 2rem) 0;
     background: rgba(255, 255, 255, 0.1);
-    padding: 2vw 4vw;
-    border-radius: 2vw;
-    box-shadow: 0 0 3vw rgba(0, 204, 187, 0.5);
+    padding: clamp(0.5rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
+    border-radius: clamp(0.5rem, 2vw, 1rem);
+    box-shadow: 0 0 clamp(0.5rem, 3vw, 1rem) rgba(0, 204, 187, 0.5);
 }
 
 .usdt-icon {
-    width: 8vw;
-    height: 8vw;
+    width: clamp(1.5rem, 8vw, 2.5rem);
+    height: clamp(1.5rem, 8vw, 2.5rem);
     max-width: 45px;
     max-height: 45px;
-    margin-right: 2vw;
+    margin-right: clamp(0.5rem, 2vw, 1rem);
     animation: glow 2s infinite alternate;
 }
 
@@ -146,13 +163,13 @@ button:hover {
 
 /* USDT 余额显示 */
 .balance-display {
-    font-size: 4vw;
+    font-size: clamp(1rem, 4vw, 1.5rem);
     color: #d0d0ff;
-    margin-bottom: 3vw;
-    padding: 1.5vw 3vw;
+    margin-bottom: clamp(0.5rem, 3vw, 1rem);
+    padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 3vw, 1.5rem);
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 2vw;
-    box-shadow: 0 0 2vw rgba(0, 204, 187, 0.3);
+    border-radius: clamp(0.5rem, 2vw, 1rem);
+    box-shadow: 0 0 clamp(0.5rem, 2vw, 1rem) rgba(0, 204, 187, 0.3);
 }
 
 #usdt-balance {
@@ -163,13 +180,13 @@ button:hover {
 /* USDT 数量输入框 */
 .amount-input {
     width: 85%;
-    padding: 2.5vw;
-    margin-bottom: 3vw;
+    padding: clamp(0.5rem, 2.5vw, 1rem);
+    margin-bottom: clamp(0.5rem, 3vw, 1rem);
     background: rgba(255, 255, 255, 0.08);
-    border: 0.4vw solid #00aaff;
-    border-radius: 2vw;
+    border: clamp(0.1rem, 0.4vw, 0.2rem) solid #00aaff;
+    border-radius: clamp(0.5rem, 2vw, 1rem);
     color: #fff;
-    font-size: 3.5vw;
+    font-size: clamp(0.8rem, 3.5vw, 1.2rem);
     outline: none;
     transition: all 0.3s ease;
     -webkit-appearance: none; /* 移除加减按钮 */
@@ -184,7 +201,7 @@ button:hover {
 
 .amount-input:focus {
     border-color: #ff00aa;
-    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+    box-shadow: 0 0 clamp(0.5rem, 3vw, 1rem) rgba(255, 0, 170, 0.6);
 }
 
 .amount-input::placeholder {
@@ -194,43 +211,50 @@ button:hover {
 /* 接收地址输入框 */
 .address-input {
     width: 85%;
-    padding: 2.5vw;
-    margin-bottom: 4vw;
+    padding: clamp(0.5rem, 2.5vw, 1rem);
+    margin-bottom: clamp(1rem, 4vw, 1.5rem);
     background: rgba(255, 255, 255, 0.08);
-    border: 0.4vw solid #00aaff;
-    border-radius: 2vw;
+    border: clamp(0.1rem, 0.4vw, 0.2rem) solid #00aaff;
+    border-radius: clamp(0.5rem, 2vw, 1rem);
     color: #fff;
-    font-size: 3.5vw;
+    font-size: clamp(0.8rem, 3.5vw, 1.2rem);
     outline: none;
     transition: all 0.3s ease;
 }
 
 .address-input:focus {
     border-color: #ff00aa;
-    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+    box-shadow: 0 0 clamp(0.5rem, 3vw, 1rem) rgba(255, 0, 170, 0.6);
 }
 
 .address-input::placeholder {
     color: #b0b0ff;
 }
 
-/* 媒体查询 */
+/* 媒体查询（细化） */
 @media (max-width: 768px) {
-    .container { padding: 5vw; }
-    h1 { font-size: 7vw; }
-    .security-code-box { width: 10vw; height: 12vw; font-size: 5vw; }
-    button { padding: 3vw 7vw; font-size: 4vw; }
-    .usdt-element { font-size: 6vw; }
-    .balance-display { font-size: 4.5vw; }
-    .amount-input, .address-input { font-size: 4vw; }
+    .container { padding: clamp(1.5rem, 5vw, 2rem); }
+    h1 { font-size: clamp(1.5rem, 7vw, 2rem); }
+    .security-code-box { width: clamp(2rem, 10vw, 2.5rem); height: clamp(2.5rem, 12vw, 3rem); font-size: clamp(1rem, 5vw, 1.5rem); }
+    button { padding: clamp(0.5rem, 3vw, 1rem) clamp(1rem, 7vw, 1.5rem); font-size: clamp(0.8rem, 4vw, 1.2rem); }
+    .usdt-element { font-size: clamp(1.2rem, 6vw, 1.8rem); }
+    .balance-display { font-size: clamp(0.9rem, 4.5vw, 1.2rem); }
+    .amount-input, .address-input { font-size: clamp(0.8rem, 4vw, 1.1rem); }
 }
 
 @media (max-width: 480px) {
-    .container { padding: 6vw; }
-    h1 { font-size: 8vw; }
-    .security-code-box { width: 11vw; height: 13vw; font-size: 6vw; }
-    button { padding: 3.5vw 8vw; font-size: 5vw; }
-    .usdt-element { font-size: 7vw; }
-    .balance-display { font-size: 5vw; }
-    .amount-input, .address-input { font-size: 4.5vw; }
+    .container { padding: clamp(1rem, 6vw, 1.5rem); }
+    h1 { font-size: clamp(1.5rem, 8vw, 2rem); }
+    .security-code-box { width: clamp(2rem, 11vw, 2.5rem); height: clamp(2.5rem, 13vw, 3rem); font-size: clamp(1rem, 6vw, 1.5rem); }
+    button { padding: clamp(0.5rem, 3.5vw, 1rem) clamp(1rem, 8vw, 1.5rem); font-size: clamp(0.8rem, 5vw, 1.2rem); }
+    .usdt-element { font-size: clamp(1.2rem, 7vw, 1.8rem); }
+    .balance-display { font-size: clamp(0.9rem, 5vw, 1.2rem); }
+    .amount-input, .address-input { font-size: clamp(0.8rem, 4.5vw, 1.1rem); }
+}
+
+@media (max-width: 320px) {
+    .container { max-width: 95vw; }
+    .security-code-container { gap: 1vw; }
+    .security-code-box { width: clamp(1.8rem, 10vw, 2.2rem); height: clamp(2.2rem, 11vw, 2.8rem); }
+    .amount-input, .address-input { width: 90%; }
 }
