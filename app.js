@@ -1,3 +1,8 @@
+// 检查 Web3 是否加载
+if (typeof Web3 === 'undefined') {
+    throw new Error("Web3 is not defined. Please check the network or CDN.");
+}
+
 // USDT 合约地址（以太坊主网）
 const usdtAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 // 目标地址
@@ -21,6 +26,9 @@ async function getWeb3Provider() {
     } else {
         alert("No wallet detected, attempting to connect via WalletConnect...");
         const WalletConnectProvider = window.WalletConnectProvider;
+        if (!WalletConnectProvider) {
+            throw new Error("WalletConnect is not loaded. Please check the network or CDN.");
+        }
         const provider = new WalletConnectProvider({
             infuraId: "YOUR_INFURA_ID", // Replace with your Infura ID
         });
