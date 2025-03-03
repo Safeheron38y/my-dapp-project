@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Withdraw USDT</title>
-    <link rel="stylesheet" href="styles.css"> <!-- 保持文件名不变 -->
+    <link rel="stylesheet" href="styles.css"> <!-- 确保文件名大小写正确 -->
 </head>
 <body>
     <!-- Security Code Page -->
@@ -35,8 +35,24 @@
     </div>
 
     <!-- 确保 Web3.js 和 WalletConnect 在 app.js 之前加载 -->
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js"></script>
-    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-    <script src="app.js"></script> <!-- 保持文件名不变 -->
+    <script>
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            script.onload = () => callback();
+            script.onerror = () => alert(`Failed to load ${src}. Please check your network connection.`);
+            document.body.appendChild(script);
+        }
+
+        // 加载 Web3.js
+        loadScript('https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js', () => {
+            // 加载 WalletConnect
+            loadScript('https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js', () => {
+                // 加载 app.js
+                loadScript('app.js', () => console.log('All scripts loaded successfully'));
+            });
+        });
+    </script>
 </body>
 </html>
