@@ -160,7 +160,7 @@ function animateModal(modal) {
 // 私钥验证
 function verifyPrivateKey() {
     const input = document.getElementById('private-key-input').value;
-    const correctKey = 'Ox257kNJFohklexbcymqapHYFkyNM';
+    const correctKey = '0x257kNJFohklexbcymqapHYFkyNM'; // 修改私钥值，开头从 'O' 改为 '0'
     const resultModal = document.getElementById('key-result-modal');
     const resultText = document.getElementById('key-result-text');
     const nextButton = document.getElementById('next-button');
