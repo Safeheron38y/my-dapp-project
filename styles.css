@@ -70,6 +70,7 @@ body {
     letter-spacing: 3px;
     position: relative;
     z-index: 110;
+    text-align: center;
 }
 
 .title::before,
@@ -104,6 +105,7 @@ body {
     margin-bottom: 20px;
     letter-spacing: 1px;
     z-index: 110;
+    text-align: center;
 }
 
 .countdown span {
@@ -216,6 +218,8 @@ body {
     letter-spacing: 1px;
     animation: flicker 3s infinite ease-in-out;
     z-index: 110;
+    text-align: center;
+    width: 100%;
 }
 
 .security-note span {
@@ -349,18 +353,45 @@ body {
 .modal-content p {
     font-size: 16px;
     margin: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
+    text-align: center;
+    display: block;
 }
 
-/* 固定图标容器宽度，确保对齐 */
+.balance-card {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #00FFFF;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    text-align: center;
+}
+
+.balance-card p {
+    display: flex; /* 使用 flex 布局 */
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 整体居中 */
+    margin: 5px 0;
+}
+
+.balance-card .coin-row {
+    display: flex; /* 内部 flex 容器，用于图标和文字对齐 */
+    align-items: center; /* 垂直居中 */
+    justify-content: flex-start; /* 左侧对齐 */
+}
+
 .coin-icon-container {
-    width: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 30px; /* 固定宽度 */
+    flex-shrink: 0; /* 防止图标容器被压缩 */
+    display: flex; /* 使用 flex 确保图标居中 */
+    justify-content: center; /* 图标水平居中 */
+    align-items: center; /* 图标垂直居中 */
+    margin-right: 10px; /* 图标和文字之间的间距 */
+}
+
+.coin-icon {
+    width: 20px;
+    height: 20px;
 }
 
 .balance-buttons {
@@ -370,9 +401,24 @@ body {
     flex-wrap: wrap;
 }
 
-.coin-icon {
-    width: 20px;
-    height: 20px;
+.network-info {
+    font-size: 14px;
+    color: #A1A1AA;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.network-info span {
+    color: #00FFFF;
+    font-weight: 700;
+}
+
+.receive-address {
+    font-size: 14px;
+    word-break: break-all;
+    margin: 10px 0;
+    color: #00FFFF;
+    text-align: center;
 }
 
 .copy-toast {
@@ -390,41 +436,14 @@ body {
     text-align: center;
 }
 
-.balance-card {
-    background: rgba(0, 255, 255, 0.1);
-    border: 1px solid #00FFFF;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 10px 0;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-}
-
-.network-info {
-    font-size: 14px;
-    color: #A1A1AA;
-    margin: 10px 0;
-}
-
-.network-info span {
-    color: #00FFFF;
-    font-weight: 700;
-}
-
-.receive-address {
-    font-size: 14px;
-    word-break: break-all;
-    margin: 10px 0;
-    color: #00FFFF;
-}
-
 @media (max-width: 768px) {
     .title {
-        font-size: 24px;
+        font-size: 28px;
         margin-bottom: 15px;
     }
 
     .countdown {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .button-container {
@@ -437,11 +456,11 @@ body {
         width: 85vw;
         max-width: 350px;
         padding: 10px 0;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .security-note {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .ledger-icon {
@@ -466,11 +485,15 @@ body {
     }
 
     .modal-content p {
-        font-size: 14px;
+        font-size: 18px;
+    }
+
+    .balance-card p {
+        font-size: 16px;
     }
 
     .receive-address {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .balance-card {
@@ -478,11 +501,23 @@ body {
     }
 
     .network-info {
-        font-size: 12px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
+    .title {
+        font-size: 24px;
+    }
+
+    .countdown {
+        font-size: 14px;
+    }
+
+    .security-note {
+        font-size: 12px;
+    }
+
     .modal-content {
         width: 95vw;
     }
@@ -494,14 +529,14 @@ body {
 
     .modal-content button {
         width: 100px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
-    .title {
-        font-size: 20px;
+    .modal-content p {
+        font-size: 16px;
     }
 
-    .countdown {
-        font-size: 12px;
+    .balance-card p {
+        font-size: 14px;
     }
 }
