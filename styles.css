@@ -1,1 +1,507 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Exo 2', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
 
+body {
+    background: radial-gradient(circle at center, #0A1A3D 0%, #000000 100%);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    position: relative;
+    touch-action: manipulation;
+}
+
+.content {
+    text-align: center;
+    z-index: 100;
+    position: relative;
+}
+
+.ledger-icon {
+    width: 60px;
+    height: 30px;
+    background: transparent;
+    border: 2px solid #00FFFF;
+    border-radius: 8px;
+    position: relative;
+    margin: 0 auto 15px;
+    animation: glow 2s infinite ease-in-out;
+    z-index: 90;
+}
+
+.ledger-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: #FF00FF;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    animation: blink 1.5s infinite ease-in-out;
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); }
+    50% { box-shadow: 0 0 16px rgba(0, 255, 255, 1); }
+    100% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); }
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #00FFFF;
+    -webkit-text-stroke: 0.3px #FF00FF;
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 110;
+}
+
+.title::before,
+.title::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00FFFF, transparent);
+    animation: lightSweep 3s infinite ease-in-out;
+    z-index: 109;
+}
+
+.title::before {
+    left: -50px;
+}
+
+.title::after {
+    right: -50px;
+}
+
+@keyframes lightSweep {
+    0% { transform: translateX(-8px); opacity: 0.3; }
+    50% { transform: translateX(8px); opacity: 1; }
+    100% { transform: translateX(-8px); opacity: 0.3; }
+}
+
+.countdown {
+    font-size: 16px;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    z-index: 110;
+}
+
+.countdown span {
+    color: #FF00FF;
+    font-weight: 700;
+    animation: tick 1s infinite step-end;
+}
+
+@keyframes tick {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 120;
+}
+
+.secondary-button,
+.quaternary-button,
+.fifth-button {
+    display: inline-block;
+    width: 250px;
+    padding: 12px 0;
+    background: transparent;
+    border: 2px solid;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 16px;
+    text-align: center;
+    position: relative;
+    z-index: 130;
+    transition: all 0.3s ease;
+    color: inherit;
+    cursor: pointer;
+}
+
+.secondary-button {
+    border-color: #FF00FF;
+    color: #FF00FF;
+    animation: buttonPulseSecondary 2s infinite ease-in-out;
+}
+
+.secondary-button:hover {
+    background: #FF00FF;
+    color: #000000;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+}
+
+.quaternary-button {
+    border-color: #00FFFF;
+    color: #00FFFF;
+    animation: buttonPulse 2s infinite ease-in-out;
+}
+
+.quaternary-button:hover {
+    background: #00FFFF;
+    color: #000000;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+.fifth-button {
+    border-color: #FF00FF;
+    color: #FF00FF;
+    animation: buttonPulseSecondary 2s infinite ease-in-out;
+}
+
+.fifth-button:hover {
+    background: #FF00FF;
+    color: #000000;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+}
+
+.secondary-button::before,
+.quaternary-button::before,
+.fifth-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(0, 255, 255, 0.1) 25%, transparent 25%, transparent 50%, rgba(0, 255, 255, 0.1) 50%, rgba(0, 255, 255, 0.1) 75%, transparent 75%, transparent);
+    background-size: 15px 15px;
+    opacity: 0.3;
+    z-index: -1;
+}
+
+@keyframes buttonPulse {
+    0% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); }
+    50% { box-shadow: 0 0 16px rgba(0, 255, 255, 1); }
+    100% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); }
+}
+
+@keyframes buttonPulseSecondary {
+    0% { box-shadow: 0 0 8px rgba(255, 0, 255, 0.5); }
+    50% { box-shadow: 0 0 16px rgba(255, 0, 255, 1); }
+    100% { box-shadow: 0 0 8px rgba(255, 0, 255, 0.5); }
+}
+
+.security-note {
+    font-size: 12px;
+    color: #A1A1AA;
+    margin-top: 20px;
+    letter-spacing: 1px;
+    animation: flicker 3s infinite ease-in-out;
+    z-index: 110;
+}
+
+.security-note span {
+    color: #00FFFF;
+    font-weight: 700;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+#particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.hex-grid {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(150deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(30deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 86px;
+    opacity: 0.3;
+    z-index: 2;
+}
+
+.circuit-flow-left,
+.circuit-flow-right {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, #00FFFF, transparent);
+    animation: flow 2s infinite linear;
+    z-index: 3;
+}
+
+.circuit-flow-left {
+    left: 20px;
+}
+
+.circuit-flow-right {
+    right: 20px;
+}
+
+@keyframes flow {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+/* 弹窗页面样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: radial-gradient(circle at center, #0A1A3D 0%, #000000 100%);
+}
+
+.modal-content {
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 210;
+    color: #FFFFFF;
+    padding: 20px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.modal-content input {
+    width: 250px;
+    padding: 10px 40px 10px 10px;
+    margin: 10px 0;
+    border: 2px solid #00FFFF;
+    border-radius: 20px;
+    background: transparent;
+    color: #FFFFFF;
+    font-size: 16px;
+}
+
+#transfer-amount {
+    background-image: url('https://s2.coinmarketcap.com/static/img/coins/64x64/825.png');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px 20px;
+}
+
+.modal-content input[type="number"] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+.modal-content input[type="number"]::-webkit-inner-spin-button,
+.modal-content input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.modal-content button {
+    width: 150px;
+    padding: 10px;
+    margin: 10px 5px;
+    border: 2px solid #00FFFF;
+    border-radius: 50px;
+    background: transparent;
+    color: #00FFFF;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-content button:hover {
+    background: #00FFFF;
+    color: #000000;
+}
+
+.modal-content p {
+    font-size: 16px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+/* 固定图标容器宽度，确保对齐 */
+.coin-icon-container {
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.balance-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.coin-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.copy-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #00FFFF;
+    padding: 10px 20px;
+    border-radius: 10px;
+    z-index: 300;
+    display: none;
+    max-width: 80vw;
+    text-align: center;
+}
+
+.balance-card {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #00FFFF;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+
+.network-info {
+    font-size: 14px;
+    color: #A1A1AA;
+    margin: 10px 0;
+}
+
+.network-info span {
+    color: #00FFFF;
+    font-weight: 700;
+}
+
+.receive-address {
+    font-size: 14px;
+    word-break: break-all;
+    margin: 10px 0;
+    color: #00FFFF;
+}
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .countdown {
+        font-size: 14px;
+    }
+
+    .button-container {
+        gap: 10px;
+    }
+
+    .secondary-button,
+    .quaternary-button,
+    .fifth-button {
+        width: 85vw;
+        max-width: 350px;
+        padding: 10px 0;
+        font-size: 14px;
+    }
+
+    .security-note {
+        font-size: 10px;
+    }
+
+    .ledger-icon {
+        width: 50px;
+        height: 25px;
+    }
+
+    .modal-content {
+        width: 90vw;
+        padding: 15px;
+    }
+
+    .modal-content input {
+        width: 100%;
+        max-width: 300px;
+        font-size: 16px;
+    }
+
+    .modal-content button {
+        width: 120px;
+        font-size: 14px;
+    }
+
+    .modal-content p {
+        font-size: 14px;
+    }
+
+    .receive-address {
+        font-size: 12px;
+    }
+
+    .balance-card {
+        padding: 8px;
+    }
+
+    .network-info {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95vw;
+    }
+
+    .modal-content input {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .modal-content button {
+        width: 100px;
+        font-size: 12px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .countdown {
+        font-size: 12px;
+    }
+}
