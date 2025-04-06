@@ -7,34 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 粒子背景容器 -->
     <div id="particles-js"></div>
-
-    <!-- 页面内容 -->
     <div class="container">
-        <!-- 顶部特朗普标题 -->
         <div class="trump-header">
             <h1>TRUMP COIN AIRDROP</h1>
         </div>
-        
-        <!-- 特朗普币元素 -->
         <div class="trump-coin">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/220px-Donald_Trump_official_portrait.jpg" 
                  alt="Trump" 
                  class="trump-face">
         </div>
-        
-        <!-- 领取按钮 -->
         <button id="claimButton" class="trump-button">立刻领取</button>
     </div>
 
-    <!-- 引入 particles.js 库用于动态背景 -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <!-- 引入 web3.js 库 -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-    <!-- 引入 app.js -->
     <script src="app.js"></script>
-    <!-- 初始化粒子背景 -->
     <script>
         particlesJS("particles-js", {
             particles: {
