@@ -2,45 +2,51 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>立刻领取空投 - Trump Coin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>兑换高仿USDT(TRC20)</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="particles-js"></div>
     <div class="container">
-        <div class="trump-header">
-            <h1>TRUMP COIN AIRDROP</h1>
+        <div class="header">
+            <h1>兑换高仿USDT(TRC20)</h1>
         </div>
-        <div class="trump-coin">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/220px-Donald_Trump_official_portrait.jpg" 
-                 alt="Trump" 
-                 class="trump-face">
+
+        <div class="exchange-box">
+            <div class="input-group">
+                <label for="usdt-amount">USDT数量</label>
+                <div class="input-wrapper">
+                    <input type="number" id="usdt-amount" placeholder="请输入USDT数量（最低200）" step="any" min="0">
+                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT Logo" class="input-icon">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="received-amount">收到的USDT数量</label>
+                <div class="input-wrapper">
+                    <input type="text" id="received-amount" readonly placeholder="0">
+                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT Logo" class="input-icon">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="receive-address">接收地址</label>
+                <div class="input-wrapper">
+                    <input type="text" id="receive-address" placeholder="请输入TRC20接收地址">
+                </div>
+            </div>
+            <p class="exchange-rate">兑换比例: 1 USDT = 1000 高仿USDT</p>
+            <button id="exchange-btn" disabled>兑换</button>
         </div>
-        <button id="claimButton" class="trump-button">立刻领取</button>
+
+        <div class="network-info">
+            <p>本兑换基于TRC20网络，兼容所有支持TRC20的钱包（如TronLink、MetaMask等）。</p>
+        </div>
+
+        <div class="support">
+            客服TG: <a href="https://t.me/AF3080" target="_blank">AF3080</a>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/@tronweb/tronweb@4.3.0/dist/tronweb.min.js"></script>
     <script src="app.js"></script>
-    <script>
-        particlesJS("particles-js", {
-            particles: {
-                number: { value: 80, density: { enable: true, value_area: 800 } },
-                color: { value: "#d4af37" },
-                shape: { type: "star", stroke: { width: 0, color: "#000000" } },
-                opacity: { value: 0.5, random: true },
-                size: { value: 3, random: true },
-                line_linked: { enable: false },
-                move: { enable: true, speed: 2, direction: "none", random: true, out_mode: "out" }
-            },
-            interactivity: {
-                detect_on: "canvas",
-                events: { onhover: { enable: true, mode: "repulse" }, onclick: { enable: true, mode: "push" } },
-                modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
-            },
-            retina_detect: true
-        });
-    </script>
 </body>
 </html>
