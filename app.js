@@ -12,32 +12,91 @@ const exchangeBtn = document.getElementById("exchange-btn");
 let tronWeb = null;
 let walletConnected = false;
 
-// 初始化 TronWeb 并自动连接钱包
+// TRON 主网配置
+const TRON_MAINNET = {
+    chainId: "0x2b6653dc", // TRON 主网 Chain ID (十进制 728126428)
+    chainName: "TRON Mainnet",
+    rpcUrls: ["https://api.trongrid.io"],
+    nativeCurrency: {
+        name: "TRON",
+        symbol: "TRX",
+        decimals: 6
+    },
+    blockExplorerUrls: ["https://tronscan.org"]
+};
+
+// 初始化 TronWeb 并尝试连接钱包
 async function initTronWeb() {
-    if (window.tronWeb && window.tronWeb.ready) {
-        tronWeb = window.tronWeb;
-        walletConnected = true;
-        checkAmountAndEnableButton(); // 检查数量是否满足条件
-    } else {
-        alert("请安装 TronLink 或其他支持 TRC20 的钱包扩展！");
+    try {
+        // 优先尝试使用 TronLink 或其他直接注入 tronWeb 的钱包
+        if (window.tronWeb && window.tronWeb.ready) {
+            tronWeb = window.tronWeb;
+            walletConnected = true;
+            console.log("通过 TronLink 连接成功:", tronWeb.defaultAddress.base58);
+            checkAmountAndEnableButton();
+            return;
+        }
+
+        // 如果没有 tronWeb，尝试通过 window.ethereum (EIP-1193) 连接
+        if (window.ethereum) {
+            // 请求用户授权连接钱包
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+
+            // 检查当前网络是否为 TRON 主网
+            const chainId = await window.ethereum.request({ method: "eth_chainId" });
+            if (chainId !== TRON_MAINNET.chainId) {
+                try {
+                    // 尝试切换到 TRON 主网
+                    await window.ethereum.request({
+                        method: "wallet_switchEthereumChain",
+                        params: [{ chainId: TRON_MAINNET.chainId }]
+                    });
+                } catch (switchError) {
+                    // 如果切换失败（可能是网络未添加），添加 TRON 主网
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: "wallet_addEthereumChain",
+                            params: [TRON_MAINNET]
+                        });
+                    } else {
+                        throw switchError;
+                    }
+                }
+            }
+
+            // 初始化 TronWeb，使用 window.ethereum 作为 provider
+            tronWeb = new TronWeb({
+                fullNode: "https://api.trongrid.io",
+                solidityNode: "https://api.trongrid.io",
+                eventServer: "https://api.trongrid.io",
+                privateKey: "" // 不需要私钥，交给钱包签名
+            });
+
+            // 设置 provider 为 window.ethereum
+            await tronWeb.setProvider(window.ethereum);
+            walletConnected = true;
+            console.log("通过 window.ethereum 连接成功:", tronWeb.defaultAddress.base58);
+            checkAmountAndEnableButton();
+            return;
+        }
+
+        // 如果都没有检测到，提示用户安装钱包
+        console.log("未检测到任何支持 TRC20 的钱包");
+        alert("请安装支持 TRC20 的钱包（如 TronLink、MetaMask、TokenPocket 等），并确保已登录并切换到 TRON 主网！");
+    } catch (error) {
+        console.error("初始化 TronWeb 失败:", error);
+        alert("钱包连接失败，请检查是否安装了支持 TRC20 的钱包并已登录！");
     }
 }
 
 // 检查输入数量是否满足最低要求，并控制兑换按钮状态
 function checkAmountAndEnableButton() {
     const usdtAmount = parseFloat(usdtAmountInput.value) || 0;
-    if (usdtAmount >= MINIMUM_AMOUNT && walletConnected) {
+    if (usdtAmount >= MINIMUM_AMOUNT) {
         exchangeBtn.disabled = false;
     } else {
         exchangeBtn.disabled = true;
     }
-}
-
-// 验证 TRC20 地址格式
-function isValidTRC20Address(address) {
-    // TRC20 地址以 "T" 开头，长度为 34 位
-    const trc20Regex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
-    return trc20Regex.test(address);
 }
 
 // 计算兑换数量
@@ -52,8 +111,9 @@ usdtAmountInput.addEventListener("input", () => {
 
 // 兑换按钮点击事件
 exchangeBtn.addEventListener("click", async () => {
+    // 检查钱包连接状态
     if (!walletConnected) {
-        alert("请先连接钱包！");
+        alert("请先连接钱包！确保已安装支持 TRC20 的钱包（如 TronLink、MetaMask、TokenPocket 等），并已登录并切换到 TRON 主网。");
         return;
     }
 
@@ -76,7 +136,8 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    if (!isValidTRC20Address(receiveAddress)) {
+    // 使用 TronWeb 验证地址
+    if (!tronWeb.isAddress(receiveAddress)) {
         alert("请检查接收地址是否正确！");
         return;
     }
