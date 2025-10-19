@@ -1,52 +1,47 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>兑换高仿USDT(TRC20)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>USDT交易订单</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>兑换高仿USDT(TRC20)</h1>
+        <h1><span class="usdt-text">USDT</span>交易订单</h1>
+        <label for="usdtAmount">预计出售的USDT数量</label>
+        <input type="number" id="usdtAmount" placeholder="输入USDT数量">
+        
+        <label for="rmbAmount">收到的人民币数量</label>
+        <div class="output">
+            <span id="rmbAmount">0</span> ￥
+        </div>
+        
+        <label for="paymentMethod">选择接收方式</label>
+        <select id="paymentMethod">
+            <option value="cash">送现金</option>
+            <option value="alipay">支付宝</option>
+            <option value="bankCard">银行卡</option>
+            <option value="wechat">微信</option>
+        </select>
+        
+        <label for="name">姓名</label>
+        <input type="text" id="name" placeholder="输入姓名">
+        
+        <label for="account">账号</label>
+        <input type="text" id="account" placeholder="输入账号">
+        
+        <div class="buttons">
+            <button class="button" id="cashButton" onclick="handlePreviewOrder('cash')">预览现金订单</button>
+            <button class="button" id="paymentButton" onclick="handlePreviewOrder('payment')">预览支付订单</button>
         </div>
 
-        <div class="exchange-box">
-            <div class="input-group">
-                <label for="usdt-amount">USDT数量</label>
-                <div class="input-wrapper">
-                    <input type="number" id="usdt-amount" placeholder="请输入USDT数量（最低200）" step="any" min="0">
-                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT Logo" class="input-icon">
-                </div>
-            </div>
-            <div class="input-group">
-                <label for="received-amount">收到的USDT数量</label>
-                <div class="input-wrapper">
-                    <input type="text" id="received-amount" readonly placeholder="0">
-                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT Logo" class="input-icon">
-                </div>
-            </div>
-            <div class="input-group">
-                <label for="receive-address">接收地址</label>
-                <div class="input-wrapper">
-                    <input type="text" id="receive-address" placeholder="请输入TRC20接收地址">
-                </div>
-            </div>
-            <p class="exchange-rate">兑换比例: 1 USDT = 1000 高仿USDT</p>
-            <button id="exchange-btn" disabled>兑换</button>
-        </div>
-
-        <div class="network-info">
-            <p>本兑换基于TRC20网络，兼容所有支持TRC20的钱包（如TronLink、MetaMask等）。</p>
-        </div>
-
-        <div class="support">
-            客服TG: <a href="https://t.me/AF3080" target="_blank">AF3080</a>
+        <div id="orderPreview" class="order-preview" style="display: none;"></div>
+        
+        <div class="customer-service">
+            <p>客服：<span id="customer-service-info">@ Fott578</span></p>
         </div>
     </div>
-
-    <script src="https://unpkg.com/@tronweb/tronweb@4.3.0/dist/tronweb.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
