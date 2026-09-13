@@ -42,7 +42,7 @@ body {
 /* ==================== 头部 ==================== */
 header {
     text-align: center;
-    padding: 32px 24px 20px;
+    padding: 32px 24px 16px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
@@ -58,6 +58,17 @@ header h1 {
     font-size: 14px;
     opacity: 0.9;
     font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.security-badge {
+    display: inline-block;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    font-weight: 600;
 }
 
 /* ==================== 主要内容 ==================== */
@@ -240,6 +251,7 @@ header h1 {
     background: #e6f7ff;
     color: var(--primary-color);
     border: 1px solid #91d5ff;
+    animation: pulse 1.5s infinite;
 }
 
 .status-message.info {
@@ -248,32 +260,84 @@ header h1 {
     border: 1px solid #d6e4ff;
 }
 
-/* ==================== 按钮 ==================== */
+/* ==================== 安全提示 ==================== */
+.safety-tips {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+    border: 1px solid #ffc069;
+    border-radius: var(--border-radius);
+    padding: 14px 16px;
+}
+
+.tip-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d48806;
+    margin-bottom: 8px;
+}
+
+.tip-content {
+    font-size: 12px;
+    color: #b87803;
+    line-height: 1.6;
+}
+
+.tip-content p {
+    margin-bottom: 4px;
+}
+
+.tip-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* ==================== 按钮组 ==================== */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .approve-button,
 .revoke-button {
-    padding: 14px 24px;
-    font-size: 16px;
+    padding: 14px 20px;
+    font-size: 15px;
     font-weight: 600;
     border-radius: var(--border-radius);
     border: none;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 4px;
     width: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 .approve-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.approve-button:hover:not(:disabled) {
+.approve-batch {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+    box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
+}
+
+.approve-batch:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px rgba(82, 196, 26, 0.6);
+}
+
+.approve-precise {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    box-shadow: 0 4px 15px rgba(24, 144, 255, 0.4);
+}
+
+.approve-precise:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(24, 144, 255, 0.6);
 }
 
 .approve-button:active:not(:disabled) {
@@ -290,11 +354,27 @@ header h1 {
     box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
 }
 
+.button-icon {
+    font-size: 18px;
+}
+
+.button-text {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.button-info {
+    font-size: 11px;
+    opacity: 0.85;
+    font-weight: 500;
+}
+
 .revoke-button {
     background: #f5f5f5;
     color: #ff4d4f;
     border: 1px solid #ffccc7;
     margin-top: 8px;
+    font-size: 14px;
 }
 
 .revoke-button:hover:not(:disabled) {
@@ -305,14 +385,6 @@ header h1 {
 .revoke-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-}
-
-.button-icon {
-    font-size: 18px;
-}
-
-.button-text {
-    font-size: 16px;
 }
 
 /* ==================== 底部 ==================== */
@@ -338,7 +410,7 @@ footer p {
     }
     
     header {
-        padding: 24px 16px 16px;
+        padding: 24px 16px 14px;
     }
     
     header h1 {
@@ -382,6 +454,15 @@ footer p {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
     }
 }
 
