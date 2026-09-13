@@ -1,304 +1,346 @@
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 :root {
-    --primary-color: #1890ff;
-    --success-color: #52c41a;
-    --error-color: #ff4d4f;
-    --warning-color: #faad14;
-    --dark-bg: #0f1419;
-    --light-bg: #ffffff;
-    --border-radius: 16px;
-    --transition: all 0.3s ease;
+    --primary: #0052CC;
+    --success: #27AE60;
+    --danger: #E74C3C;
+    --warning: #F39C12;
+    --bg-light: #F8F9FA;
+    --bg-white: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-secondary: #666666;
+    --border-color: #E0E0E0;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #1a1a1a;
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.container {
-    max-width: 420px;
+html, body {
     width: 100%;
-    background: var(--light-bg);
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    height: 100%;
     overflow: hidden;
 }
 
-/* ==================== 头部 ==================== */
-header {
-    text-align: center;
-    padding: 32px 24px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-}
-
-.network {
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-primary);
     font-size: 14px;
-    opacity: 0.9;
-    font-weight: 500;
+    line-height: 1.5;
 }
 
-/* ==================== 主要内容 ==================== */
-.main {
-    flex: 1;
+/* ========== 状态栏 ========== */
+.status-bar {
+    height: 44px;
+    background: var(--bg-white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-bar .time {
+    color: var(--text-primary);
+}
+
+.status-icons {
+    display: flex;
+    gap: 4px;
+    font-size: 12px;
+}
+
+/* ========== 应用容器 ========== */
+.app-container {
+    width: 100%;
+    height: calc(100vh - 44px);
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 24px;
-    overflow-y: auto;
+    background: var(--bg-white);
 }
 
-/* ==================== 钱包状态 ==================== */
-.wallet-status {
+/* ========== 导航栏 ========== */
+.navbar {
+    height: 56px;
+    background: var(--bg-white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--primary);
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    background: #f0f5ff;
-    border-radius: var(--border-radius);
-    border: 1px solid #d6e4ff;
-    transition: var(--transition);
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
 }
 
-.wallet-status.connected {
-    background: #f6ffed;
-    border-color: #b7eb8f;
+.nav-btn:active {
+    background: rgba(0, 82, 204, 0.1);
 }
 
-.wallet-status.error {
-    background: #fff1f0;
-    border-color: #ffccc7;
+.nav-title {
+    font-size: 18px;
+    font-weight: 700;
+    flex: 1;
+    text-align: center;
 }
 
-.status-icon {
-    font-size: 28px;
+.nav-right {
+    width: 44px;
 }
 
-.status-text {
+/* ========== 内容区域 ========== */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background: #D0D0D0;
+    border-radius: 3px;
+}
+
+/* ========== 段落标题 ========== */
+.section-title {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========== 钱包卡片 ========== */
+.wallet-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 16px;
+}
+
+.wallet-icon {
+    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 82, 204, 0.1);
+    border-radius: 10px;
+}
+
+.wallet-info {
     flex: 1;
 }
 
-.status-label {
-    font-size: 12px;
-    color: #8c8c8c;
+.wallet-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
-.status-value {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a1a1a;
+.wallet-address {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: 'Monaco', 'Courier New', monospace;
     word-break: break-all;
-    font-family: 'Courier New', monospace;
 }
 
-.wallet-status.error .status-value {
-    color: var(--error-color);
+.wallet-balance {
+    text-align: right;
 }
 
-.wallet-status.connected .status-value {
-    color: var(--success-color);
-}
-
-/* ==================== 余额卡片 ==================== */
-.balance-card {
-    background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    border: 2px solid #ffc069;
-    text-align: center;
-}
-
-.balance-label {
-    font-size: 13px;
-    color: #d48806;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.balance-amount {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 8px;
-}
-
-.balance-amount span:first-child {
-    font-size: 36px;
-    font-weight: 800;
-    color: #d48806;
+.wallet-balance > div:first-child {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
 }
 
 .balance-unit {
-    font-size: 16px;
-    font-weight: 700;
-    color: #b87803;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
-/* ==================== 信息卡片 ==================== */
-.info-card {
-    background: linear-gradient(135deg, #f0f5ff 0%, #f9f0ff 100%);
-    border-radius: var(--border-radius);
-    padding: 16px;
-    border: 1px solid #d6e4ff;
-}
-
-.info-row {
+/* ========== 输入区域 ========== */
+.input-section {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    font-size: 13px;
     gap: 8px;
+    margin-bottom: 16px;
 }
 
-.info-row:last-child {
-    margin-bottom: 0;
-}
-
-.info-label {
-    color: #8c8c8c;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.info-value {
-    font-weight: 600;
-    color: #1a1a1a;
-    text-align: right;
-    word-break: break-all;
-}
-
-.address-value {
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    color: var(--primary-color);
-}
-
-.contract-value {
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    color: #666;
-}
-
-/* ==================== 输入卡片 ==================== */
-.input-card {
-    background: #fafafa;
-    border-radius: var(--border-radius);
-    padding: 16px;
-    border: 1px solid #f0f0f0;
-}
-
-.input-label {
-    display: block;
+.addr-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     font-size: 13px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 10px;
+    background: var(--bg-white);
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Courier New', monospace;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-.input-group {
+.addr-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+}
+
+.addr-input::-webkit-input-placeholder {
+    color: #CCC;
+}
+
+.paste-btn {
+    padding: 12px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.paste-btn:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+}
+
+/* ========== 金额区域 ========== */
+.amount-section {
+    margin-bottom: 16px;
+}
+
+.amount-input-wrapper {
     display: flex;
     align-items: center;
-    background: white;
-    border: 2px solid #d9d9d9;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-light);
     border-radius: 12px;
-    padding: 0 12px;
-    transition: var(--transition);
+    border: 2px solid transparent;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
 }
 
-.input-group:focus-within {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+.amount-input-wrapper:focus-within {
+    border-color: var(--primary);
 }
 
 .amount-input {
     flex: 1;
+    font-size: 28px;
+    font-weight: 700;
     border: none;
     background: transparent;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1a1a1a;
-    padding: 12px 0;
+    color: var(--text-primary);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.amount-input:focus {
     outline: none;
 }
 
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.amount-input[type=number] {
+    -moz-appearance: textfield;
+}
+
 .amount-input::placeholder {
-    color: #bfbfbf;
+    color: #DDD;
 }
 
-.input-unit {
-    font-size: 14px;
-    font-weight: 600;
-    color: #8c8c8c;
-    margin-left: 8px;
+.amount-unit {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-secondary);
 }
 
-/* ==================== 快速按钮 ==================== */
-.quick-buttons {
+/* ========== 快速金额按钮 ========== */
+.quick-amount-buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 8px;
 }
 
 .quick-btn {
     padding: 10px;
-    background: linear-gradient(135deg, #e6f7ff 0%, #e0f2f1 100%);
-    border: 1px solid #91d5ff;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary-color);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
     cursor: pointer;
-    transition: var(--transition);
-}
-
-.quick-btn:hover {
-    background: linear-gradient(135deg, #bae7ff 0%, #a8e6df 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+    transition: all 0.2s;
 }
 
 .quick-btn:active {
-    transform: translateY(0);
+    background: rgba(0, 82, 204, 0.1);
+    transform: scale(0.95);
 }
 
-/* ==================== 费用卡片 ==================== */
-.fee-card {
-    background: #fafafa;
-    border-radius: var(--border-radius);
-    padding: 14px;
-    border: 1px solid #f0f0f0;
+/* ========== 费用区域 ========== */
+.fee-section {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
 }
 
 .fee-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
 }
 
 .fee-row:last-child {
@@ -306,212 +348,192 @@ header h1 {
 }
 
 .fee-label {
-    color: #8c8c8c;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
 .fee-value {
+    color: var(--text-primary);
     font-weight: 600;
-    color: #1a1a1a;
-}
-
-.fee-amount {
-    color: var(--warning-color);
 }
 
 .fee-divider {
     height: 1px;
-    background: #e8e8e8;
-    margin: 8px 0;
+    background: var(--border-color);
+    margin: 12px 0;
 }
 
-.fee-row.total {
-    margin-top: 4px;
+.fee-row.total-row {
+    margin-bottom: 0;
 }
 
-.fee-row.total .fee-label {
+.fee-row.total-row .fee-label {
+    color: var(--text-primary);
     font-weight: 700;
-    color: #1a1a1a;
 }
 
-.total-amount {
-    font-size: 15px;
-    color: var(--success-color);
-    font-weight: 800;
+.total-value {
+    font-size: 16px;
+    color: var(--success);
+    font-weight: 700;
 }
 
-/* ==================== 警告消息 ==================== */
-.warning-message {
+/* ========== 警告框 ========== */
+.warning-box {
+    background: #FFF3CD;
+    border: 1px solid #FFE69C;
+    border-radius: 10px;
     padding: 12px 16px;
-    background: #fff1f0;
-    color: var(--error-color);
-    border: 1px solid #ffccc7;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-}
-
-/* ==================== 状态消息 ==================== */
-.status-message {
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 12px;
-    text-align: center;
-    min-height: 40px;
     display: flex;
+    gap: 12px;
     align-items: center;
-    justify-content: center;
-    word-break: break-word;
-    line-height: 1.6;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #856404;
 }
 
-.status-message.success {
-    background: #f6ffed;
-    color: var(--success-color);
-    border: 1px solid #b7eb8f;
-}
-
-.status-message.error {
-    background: #fff1f0;
-    color: var(--error-color);
-    border: 1px solid #ffccc7;
-}
-
-.status-message.loading {
-    background: #e6f7ff;
-    color: var(--primary-color);
-    border: 1px solid #91d5ff;
-    animation: pulse 1.5s infinite;
-}
-
-/* ==================== 安全提示 ==================== */
-.safety-notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 14px;
-    background: #f0f5ff;
-    border: 1px solid #d6e4ff;
-    border-radius: 12px;
-}
-
-.notice-icon {
+.warning-icon {
     font-size: 16px;
     flex-shrink: 0;
 }
 
-.notice-text {
-    font-size: 12px;
-    color: #0050b3;
-    line-height: 1.6;
+/* ========== 备注输入框 ========== */
+.remark-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    height: 80px;
+    background: var(--bg-white);
+    color: var(--text-primary);
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-/* ==================== 转账按钮 ==================== */
-.send-button {
-    padding: 16px 24px;
-    font-size: 17px;
-    font-weight: 700;
-    border-radius: var(--border-radius);
+.remark-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+}
+
+.remark-input::placeholder {
+    color: #CCC;
+}
+
+/* ========== 按钮区域 ========== */
+.button-area {
+    margin: 24px 0 16px;
+}
+
+.btn-confirm {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0041A3 100%);
+    color: white;
     border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: var(--transition);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    width: 100%;
-    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-    color: white;
-    box-shadow: 0 6px 20px rgba(82, 196, 26, 0.4);
-    margin-top: 8px;
+    gap: 8px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s;
 }
 
-.send-button:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(82, 196, 26, 0.6);
+.btn-confirm:active:not(:disabled) {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-sm);
 }
 
-.send-button:active:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-.send-button:disabled {
-    opacity: 0.6;
+.btn-confirm:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-.button-icon {
-    font-size: 20px;
+.btn-loading {
+    animation: spin 1s linear infinite;
 }
 
-.button-text {
-    font-size: 17px;
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
-/* ==================== 底部 ==================== */
-footer {
-    padding: 16px 24px;
-    background: #fafafa;
-    border-top: 1px solid #f0f0f0;
+/* ========== 安全提示 ========== */
+.security-notice {
     text-align: center;
-}
-
-footer p {
     font-size: 12px;
-    color: #8c8c8c;
+    color: var(--text-secondary);
+    padding: 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
     line-height: 1.6;
 }
 
-/* ==================== 响应式设计 ==================== */
-@media (max-width: 480px) {
-    .container {
-        border-radius: 16px;
-        min-height: auto;
-        max-height: 100vh;
-    }
-    
-    header {
-        padding: 24px 16px 16px;
-    }
-    
-    header h1 {
-        font-size: 28px;
-    }
-    
-    .main {
-        padding: 16px;
-        gap: 12px;
-    }
-    
-    .quick-buttons {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* ========== 加载动画 ========== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
-/* ==================== 滚动条美化 ==================== */
-.main::-webkit-scrollbar {
-    width: 4px;
+.loading-content {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
 }
 
-.main::-webkit-scrollbar-track {
-    background: transparent;
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
 }
 
-.main::-webkit-scrollbar-thumb {
-    background: #bfbfbf;
-    border-radius: 2px;
+#loadingText {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
 }
 
-.main::-webkit-scrollbar-thumb:hover {
-    background: #8c8c8c;
+/* ========== 模态框 ========== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end;
+    z-index: 999;
+    animation: slideUp 0.3s ease-out;
 }
 
-/* ==================== 动画 ==================== */
-@keyframes fadeIn {
+@keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(100px);
     }
     to {
         opacity: 1;
@@ -519,26 +541,164 @@ footer p {
     }
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
+.modal-content {
+    width: 100%;
+    background: var(--bg-white);
+    border-radius: 24px 24px 0 0;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+    padding: 24px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.success-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 12px;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 24px 16px;
+}
+
+.success-info {
+    font-size: 16px;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.tx-hash {
+    font-size: 12px;
+    color: var(--text-secondary);
+    word-break: break-all;
+    font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.confirm-body {
+    padding: 20px 16px;
+}
+
+.confirm-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.confirm-item:last-child {
+    border-bottom: none;
+}
+
+.confirm-item span:first-child {
+    color: var(--text-secondary);
+}
+
+.confirm-item strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.confirm-addr {
+    font-size: 11px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    color: var(--primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-all;
+}
+
+.modal-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+}
+
+.modal-footer.two-buttons {
+    justify-content: space-between;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn:not(.cancel):not(.confirm) {
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.modal-btn:not(.cancel):not(.confirm):active {
+    transform: scale(0.98);
+}
+
+.modal-btn.cancel {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-btn.cancel:active {
+    background: #E8E8E8;
+}
+
+.modal-btn.confirm {
+    background: var(--success);
+    color: white;
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.modal-btn.confirm:active {
+    transform: scale(0.98);
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 480px) {
+    .navbar {
+        height: 48px;
     }
-    50% {
-        opacity: 0.7;
+
+    .nav-title {
+        font-size: 16px;
     }
-}
 
-.main > * {
-    animation: fadeIn 0.4s ease-out;
-}
+    .wallet-card {
+        padding: 12px;
+    }
 
-/* ==================== 输入框数字调节 ==================== */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
+    .amount-input {
+        font-size: 24px;
+    }
 
-input[type="number"] {
-    -moz-appearance: textfield;
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
 }
