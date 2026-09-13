@@ -42,13 +42,13 @@ body {
 /* ==================== 头部 ==================== */
 header {
     text-align: center;
-    padding: 32px 24px 16px;
+    padding: 32px 24px 20px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
 
 header h1 {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     margin-bottom: 8px;
     letter-spacing: -0.5px;
@@ -58,17 +58,6 @@ header h1 {
     font-size: 14px;
     opacity: 0.9;
     font-weight: 500;
-    margin-bottom: 8px;
-}
-
-.security-badge {
-    display: inline-block;
-    font-size: 12px;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 4px 12px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    font-weight: 600;
 }
 
 /* ==================== 主要内容 ==================== */
@@ -76,7 +65,7 @@ header h1 {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     padding: 24px;
     overflow-y: auto;
 }
@@ -118,10 +107,11 @@ header h1 {
 }
 
 .status-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #1a1a1a;
     word-break: break-all;
+    font-family: 'Courier New', monospace;
 }
 
 .wallet-status.error .status-value {
@@ -132,20 +122,56 @@ header h1 {
     color: var(--success-color);
 }
 
+/* ==================== 余额卡片 ==================== */
+.balance-card {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    border: 2px solid #ffc069;
+    text-align: center;
+}
+
+.balance-label {
+    font-size: 13px;
+    color: #d48806;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.balance-amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+}
+
+.balance-amount span:first-child {
+    font-size: 36px;
+    font-weight: 800;
+    color: #d48806;
+}
+
+.balance-unit {
+    font-size: 16px;
+    font-weight: 700;
+    color: #b87803;
+}
+
 /* ==================== 信息卡片 ==================== */
 .info-card {
     background: linear-gradient(135deg, #f0f5ff 0%, #f9f0ff 100%);
     border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 16px;
     border: 1px solid #d6e4ff;
 }
 
 .info-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    font-size: 14px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-size: 13px;
+    gap: 8px;
 }
 
 .info-row:last-child {
@@ -154,85 +180,190 @@ header h1 {
 
 .info-label {
     color: #8c8c8c;
-    font-weight: 500;
+    font-weight: 600;
+    flex-shrink: 0;
 }
 
 .info-value {
     font-weight: 600;
     color: #1a1a1a;
-    max-width: 60%;
     text-align: right;
-    word-break: break-word;
-}
-
-.amount-value {
-    font-size: 16px;
-    color: var(--success-color);
+    word-break: break-all;
 }
 
 .address-value {
-    font-size: 12px;
+    font-size: 11px;
     font-family: 'Courier New', monospace;
     color: var(--primary-color);
 }
 
 .contract-value {
-    font-size: 12px;
+    font-size: 11px;
     font-family: 'Courier New', monospace;
     color: #666;
 }
 
-/* ==================== 授权额度 ==================== */
-.allowance-box {
+/* ==================== 输入卡片 ==================== */
+.input-card {
     background: #fafafa;
-    padding: 16px;
     border-radius: var(--border-radius);
+    padding: 16px;
     border: 1px solid #f0f0f0;
 }
 
-.allowance-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    margin-bottom: 12px;
+.input-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 10px;
 }
 
-.allowance-header span:first-child {
+.input-group {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #d9d9d9;
+    border-radius: 12px;
+    padding: 0 12px;
+    transition: var(--transition);
+}
+
+.input-group:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+.amount-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    padding: 12px 0;
+    outline: none;
+}
+
+.amount-input::placeholder {
+    color: #bfbfbf;
+}
+
+.input-unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8c8c8c;
+    margin-left: 8px;
+}
+
+/* ==================== 快速按钮 ==================== */
+.quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.quick-btn {
+    padding: 10px;
+    background: linear-gradient(135deg, #e6f7ff 0%, #e0f2f1 100%);
+    border: 1px solid #91d5ff;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quick-btn:hover {
+    background: linear-gradient(135deg, #bae7ff 0%, #a8e6df 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.quick-btn:active {
+    transform: translateY(0);
+}
+
+/* ==================== 费用卡片 ==================== */
+.fee-card {
+    background: #fafafa;
+    border-radius: var(--border-radius);
+    padding: 14px;
+    border: 1px solid #f0f0f0;
+}
+
+.fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.fee-row:last-child {
+    margin-bottom: 0;
+}
+
+.fee-label {
     color: #8c8c8c;
     font-weight: 500;
 }
 
-.allowance-amount {
-    color: var(--primary-color);
-    font-weight: 700;
+.fee-value {
+    font-weight: 600;
+    color: #1a1a1a;
 }
 
-.allowance-bar {
-    width: 100%;
-    height: 8px;
+.fee-amount {
+    color: var(--warning-color);
+}
+
+.fee-divider {
+    height: 1px;
     background: #e8e8e8;
-    border-radius: 10px;
-    overflow: hidden;
+    margin: 8px 0;
 }
 
-.allowance-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    transition: width 0.6s ease;
-    border-radius: 10px;
+.fee-row.total {
+    margin-top: 4px;
+}
+
+.fee-row.total .fee-label {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.total-amount {
+    font-size: 15px;
+    color: var(--success-color);
+    font-weight: 800;
+}
+
+/* ==================== 警告消息 ==================== */
+.warning-message {
+    padding: 12px 16px;
+    background: #fff1f0;
+    color: var(--error-color);
+    border: 1px solid #ffccc7;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
 }
 
 /* ==================== 状态消息 ==================== */
 .status-message {
     padding: 12px 16px;
     border-radius: 12px;
-    font-size: 13px;
+    font-size: 12px;
     text-align: center;
     min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     word-break: break-word;
+    line-height: 1.6;
 }
 
 .status-message.success {
@@ -254,137 +385,68 @@ header h1 {
     animation: pulse 1.5s infinite;
 }
 
-.status-message.info {
-    background: #f0f5ff;
-    color: var(--primary-color);
-    border: 1px solid #d6e4ff;
-}
-
 /* ==================== 安全提示 ==================== */
-.safety-tips {
-    background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
-    border: 1px solid #ffc069;
-    border-radius: var(--border-radius);
-    padding: 14px 16px;
+.safety-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #f0f5ff;
+    border: 1px solid #d6e4ff;
+    border-radius: 12px;
 }
 
-.tip-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #d48806;
-    margin-bottom: 8px;
+.notice-icon {
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
-.tip-content {
+.notice-text {
     font-size: 12px;
-    color: #b87803;
+    color: #0050b3;
     line-height: 1.6;
 }
 
-.tip-content p {
-    margin-bottom: 4px;
-}
-
-.tip-content p:last-child {
-    margin-bottom: 0;
-}
-
-/* ==================== 按钮组 ==================== */
-.button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.approve-button,
-.revoke-button {
-    padding: 14px 20px;
-    font-size: 15px;
-    font-weight: 600;
+/* ==================== 转账按钮 ==================== */
+.send-button {
+    padding: 16px 24px;
+    font-size: 17px;
+    font-weight: 700;
     border-radius: var(--border-radius);
     border: none;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 10px;
     width: 100%;
-    position: relative;
-    overflow: hidden;
-}
-
-.approve-button {
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.approve-batch {
     background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-    box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
+    color: white;
+    box-shadow: 0 6px 20px rgba(82, 196, 26, 0.4);
+    margin-top: 8px;
 }
 
-.approve-batch:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(82, 196, 26, 0.6);
+.send-button:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(82, 196, 26, 0.6);
 }
 
-.approve-precise {
-    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-    box-shadow: 0 4px 15px rgba(24, 144, 255, 0.4);
+.send-button:active:not(:disabled) {
+    transform: translateY(-1px);
 }
 
-.approve-precise:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(24, 144, 255, 0.6);
-}
-
-.approve-button:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.approve-button:disabled {
+.send-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-}
-
-.approve-button.approved {
-    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-    box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
 }
 
 .button-icon {
-    font-size: 18px;
+    font-size: 20px;
 }
 
 .button-text {
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.button-info {
-    font-size: 11px;
-    opacity: 0.85;
-    font-weight: 500;
-}
-
-.revoke-button {
-    background: #f5f5f5;
-    color: #ff4d4f;
-    border: 1px solid #ffccc7;
-    margin-top: 8px;
-    font-size: 14px;
-}
-
-.revoke-button:hover:not(:disabled) {
-    background: #fff1f0;
-    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);
-}
-
-.revoke-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    font-size: 17px;
 }
 
 /* ==================== 底部 ==================== */
@@ -410,11 +472,11 @@ footer p {
     }
     
     header {
-        padding: 24px 16px 14px;
+        padding: 24px 16px 16px;
     }
     
     header h1 {
-        font-size: 24px;
+        font-size: 28px;
     }
     
     .main {
@@ -422,8 +484,8 @@ footer p {
         gap: 12px;
     }
     
-    .info-value {
-        max-width: 55%;
+    .quick-buttons {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -468,4 +530,15 @@ footer p {
 
 .main > * {
     animation: fadeIn 0.4s ease-out;
+}
+
+/* ==================== 输入框数字调节 ==================== */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }
