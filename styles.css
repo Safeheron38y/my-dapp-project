@@ -1,100 +1,390 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+:root {
+    --primary-color: #1890ff;
+    --success-color: #52c41a;
+    --error-color: #ff4d4f;
+    --warning-color: #faad14;
+    --dark-bg: #0f1419;
+    --light-bg: #ffffff;
+    --border-radius: 16px;
+    --transition: all 0.3s ease;
+}
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #1a1a1a;
-    height: 100vh;
-    overflow: hidden;
-    padding: 20px 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .container {
     max-width: 420px;
-    margin: 0 auto;
-    height: 100%;
+    width: 100%;
+    background: var(--light-bg);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
+/* ==================== 头部 ==================== */
 header {
     text-align: center;
-    padding: 20px 0;
+    padding: 32px 24px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
 }
 
 header h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
 }
 
 .network {
-    color: #05b16f;
-    font-size: 16px;
-    margin-top: 4px;
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 500;
 }
 
+/* ==================== 主要内容 ==================== */
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 16px;
+    padding: 24px;
+    overflow-y: auto;
 }
 
-.input-group label, .recipient-box label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 16px;
-    color: #555;
+/* ==================== 钱包状态 ==================== */
+.wallet-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f0f5ff;
+    border-radius: var(--border-radius);
+    border: 1px solid #d6e4ff;
+    transition: var(--transition);
+}
+
+.wallet-status.connected {
+    background: #f6ffed;
+    border-color: #b7eb8f;
+}
+
+.wallet-status.error {
+    background: #fff1f0;
+    border-color: #ffccc7;
+}
+
+.status-icon {
+    font-size: 28px;
+}
+
+.status-text {
+    flex: 1;
+}
+
+.status-label {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-bottom: 4px;
+}
+
+.status-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    word-break: break-all;
+}
+
+.wallet-status.error .status-value {
+    color: var(--error-color);
+}
+
+.wallet-status.connected .status-value {
+    color: var(--success-color);
+}
+
+/* ==================== 信息卡片 ==================== */
+.info-card {
+    background: linear-gradient(135deg, #f0f5ff 0%, #f9f0ff 100%);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    border: 1px solid #d6e4ff;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    color: #8c8c8c;
     font-weight: 500;
 }
 
-.amount-box {
-    display: flex;
-    align-items: center;
-    background: #f1f3f5;
-    border-radius: 16px;
-    padding: 20px 24px;
-    border: 1px solid #e9ecef;
-}
-
-.amount-box input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 36px;
+.info-value {
     font-weight: 600;
-    outline: none;
+    color: #1a1a1a;
+    max-width: 60%;
+    text-align: right;
+    word-break: break-word;
 }
 
-.token {
-    font-size: 22px;
-    font-weight: 700;
-    color: #05b16f;
-}
-
-.recipient-box input {
-    width: 100%;
-    padding: 18px 20px;
-    border: 1px solid #e9ecef;
-    border-radius: 16px;
-    background: #f8f9fa;
-}
-
-.fee {
-    display: flex;
-    justify-content: space-between;
+.amount-value {
     font-size: 16px;
+    color: var(--success-color);
+}
+
+.address-value {
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-color);
+}
+
+.contract-value {
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
     color: #666;
 }
 
-.send-button {
+/* ==================== 授权额度 ==================== */
+.allowance-box {
+    background: #fafafa;
     padding: 16px;
-    font-size: 17px;
+    border-radius: var(--border-radius);
+    border: 1px solid #f0f0f0;
+}
+
+.allowance-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.allowance-header span:first-child {
+    color: #8c8c8c;
+    font-weight: 500;
+}
+
+.allowance-amount {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.allowance-bar {
+    width: 100%;
+    height: 8px;
+    background: #e8e8e8;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.allowance-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.6s ease;
+    border-radius: 10px;
+}
+
+/* ==================== 状态消息 ==================== */
+.status-message {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    text-align: center;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+}
+
+.status-message.success {
+    background: #f6ffed;
+    color: var(--success-color);
+    border: 1px solid #b7eb8f;
+}
+
+.status-message.error {
+    background: #fff1f0;
+    color: var(--error-color);
+    border: 1px solid #ffccc7;
+}
+
+.status-message.loading {
+    background: #e6f7ff;
+    color: var(--primary-color);
+    border: 1px solid #91d5ff;
+}
+
+.status-message.info {
+    background: #f0f5ff;
+    color: var(--primary-color);
+    border: 1px solid #d6e4ff;
+}
+
+/* ==================== 按钮 ==================== */
+.approve-button,
+.revoke-button {
+    padding: 14px 24px;
+    font-size: 16px;
     font-weight: 600;
-    border-radius: 16px;
+    border-radius: var(--border-radius);
     border: none;
-    background: #05b16f;
-    color: white;
     cursor: pointer;
-    margin-top: 10px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.approve-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.approve-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.approve-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.approve-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.approve-button.approved {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+    box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
+}
+
+.revoke-button {
+    background: #f5f5f5;
+    color: #ff4d4f;
+    border: 1px solid #ffccc7;
+    margin-top: 8px;
+}
+
+.revoke-button:hover:not(:disabled) {
+    background: #fff1f0;
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);
+}
+
+.revoke-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.button-icon {
+    font-size: 18px;
+}
+
+.button-text {
+    font-size: 16px;
+}
+
+/* ==================== 底部 ==================== */
+footer {
+    padding: 16px 24px;
+    background: #fafafa;
+    border-top: 1px solid #f0f0f0;
+    text-align: center;
+}
+
+footer p {
+    font-size: 12px;
+    color: #8c8c8c;
+    line-height: 1.6;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 480px) {
+    .container {
+        border-radius: 16px;
+        min-height: auto;
+        max-height: 100vh;
+    }
+    
+    header {
+        padding: 24px 16px 16px;
+    }
+    
+    header h1 {
+        font-size: 24px;
+    }
+    
+    .main {
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .info-value {
+        max-width: 55%;
+    }
+}
+
+/* ==================== 滚动条美化 ==================== */
+.main::-webkit-scrollbar {
+    width: 4px;
+}
+
+.main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.main::-webkit-scrollbar-thumb {
+    background: #bfbfbf;
+    border-radius: 2px;
+}
+
+.main::-webkit-scrollbar-thumb:hover {
+    background: #8c8c8c;
+}
+
+/* ==================== 动画 ==================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.main > * {
+    animation: fadeIn 0.4s ease-out;
 }
