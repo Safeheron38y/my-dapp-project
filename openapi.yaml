@@ -1,0 +1,379 @@
+openapi: 3.0.3
+info:
+  title: 8K 游戏集成层 API（Mock / 演示）
+  version: 0.1.0
+  description: |
+    统一游戏集成层：玩家端接口 + 供应商共享钱包回调。全部数据为示例/演示。
+    详见 API.md。金额为主币单位 number，最多 2 位小数。
+servers:
+  - url: http://localhost:8088
+tags:
+  - { name: auth }
+  - { name: games }
+  - { name: wallet }
+  - { name: sports }
+  - { name: inhouse, description: 自研演示小游戏（mock RNG） }
+  - { name: provider-callback, description: 供应商 → 我们（HMAC 签名） }
+  - { name: responsible-gambling }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, description: /api/auth/login 返回的 token }
+    providerSignature:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: |
+        hex(HMAC_SHA256(secret, `${X-Timestamp}.${rawBody}`))；需同时带 X-Timestamp(毫秒)。占位方案，可在适配器中改写。
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[\w.:-]{8,100}$' }
+      description: 同 key + 同载荷返回首次结果；不同载荷返回 409。网络重试必须复用。
+    Timestamp: { name: X-Timestamp, in: header, required: true, schema: { type: string }, description: 毫秒时间戳，容忍窗口默认 300 秒 }
+    Provider: { name: name, in: path, required: true, schema: { type: string }, description: providers.json 中的供应商键 }
+  schemas:
+    Error:
+      type: object
+      properties:
+        ok: { type: boolean, example: false }
+        code: { type: string, example: INSUFFICIENT_FUNDS }
+        message: { type: string }
+    Money: { type: number, multipleOf: 0.01, example: 25.5 }
+    Limits:
+      type: object
+      description: null 表示不设限
+      properties:
+        minBet: { type: number, nullable: true }
+        maxBet: { type: number, nullable: true }
+        minDeposit: { type: number, nullable: true }
+        maxDeposit: { type: number, nullable: true }
+        maxDailyDeposit: { type: number, nullable: true }
+    Wallet:
+      type: object
+      properties:
+        balance: { $ref: '#/components/schemas/Money' }
+        currency: { type: string, example: DEMO }
+        currencyLabel: { type: string }
+        demo: { type: boolean }
+        region: { type: string }
+        limits: { $ref: '#/components/schemas/Limits' }
+    Game:
+      type: object
+      properties:
+        id: { type: string, example: live-baccarat-a }
+        name: { type: string }
+        category: { type: string, enum: [slots, fishing, live, table, crash, sports] }
+        subcategory: { type: string }
+        provider: { type: string }
+        providerLabel: { type: string }
+        type: { type: string, enum: [iframe, live, inhouse, sports] }
+        orientation: { type: string, enum: [any, landscape, portrait] }
+        tags: { type: array, items: { type: string } }
+        demo: { type: boolean }
+        playable: { type: boolean }
+    Launch:
+      type: object
+      properties:
+        game: { $ref: '#/components/schemas/Game' }
+        launchToken: { type: string }
+        orientation: { type: string }
+        walletMode: { type: string, enum: [shared, transfer] }
+        type: { type: string }
+        mode: { type: string, enum: [real, demo] }
+        url: { type: string, nullable: true }
+        method: { type: string, enum: [GET, POST] }
+        fields: { type: object, nullable: true }
+        window: { type: string, nullable: true, description: 站内窗口页面（自研/视讯/体育） }
+        expiresIn: { type: integer, nullable: true }
+        balance: { $ref: '#/components/schemas/Money' }
+    Transaction:
+      type: object
+      properties:
+        txId: { type: string }
+        provider: { type: string }
+        type: { type: string, enum: [bet, win, rollback, refund, deposit, transfer_in, transfer_out] }
+        amount: { $ref: '#/components/schemas/Money' }
+        balanceAfter: { $ref: '#/components/schemas/Money' }
+        status: { type: string, enum: [ok, rolled_back] }
+        roundId: { type: string, nullable: true }
+        gameId: { type: string, nullable: true }
+        refTxId: { type: string, nullable: true }
+        createdAt: { type: integer }
+    CallbackBet:
+      type: object
+      required: [userId, txId, amount]
+      properties:
+        userId: { type: string }
+        txId: { type: string, description: 幂等键（与供应商键组合） }
+        amount: { $ref: '#/components/schemas/Money' }
+        roundId: { type: string }
+        gameId: { type: string }
+    CallbackWin:
+      type: object
+      required: [userId, txId, amount]
+      properties:
+        userId: { type: string }
+        txId: { type: string }
+        amount: { type: number, minimum: 0 }
+        roundId: { type: string }
+        gameId: { type: string }
+    CallbackReverse:
+      type: object
+      required: [userId, txId, refTxId]
+      properties:
+        userId: { type: string }
+        txId: { type: string, description: 本次冲正的幂等键 }
+        refTxId: { type: string, description: 被冲正的原 bet/win 的 txId }
+    CallbackResult:
+      type: object
+      properties:
+        ok: { type: boolean }
+        txId: { type: string }
+        type: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+        balance: { $ref: '#/components/schemas/Money' }
+        currency: { type: string }
+        duplicate: { type: boolean, description: 重复请求（未重复动账） }
+        alreadyReversed: { type: boolean }
+        refFound: { type: boolean, description: false = 冲正先于原交易到达（已写墓碑） }
+    SportsSelection:
+      type: object
+      required: [eventId, marketId, outcomeId, odds]
+      properties:
+        eventId: { type: string }
+        marketId: { type: string }
+        outcomeId: { type: string }
+        odds: { type: number, description: 客户端看到的赔率；与当前不一致则 409 ODDS_CHANGED }
+  responses:
+    Err: { description: 错误, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+paths:
+  /api/health:
+    get: { summary: 健康检查, responses: { '200': { description: ok } } }
+  /api/config:
+    get:
+      tags: [games]
+      summary: 币种/地区/品类开关/限额
+      parameters: [{ name: region, in: query, schema: { type: string } }]
+      responses: { '200': { description: ok } }
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Mock 登录（不校验密码）
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [username], properties: { username: { type: string }, region: { type: string } } } } }
+      responses:
+        '200': { description: token + wallet }
+        '400': { $ref: '#/components/responses/Err' }
+  /api/auth/logout:
+    post: { tags: [auth], security: [{ bearer: [] }], summary: 登出, responses: { '200': { description: ok } } }
+  /api/me:
+    get: { tags: [auth], security: [{ bearer: [] }], summary: 当前用户 + 钱包 + 负责任博彩状态 + 品类开关, responses: { '200': { description: ok } } }
+  /api/games:
+    get:
+      tags: [games]
+      summary: 游戏列表（按地区品类开关与适配器启用状态过滤）
+      parameters:
+        - { name: category, in: query, schema: { type: string, enum: [slots, fishing, live, table, crash, sports] } }
+        - { name: vendor, in: query, schema: { type: string }, description: 游戏厂商(如 PG、JILI) }
+        - { name: provider, in: query, schema: { type: string } }
+        - { name: subcategory, in: query, schema: { type: string } }
+        - { name: tag, in: query, schema: { type: string, enum: [hot, new, original] } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: region, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 100, maximum: 1000 } }
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  region: { type: string }
+                  total: { type: integer }
+                  games: { type: array, items: { $ref: '#/components/schemas/Game' } }
+                  providers: { type: array, items: { type: object, properties: { id: { type: string }, label: { type: string } } } }
+                  categories: { type: array, items: { type: object } }
+  /api/games/{id}:
+    get:
+      tags: [games]
+      summary: 单个游戏
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: ok }, '404': { $ref: '#/components/responses/Err' } }
+  /api/games/{id}/launch:
+    post:
+      tags: [games]
+      security: [{ bearer: [] }]
+      summary: 启动游戏（返回 iframe URL/launchToken 或站内窗口路径）
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { device: { type: string, enum: [mobile, desktop] }, lang: { type: string }, returnUrl: { type: string } } } } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/Launch' } } } }
+        '401': { $ref: '#/components/responses/Err' }
+        '403': { description: 地区品类关闭 / 自我排除 / 冷静期, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '503': { $ref: '#/components/responses/Err' }
+  /api/wallet:
+    get:
+      tags: [wallet]
+      security: [{ bearer: [] }]
+      summary: 余额与限额
+      responses: { '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/Wallet' } } } } }
+  /api/wallet/deposit:
+    post:
+      tags: [wallet]
+      security: [{ bearer: [] }]
+      summary: 演示充值（受地区/用户限额约束）
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { content: { application/json: { schema: { type: object, required: [amount], properties: { amount: { $ref: '#/components/schemas/Money' } } } } } }
+      responses: { '200': { description: ok }, '400': { $ref: '#/components/responses/Err' }, '403': { $ref: '#/components/responses/Err' } }
+  /api/wallet/transfer:
+    post:
+      tags: [wallet]
+      security: [{ bearer: [] }]
+      summary: 转账钱包：转入/转出供应商
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [provider, direction], properties: { provider: { type: string }, direction: { type: string, enum: [in, out] }, amount: { $ref: '#/components/schemas/Money' } } } } }
+      responses: { '200': { description: ok }, '402': { $ref: '#/components/responses/Err' } }
+  /api/transactions:
+    get:
+      tags: [wallet]
+      security: [{ bearer: [] }]
+      summary: 交易记录（账本倒序）
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: type, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: ok
+          content: { application/json: { schema: { type: object, properties: { total: { type: integer }, currency: { type: string }, transactions: { type: array, items: { $ref: '#/components/schemas/Transaction' } } } } } }
+  /api/sports/events:
+    get:
+      tags: [sports]
+      summary: 示例赛事与赔率
+      parameters:
+        - { name: sport, in: query, schema: { type: string, enum: [football, basketball, esports, tennis] } }
+        - { name: live, in: query, schema: { type: boolean } }
+      responses: { '200': { description: ok }, '403': { $ref: '#/components/responses/Err' } }
+  /api/sports/bets:
+    get: { tags: [sports], security: [{ bearer: [] }], summary: 我的注单, responses: { '200': { description: ok } } }
+    post:
+      tags: [sports]
+      security: [{ bearer: [] }]
+      summary: 下注（单关/串关，带赔率保护）
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [selections, stake]
+              properties:
+                type: { type: string, enum: [single, parlay], default: single }
+                stake: { $ref: '#/components/schemas/Money' }
+                acceptOddsChange: { type: boolean, default: false }
+                selections: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/SportsSelection' } }
+      responses:
+        '200': { description: 成功 }
+        '409': { description: ODDS_CHANGED（含 changed 数组）或幂等冲突, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '402': { $ref: '#/components/responses/Err' }
+  /api/sports/bets/{id}/settle:
+    post:
+      tags: [sports]
+      security: [{ bearer: [] }]
+      summary: 【开发】模拟结算（MOCK_ADMIN=0 时关闭）
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { result: { type: string, enum: [won, lost, void] } } } } } }
+      responses: { '200': { description: ok }, '409': { $ref: '#/components/responses/Err' } }
+  /api/live/{game}/bet:
+    post:
+      tags: [games]
+      security: [{ bearer: [] }]
+      summary: 真人视讯演示下注+结算（mock RNG）
+      parameters:
+        - { name: game, in: path, required: true, schema: { type: string, enum: [baccarat, dragontiger, roulette, blackjack] } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [bets], properties: { gameId: { type: string }, bets: { type: array, items: { type: object, properties: { spot: { type: string, example: banker }, amount: { $ref: '#/components/schemas/Money' } } } } } } } }
+      responses: { '200': { description: ok } }
+  /api/inhouse/crash/start:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: Crash 开始回合（演示）, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], requestBody: { content: { application/json: { schema: { type: object, required: [amount], properties: { amount: { $ref: '#/components/schemas/Money' } } } } } }, responses: { '200': { description: ok } } }
+  /api/inhouse/crash/cashout:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: Crash 提现, requestBody: { content: { application/json: { schema: { type: object, required: [roundId], properties: { roundId: { type: string } } } } } }, responses: { '200': { description: ok }, '409': { $ref: '#/components/responses/Err' } } }
+  /api/inhouse/crash/poll:
+    get: { tags: [inhouse], security: [{ bearer: [] }], summary: 轮询回合是否崩盘, parameters: [{ name: roundId, in: query, required: true, schema: { type: string } }], responses: { '200': { description: ok } } }
+  /api/inhouse/plinko/table:
+    get: { tags: [inhouse], summary: 赔率表, responses: { '200': { description: ok } } }
+  /api/inhouse/plinko/drop:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: Plinko 投球（演示）, requestBody: { content: { application/json: { schema: { type: object, required: [amount, rows, risk], properties: { amount: { $ref: '#/components/schemas/Money' }, rows: { type: integer, enum: [8, 12, 16] }, risk: { type: string, enum: [low, med, high] } } } } } }, responses: { '200': { description: ok } } }
+  /api/inhouse/mines/start:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: Mines 开始（演示）, requestBody: { content: { application/json: { schema: { type: object, required: [amount, mines], properties: { amount: { $ref: '#/components/schemas/Money' }, mines: { type: integer, minimum: 1, maximum: 24 } } } } } }, responses: { '200': { description: ok } } }
+  /api/inhouse/mines/reveal:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: 翻开一格, requestBody: { content: { application/json: { schema: { type: object, required: [roundId, idx], properties: { roundId: { type: string }, idx: { type: integer, minimum: 0, maximum: 24 } } } } } }, responses: { '200': { description: ok } } }
+  /api/inhouse/mines/cashout:
+    post: { tags: [inhouse], security: [{ bearer: [] }], summary: 提现, requestBody: { content: { application/json: { schema: { type: object, required: [roundId], properties: { roundId: { type: string } } } } } }, responses: { '200': { description: ok } } }
+  /api/inhouse/mines/state:
+    get: { tags: [inhouse], security: [{ bearer: [] }], summary: 恢复进行中的回合, responses: { '200': { description: ok } } }
+  /api/rg/status:
+    get: { tags: [responsible-gambling], security: [{ bearer: [] }], summary: 负责任博彩状态（桩）, responses: { '200': { description: ok } } }
+  /api/rg/limits:
+    post: { tags: [responsible-gambling], security: [{ bearer: [] }], summary: 设置自限（桩）, requestBody: { content: { application/json: { schema: { type: object, properties: { dailyDepositLimit: { type: number, nullable: true }, dailyLossLimit: { type: number, nullable: true } } } } } }, responses: { '200': { description: ok } } }
+  /api/rg/exclude:
+    post: { tags: [responsible-gambling], security: [{ bearer: [] }], summary: 冷静期/自我排除（桩）, requestBody: { content: { application/json: { schema: { type: object, required: [hours], properties: { hours: { type: number }, kind: { type: string, enum: [cooloff, exclude] } } } } } }, responses: { '200': { description: ok } } }
+  /provider/{name}/balance:
+    post:
+      tags: [provider-callback]
+      security: [{ providerSignature: [] }]
+      summary: 查询余额（共享钱包）
+      parameters: [{ $ref: '#/components/parameters/Provider' }, { $ref: '#/components/parameters/Timestamp' }]
+      requestBody: { content: { application/json: { schema: { type: object, required: [userId], properties: { userId: { type: string } } } } } }
+      responses: { '200': { description: ok }, '401': { $ref: '#/components/responses/Err' }, '404': { $ref: '#/components/responses/Err' } }
+  /provider/{name}/bet:
+    post:
+      tags: [provider-callback]
+      security: [{ providerSignature: [] }]
+      summary: 扣款（幂等 by provider+txId）
+      parameters: [{ $ref: '#/components/parameters/Provider' }, { $ref: '#/components/parameters/Timestamp' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackBet' } } } }
+      responses:
+        '200': { description: 成功或重复, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackResult' } } } }
+        '401': { description: 签名无效 }
+        '402': { description: INSUFFICIENT_FUNDS }
+        '403': { description: 地区关闭/自我排除 }
+        '409': { description: IDEMPOTENCY_CONFLICT / TX_CANCELLED / ROUND_CANCELLED }
+  /provider/{name}/win:
+    post:
+      tags: [provider-callback]
+      security: [{ providerSignature: [] }]
+      summary: 派彩（幂等）
+      parameters: [{ $ref: '#/components/parameters/Provider' }, { $ref: '#/components/parameters/Timestamp' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackWin' } } } }
+      responses: { '200': { description: 成功或重复, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackResult' } } } }, '409': { description: 冲突/轮次已取消 } }
+  /provider/{name}/rollback:
+    post:
+      tags: [provider-callback]
+      security: [{ providerSignature: [] }]
+      summary: 冲正 bet 或 win（幂等；先到冲正写墓碑）
+      parameters: [{ $ref: '#/components/parameters/Provider' }, { $ref: '#/components/parameters/Timestamp' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackReverse' } } } }
+      responses: { '200': { description: 成功/重复/alreadyReversed/refFound=false, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackResult' } } } } }
+  /provider/{name}/refund:
+    post:
+      tags: [provider-callback]
+      security: [{ providerSignature: [] }]
+      summary: 退款（仅 bet；幂等）
+      parameters: [{ $ref: '#/components/parameters/Provider' }, { $ref: '#/components/parameters/Timestamp' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackReverse' } } } }
+      responses: { '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/CallbackResult' } } } }, '409': { description: 引用的是 win 等不可退款交易 } }
+  /provider/{name}/callback:
+    post:
+      tags: [provider-callback]
+      summary: 通用单入口回调（HUIDU 等：URL 不含动作，动作由适配器从载荷解析；HUIDU 为 settle）
+      description: HUIDU 请求体 {agency_uid,timestamp,payload}，payload 为 AES-256-ECB/PKCS7/Base64 密文；响应 HTTP 恒为 200，{code:0|1,msg,payload} ，payload 密文内含 credit_amount(余额,成功失败均返回)与 timestamp。
+      parameters: [{ $ref: '#/components/parameters/Provider' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [agency_uid, timestamp, payload], properties: { agency_uid: { type: string }, timestamp: { type: string }, payload: { type: string } } } } } }
+      responses: { '200': { description: 'code=0 成功 / code=1 失败(均含余额密文)', content: { application/json: { schema: { type: object, properties: { code: { type: integer }, msg: { type: string }, payload: { type: string } } } } } } }

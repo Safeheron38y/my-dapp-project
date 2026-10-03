@@ -1,0 +1,23 @@
+# deps / envs
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+# logs
+*.log
+logs/
+# runtime data (admin/player JSON persistence)
+data/
+.data/
+# big generated screenshots (admin screenshots are kept under docs/screenshots/)
+shots/*.png
+shots/*.jpg
+shots/*.webp
+# misc
+.DS_Store
+*.pem
+*.key

@@ -1,0 +1,12 @@
+{
+  "name": "8k-platform-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "8K 游戏集成层 Mock API（零依赖，Node >= 20）",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test/run.js"
+  }
+}

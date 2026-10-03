@@ -1,0 +1,373 @@
+'use strict';
+/**
+ * 8K 游戏集成层 Mock API 服务器（Node >= 20，零依赖）
+ * 启动： PORT=8088 node server/index.js
+ */
+const http = require('http');
+const crypto = require('crypto');
+const config = require('./lib/config');
+const H = require('./lib/http');
+const store = require('./lib/store');
+const geo = require('./lib/geo');
+const rg = require('./lib/rg');
+const wallet = require('./lib/wallet');
+const sports = require('./lib/sports');
+const live = require('./lib/live');
+const inhouse = require('./lib/inhouse');
+const search = require('./lib/search');
+const sign = require('./lib/sign');
+const { toMinor } = require('./lib/money');
+const adapters = require('./adapters');
+const { WalletError } = wallet;
+
+const SESSION_TTL = 12 * 3600 * 1000;
+const LAUNCH_TTL = 4 * 3600 * 1000;
+const cur = config.regions.currency;
+
+// ---------- 工具 ----------
+const bad = (code, msg, http = 400, extra) => new WalletError(code, msg, http, extra);
+function requireUser(ctx) {
+  const m = /^Bearer\s+(\S+)$/.exec(ctx.req.headers.authorization || '');
+  const s = m && store.sessions.get(m[1]);
+  if (!s || s.exp < Date.now()) throw bad('UNAUTHORIZED', '未登录或会话已过期', 401);
+  ctx.token = m[1];
+  return (ctx.user = store.users.get(s.userId));
+}
+function amountOf(v) { const m = toMinor(v); if (m == null || m <= 0) throw bad('INVALID_AMOUNT', '金额必须大于 0，最多两位小数'); return m; }
+function gameOf(id) {
+  const g = config.catalog.games.find((x) => x.id === id);
+  if (!g) throw bad('GAME_NOT_FOUND', '游戏不存在', 404);
+  return g;
+}
+// 对外游戏对象：去掉内部/冗余扩展字段(providerGameId、币种/语言/地区备注、数据来源)，补 vendor/providerLabel/demo。
+const INTERNAL = ['providerGameId', 'currencies', 'languages', 'regionNotes', 'source', 'extras'];
+function pubGame(g, region) {
+  const p = config.providers[g.provider] || {}, ad = adapters.get(g.provider);
+  const o = Object.assign({}, g);
+  for (const k of INTERNAL) delete o[k];
+  return Object.assign(o, { vendor: g.vendor || p.label || g.provider, providerLabel: p.label || g.provider, demo: !!(g.demo || (ad && ad.isDemo && ad.isDemo())), playable: geo.categoryEnabled(region, g.category) && !!ad });
+}
+function walletOut(u) {
+  return { balance: u.balance / 100, currency: cur.code, currencyLabel: cur.label, demo: true, region: u.region, limits: geo.limitsFor(u.region) };
+}
+function clientIp(req) { return req.socket.remoteAddress; } // 反向代理后请改读受信任的 X-Forwarded-For
+
+// 客户端 Idempotency-Key：同一用户+key+路径+载荷 → 返回首次响应
+function withIdem(ctx, fn) {
+  const key = ctx.req.headers['idempotency-key'];
+  if (!key) return fn();
+  if (!/^[\w.:\-]{8,100}$/.test(key)) throw bad('INVALID_IDEMPOTENCY_KEY', 'Idempotency-Key 需 8-100 位字母数字或 . : _ -');
+  const k = `${ctx.user.id}:${ctx.path}:${key}`;
+  const h = crypto.createHash('sha256').update(ctx.raw || '').digest('hex');
+  const ex = store.clientIdem.get(k);
+  if (ex) { if (ex.hash !== h) throw bad('IDEMPOTENCY_CONFLICT', 'Idempotency-Key 已用于不同请求', 409); return Object.assign({}, ex.res, { idempotentReplay: true }); }
+  const res = fn();
+  store.clientIdem.set(k, { hash: h, res });
+  if (store.clientIdem.size > 20000) store.clientIdem.delete(store.clientIdem.keys().next().value);
+  return res;
+}
+
+// ---------- 路由 ----------
+const routes = []; // [method, regex, keys, handler]
+function route(method, pattern, handler) {
+  const keys = [];
+  const re = new RegExp('^' + pattern.replace(/:([a-z]+)/gi, (_, k) => { keys.push(k); return '([^/]+)'; }) + '$');
+  routes.push([method, re, keys, handler]);
+}
+
+route('GET', '/api/health', () => ({ ok: true, time: Date.now(), env: 'mock', providers: adapters.names() }));
+
+route('GET', '/api/config', (ctx) => {
+  const region = geo.resolveRegion(ctx.query.get('region') || ctx.req.headers['x-region']);
+  return { currency: cur, region, categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: geo.categoryEnabled(region, id) }, c)), limits: geo.limitsFor(region), ageGate: geo.regionCfg(region).ageGate, regions: Object.entries(config.regions.regions).map(([id, r]) => ({ id, label: r.label })), demo: true };
+});
+
+route('POST', '/api/auth/login', (ctx) => {
+  // ⚠ MOCK：不校验密码，任何用户名即可登录。生产请接入真实账号体系 + KYC + 2FA。
+  const name = String(ctx.body.username || '').trim();
+  if (!/^[\w\u4e00-\u9fa5\-]{2,32}$/.test(name)) throw bad('INVALID_USERNAME', '用户名 2-32 位(字母数字汉字 _ -)');
+  const region = geo.resolveRegion(ctx.body.region || ctx.req.headers['x-region']);
+  let u = store.users.get(store.byName.get(name));
+  if (!u) u = store.createUser(name, region); else u.region = region; // mock：允许演示时切换地区
+  const token = 'tk_' + crypto.randomBytes(24).toString('hex');
+  store.sessions.set(token, { userId: u.id, exp: Date.now() + SESSION_TTL });
+  rg.state(u.id).sessionStart = Date.now();
+  return { token, expiresIn: SESSION_TTL / 1000, user: { id: u.id, username: u.username, region: u.region }, wallet: walletOut(u), mock: true };
+});
+route('POST', '/api/auth/logout', (ctx) => { requireUser(ctx); store.sessions.delete(ctx.token); return { ok: true }; });
+route('GET', '/api/me', (ctx) => { const u = requireUser(ctx); return { user: { id: u.id, username: u.username, region: u.region }, wallet: walletOut(u), rg: rg.status(u.id), categories: geo.categoriesFor(u.region) }; });
+
+route('GET', '/api/games', (ctx) => {
+  const region = ctx.query.get('region') || ctx.req.headers['x-region'];
+  const r = geo.resolveRegion(region);
+  const q = (ctx.query.get('q') || '').trim();
+  const cat = ctx.query.get('category'), prov = ctx.query.get('provider'), tag = ctx.query.get('tag'), sub = ctx.query.get('subcategory'), vendor = ctx.query.get('vendor');
+  const enabled = geo.categoriesFor(r);
+  const vendorOf = (g) => g.vendor || (config.providers[g.provider] || {}).label || g.provider;
+  let list = config.catalog.games.filter((g) => enabled[g.category] && adapters.get(g.provider));
+  if (cat) list = list.filter((g) => g.category === cat);
+  if (prov) list = list.filter((g) => g.provider === prov);
+  if (vendor) list = list.filter((g) => vendorOf(g) === vendor);
+  if (sub) list = list.filter((g) => g.subcategory === sub);
+  if (tag) list = list.filter((g) => g.tags.includes(tag));
+  if (q) list = list.filter((g) => search.matches(g, q, (config.catalog.categories[g.category] || {}).label));
+  const total = list.length;
+  const limit = Math.min(Math.max(parseInt(ctx.query.get('limit'), 10) || 100, 1), 1000);
+  const page = Math.max(parseInt(ctx.query.get('page'), 10) || 1, 1);
+  list = list.slice((page - 1) * limit, page * limit);
+  const provs = {};
+  for (const g of config.catalog.games) if (enabled[g.category] && (!cat || g.category === cat) && adapters.get(g.provider)) provs[g.provider] = config.providers[g.provider].label;
+  return { region: r, total, page, limit, games: list.map((g) => pubGame(g, r)), providers: Object.entries(provs).map(([id, label]) => ({ id, label })), categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: !!enabled[id] }, c)), aliases: search.ALIASES, demo: true };
+});
+route('GET', '/api/games/:id', (ctx) => { const u = ctx.optUser(); const g = gameOf(ctx.params.id); return { game: pubGame(g, u ? u.region : ctx.query.get('region')) }; });
+
+route('GET', '/api/wallet', (ctx) => walletOut(requireUser(ctx)));
+route('POST', '/api/wallet/deposit', (ctx) => {
+  // 演示充值：真实环境由支付通道(出入金)异步回调入账，并需 KYC/风控。
+  const u = requireUser(ctx);
+  const r = wallet.deposit({ userId: u.id, amountMinor: amountOf(ctx.body.amount), txId: ctx.req.headers['idempotency-key'] || 'dep_' + crypto.randomBytes(8).toString('hex') });
+  return Object.assign({ ok: true }, r.view);
+});
+route('GET', '/api/transactions', (ctx) => {
+  const u = requireUser(ctx);
+  const limit = Math.min(Math.max(parseInt(ctx.query.get('limit'), 10) || 50, 1), 200);
+  const type = ctx.query.get('type');
+  let list = store.ledgerOf(u.id).filter((e) => e.type !== 'cancelled' && (!type || e.type === type));
+  const total = list.length;
+  list = list.slice().reverse().slice(0, limit).map((e) => ({ txId: e.txId, provider: e.provider, type: e.type, amount: e.amount / 100, bet: e.bet != null ? e.bet / 100 : undefined, win: e.win != null ? e.win / 100 : undefined, balanceAfter: e.balanceAfter / 100, status: e.status, roundId: e.roundId || null, gameId: e.gameId || null, refTxId: e.refTxId || null, createdAt: e.createdAt, demo: true }));
+  return { total, transactions: list, currency: cur.code };
+});
+
+route('POST', '/api/games/:id/launch', async (ctx) => {
+  const u = requireUser(ctx);
+  const g = gameOf(ctx.params.id);
+  if (!geo.categoryEnabled(u.region, g.category)) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放该品类', 403);
+  const ad = adapters.get(g.provider);
+  if (!ad) throw bad('PROVIDER_UNAVAILABLE', '供应商未启用', 503);
+  const blk = rg.beforeBet(u.id, 0, {}); if (blk) throw bad(blk.code, blk.message, 403);
+  const launchToken = 'lt_' + crypto.randomBytes(18).toString('hex');
+  store.launches.set(launchToken, { userId: u.id, gameId: g.id, provider: g.provider, exp: Date.now() + LAUNCH_TTL });
+  const base = config.env.publicBase || `${ctx.req.headers['x-forwarded-proto'] || 'http'}://${ctx.req.headers.host}`;
+  let out;
+  if (g.type === 'inhouse' || g.type === 'live' || g.type === 'sports') {
+    // 自研/演示窗口：由前端内置页面渲染，不需要 iframe URL
+    out = { mode: 'demo', type: g.type, url: null, window: g.type === 'inhouse' ? `/games/${g.key}.html` : g.type === 'live' ? `/live.html?game=${g.key}&id=${g.id}` : '/sports.html' };
+    if (g.type === 'live') out.url = null;
+  } else {
+    const r = await ad.launch({ user: u, game: g, device: ctx.body.device || 'mobile', lang: ctx.body.lang || 'zh-CN', currency: cur.code, launchToken, returnUrl: ctx.body.returnUrl || base + '/', callbackBase: `${base}/provider/${g.provider}`, publicBase: config.env.publicBase, demo: true, transferAmountMinor: ctx.body.transferAmount != null ? amountOf(ctx.body.transferAmount) : null });
+    out = { type: 'iframe', mode: r.mode, url: r.url, method: r.method || 'GET', fields: r.fields || null, expiresIn: r.expiresIn || null };
+    if (r.providerBalance != null) out.providerBalance = r.providerBalance;
+  }
+  return Object.assign({ game: pubGame(g, u.region), launchToken, orientation: g.orientation, walletMode: ad.walletMode, balance: u.balance / 100, currency: cur.code, allowedOrigins: [] }, out);
+});
+
+// ---- 自研演示游戏 ----
+const inh = (fn) => (ctx) => { const u = requireUser(ctx); return withIdem(ctx, () => fn(u, ctx.body, ctx)); };
+route('POST', '/api/inhouse/crash/start', inh((u, b) => inhouse.crashStart(u.id, amountOf(b.amount))));
+route('POST', '/api/inhouse/crash/cashout', inh((u, b) => inhouse.crashCash(u.id, b.roundId)));
+route('GET', '/api/inhouse/crash/poll', (ctx) => inhouse.crashPoll(requireUser(ctx).id, ctx.query.get('roundId')));
+route('GET', '/api/inhouse/plinko/table', () => ({ table: inhouse.plinkoTable(), demo: true }));
+route('POST', '/api/inhouse/plinko/drop', inh((u, b) => inhouse.plinkoDrop(u.id, amountOf(b.amount), b.rows, b.risk)));
+route('POST', '/api/inhouse/mines/start', inh((u, b) => inhouse.minesStart(u.id, amountOf(b.amount), b.mines)));
+route('POST', '/api/inhouse/mines/reveal', inh((u, b) => inhouse.minesReveal(u.id, b.roundId, b.idx)));
+route('POST', '/api/inhouse/mines/cashout', inh((u, b) => inhouse.minesCash(u.id, b.roundId)));
+route('GET', '/api/inhouse/mines/state', (ctx) => inhouse.minesState(requireUser(ctx).id));
+
+// ---- 真人视讯(演示结算) ----
+route('POST', '/api/live/:game/bet', (ctx) => {
+  const u = requireUser(ctx);
+  const g = config.catalog.games.find((x) => x.id === ctx.body.gameId) || null;
+  if (g && g.category !== 'live') throw bad('INVALID_GAME', '不是视讯游戏');
+  const bets = (ctx.body.bets || []).map((b) => ({ spot: String(b.spot), amountMinor: amountOf(b.amount) }));
+  return withIdem(ctx, () => live.play(u, { gameId: g ? g.id : 'live-' + ctx.params.game, game: ctx.params.game, bets, provider: g ? g.provider : 'demo_live_a' }));
+});
+
+// ---- 体育 ----
+route('GET', '/api/sports/events', (ctx) => { const u = ctx.optUser(); const region = u ? u.region : ctx.req.headers['x-region']; if (!geo.categoryEnabled(geo.resolveRegion(region), 'sports')) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放体育', 403); return { events: sports.listEvents({ sport: ctx.query.get('sport') || undefined, live: ctx.query.get('live') || undefined }), serverTime: Date.now(), demo: true }; });
+route('POST', '/api/sports/bets', (ctx) => {
+  const u = requireUser(ctx);
+  if (!geo.categoryEnabled(u.region, 'sports')) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放体育', 403);
+  const key = ctx.req.headers['idempotency-key'];
+  return sports.placeBet(u, { selections: ctx.body.selections, stakeMinor: amountOf(ctx.body.stake), type: ctx.body.type, acceptOddsChange: !!ctx.body.acceptOddsChange, clientKey: key && /^[\w.:\-]{8,90}$/.test(key) ? u.id + '-' + key : undefined });
+});
+route('GET', '/api/sports/bets', (ctx) => ({ bets: sports.listBets(requireUser(ctx).id) }));
+route('POST', '/api/sports/bets/:id/settle', (ctx) => { // 开发用，MOCK_ADMIN=0 关闭
+  if (!config.env.mockAdmin) throw bad('NOT_FOUND', '未找到', 404);
+  const u = requireUser(ctx);
+  const b = store.sportsBets.get(ctx.params.id); if (!b || b.userId !== u.id) throw bad('BET_NOT_FOUND', '注单不存在', 404);
+  return sports.settle(ctx.params.id, ctx.body.result);
+});
+
+// ---- 负责任博彩(桩) ----
+route('GET', '/api/rg/status', (ctx) => rg.status(requireUser(ctx).id));
+route('POST', '/api/rg/limits', (ctx) => {
+  const u = requireUser(ctx), d = {};
+  if (ctx.body.dailyDepositLimit !== undefined) d.dailyDepositLimitMinor = ctx.body.dailyDepositLimit === null ? null : amountOf(ctx.body.dailyDepositLimit);
+  if (ctx.body.dailyLossLimit !== undefined) d.dailyLossLimitMinor = ctx.body.dailyLossLimit === null ? null : amountOf(ctx.body.dailyLossLimit);
+  rg.setLimits(u.id, d); return rg.status(u.id);
+});
+route('POST', '/api/rg/exclude', (ctx) => {
+  const u = requireUser(ctx); const hrs = Number(ctx.body.hours);
+  if (!(hrs > 0 && hrs <= 24 * 365)) throw bad('INVALID_PARAMS', 'hours 取 (0, 8760]');
+  rg.selfExclude(u.id, hrs, ctx.body.kind === 'cooloff' ? 'cooloff' : 'exclude'); return rg.status(u.id);
+});
+
+// ---- 转账钱包 ----
+route('POST', '/api/wallet/transfer', async (ctx) => {
+  const u = requireUser(ctx);
+  const name = String(ctx.body.provider || ''); const ad = adapters.get(name);
+  if (!ad || ad.walletMode !== 'transfer') throw bad('NOT_TRANSFER_PROVIDER', '该供应商不是转账钱包模式');
+  const txId = ctx.req.headers['idempotency-key'] || 'tr_' + crypto.randomBytes(8).toString('hex');
+  if (ctx.body.direction === 'in') { const r = await ad.transferIn({ user: u, amountMinor: amountOf(ctx.body.amount), txId }); return { ok: true, balance: u.balance / 100, providerBalance: r.providerBalance }; }
+  const r = await ad.transferOut({ user: u, amountMinor: ctx.body.amount == null ? null : amountOf(ctx.body.amount), txId });
+  return { ok: true, balance: u.balance / 100, transferred: (r.amountMinor || 0) / 100 };
+});
+
+// ---------- 供应商回调(共享钱包) ----------
+// 两种入口：
+//   1) /provider/:name/{balance|bet|win|rollback|refund}   —— 每个 action 一个 URL（模板适配器）
+//   2) /provider/:name/callback                            —— 单一回调 URL，无 action（如 HUIDU）；action 由 adapter.resolveAction(req) 决定
+// 可选适配器钩子：decodeCallback(req)(信封解密) · verifyCallback · resolveAction · formatDecodeError/formatAuthError ·
+//   formatError(action, err, {userId, balance})（失败也要带余额的供应商，如 HUIDU）。
+const CB = ['balance', 'bet', 'win', 'rollback', 'refund'];
+async function providerCallback(ctx, name, action) {
+  const ad = adapters.get(name);
+  if (!ad) return { status: 404, body: { ok: false, code: 'UNKNOWN_PROVIDER' } };
+  const cfg = config.providers[name];
+  if (cfg.ipAllowlist && cfg.ipAllowlist.length && !cfg.ipAllowlist.includes(clientIp(ctx.req))) return { status: 403, body: { ok: false, code: 'IP_NOT_ALLOWED' } };
+  if (action && Array.isArray(ad.callbackActions) && !ad.callbackActions.includes(action)) return { status: 404, body: { ok: false, code: 'NO_SUCH_CALLBACK', message: '该供应商不使用该回调路径' } };
+  if (!action && typeof ad.resolveAction !== 'function') return { status: 404, body: { ok: false, code: 'NO_GENERIC_CALLBACK', message: '该供应商没有通用回调入口' } };
+  const req = { headers: ctx.req.headers, rawBody: ctx.raw, query: Object.fromEntries(ctx.query), body: ctx.body, action, ip: clientIp(ctx.req) };
+  if (typeof ad.decodeCallback === 'function') {
+    const d = ad.decodeCallback(req);
+    if (!d.ok) { console.warn(`[provider:${name}] 回调解码失败 ${d.reason}`); return ad.formatDecodeError ? ad.formatDecodeError(d.reason) : { status: 400, body: { ok: false, code: 'INVALID_PAYLOAD', message: d.reason } }; }
+    req.body = d.body; req.envelope = d.envelope;
+  }
+  if (config.env.signatureMode !== 'off') {
+    const v = ad.verifyCallback(req);
+    if (!v.ok) {
+      console.warn(`[provider:${name}] 签名校验失败 ${v.reason} ${action || 'callback'}`);
+      if (config.env.signatureMode === 'enforce') return ad.formatAuthError ? ad.formatAuthError(v.reason) : { status: 401, body: { ok: false, code: 'INVALID_SIGNATURE', message: v.reason } };
+    }
+  }
+  if (!action) action = ad.resolveAction(req);
+  const info = { userId: null, balance: null };
+  const bal = () => { const u = info.userId && store.users.get(info.userId); return u ? u.balance / 100 : null; };
+  try {
+    if (ad.walletMode !== 'shared') throw bad('WALLET_MODE_MISMATCH', '该供应商为转账钱包模式，不支持共享钱包回调', 409);
+    const p = ad.parseCallback(action, { body: req.body, query: ctx.query, headers: ctx.req.headers }, info);
+    let userId = p.userId;
+    if (!userId && req.body.token) { const l = store.launches.get(req.body.token); if (l && l.exp > Date.now() && l.provider === name) userId = l.userId; }
+    info.userId = info.userId || userId;
+    if (!userId) throw bad('PLAYER_NOT_FOUND', '缺少玩家标识', 404);
+    const base = { provider: name, userId, txId: p.txId, roundId: p.roundId, gameId: p.gameId, category: p.category };
+    if (!base.category && p.gameId) { const g = config.catalog.games.find((x) => x.id === p.gameId); if (g) base.category = g.category; }
+    let result;
+    if (action === 'balance') { if (!store.users.get(userId)) throw bad('PLAYER_NOT_FOUND', '玩家不存在', 404); result = wallet.balance(userId); }
+    else if (action === 'settle') {
+      const bm = Number.isSafeInteger(p.betMinor) ? p.betMinor : toMinor(p.bet), wm = Number.isSafeInteger(p.winMinor) ? p.winMinor : toMinor(p.win);
+      if (bm == null || wm == null) throw bad('INVALID_AMOUNT', '金额无效');
+      result = wallet.settle(Object.assign(base, { betMinor: bm, winMinor: wm })).view;
+    }
+    else if (action === 'bet') result = wallet.bet(Object.assign(base, { amountMinor: amountOf(p.amount) })).view;
+    else if (action === 'win') { const m = toMinor(p.amount); if (m == null) throw bad('INVALID_AMOUNT', '金额无效'); result = wallet.win(Object.assign(base, { amountMinor: m, refTxId: p.refTxId })).view; }
+    else if (action === 'rollback' || action === 'refund') result = wallet[action](Object.assign(base, { refTxId: p.refTxId })).view;
+    else throw bad('UNKNOWN_ACTION', '未知回调动作', 404);
+    return ad.formatResponse(action, result);
+  } catch (e) {
+    info.balance = bal();
+    if (e instanceof WalletError) return ad.formatError(action, e, info);
+    if (typeof ad.decodeCallback === 'function') { console.error(`[provider:${name}] 回调内部错误`, e); return ad.formatError(action, new WalletError('INTERNAL_ERROR', '内部错误', 500), info); } // 加密型供应商：HTTP 恒 200，code=1 + 余额
+    throw e;
+  }
+}
+for (const a of CB) route('POST', `/provider/:name/${a}`, (ctx) => providerCallback(ctx, ctx.params.name, a));
+route('POST', '/provider/:name/callback', (ctx) => providerCallback(ctx, ctx.params.name, null));
+
+// ---- 开发辅助：模拟“供应商服务器”向自己回调(带签名)，供演示 iframe 游戏使用 ----
+async function mockProviderCall(name, action, payload) {
+  const cfg = config.providers[name];
+  const raw = JSON.stringify(payload), ts = String(Date.now());
+  const port = server.address().port;
+  const r = await fetch(`http://127.0.0.1:${port}/provider/${name}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Timestamp': ts, 'X-Signature': sign.sign(cfg.secret, ts, raw), 'X-Api-Key': cfg.apiKey }, body: raw });
+  return { status: r.status, body: await r.json() };
+}
+route('POST', '/api/mock/provider-spin', async (ctx) => { // 演示 iframe 老虎机：用 launchToken 作为身份
+  if (!config.env.mockAdmin) throw bad('NOT_FOUND', '未找到', 404);
+  const l = store.launches.get(ctx.body.token);
+  if (!l || l.exp < Date.now()) throw bad('INVALID_LAUNCH_TOKEN', '启动令牌无效或已过期', 401);
+  const amount = amountOf(ctx.body.amount);
+  const id = 'rd_' + crypto.randomBytes(6).toString('hex');
+  const g = config.catalog.games.find((x) => x.id === l.gameId);
+  const common = { userId: l.userId, roundId: id, gameId: l.gameId, category: g.category };
+  const b = await mockProviderCall(l.provider, 'bet', Object.assign({ txId: id + ':bet', amount }, common));
+  if (b.status !== 200) return { status: b.status, body: b.body };
+  const sym = ['🍒', '🍋', '🔔', '⭐', '7', '💎'];
+  const reels = [0, 0, 0].map(() => crypto.randomInt(0, sym.length));
+  const mult = reels[0] === reels[1] && reels[1] === reels[2] ? 10 : reels[0] === reels[1] || reels[1] === reels[2] ? 1.5 : 0;
+  const winAmt = Math.floor(amount * mult) / 100;
+  let balance = b.body.balance;
+  if (winAmt > 0) { const w = await mockProviderCall(l.provider, 'win', Object.assign({ txId: id + ':win', amount: winAmt }, common)); balance = w.body.balance; }
+  return { reels: reels.map((i) => sym[i]), win: winAmt, balance, roundId: id, demo: true };
+});
+
+route('POST', '/api/mock/huidu-spin', async (ctx) => { // 演示 iframe（模拟器模式）：模拟器以 HUIDU 的身份向本平台发加密回调
+  if (!config.env.mockAdmin) throw bad('NOT_FOUND', '未找到', 404);
+  const name = String(ctx.body.provider || 'huidu_seamless'); const ad = adapters.get(name);
+  if (!ad || typeof ad.simPlay !== 'function' || !ad.isDemo()) throw bad('NOT_SIMULATOR', '该供应商不在模拟器模式', 400);
+  const r = await ad.simPlay(String(ctx.body.session || ''), +amountOf(ctx.body.amount) / 100);
+  if (!r.ok) return { status: r.code === 10025 || (r.raw && r.raw.msg === 'INSUFFICIENT_FUNDS') ? 402 : 400, body: { ok: false, code: (r.raw && r.raw.msg) || r.msg || 'FAILED', message: '下注失败', balance: r.balance } };
+  return { reels: r.reels, win: r.win, balance: r.balance, roundId: r.round, demo: true };
+});
+
+// ---------- HTTP 服务器 ----------
+const server = http.createServer(async (req, res) => {
+  const t0 = Date.now();
+  H.securityHeaders(res); H.cors(req, res);
+  const url = new URL(req.url, 'http://x');
+  const pathname = url.pathname;
+  const isApi = pathname.startsWith('/api/') || pathname.startsWith('/provider/');
+  try {
+    if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    if (!isApi) {
+      if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
+      return H.serveStatic(req, res, pathname);
+    }
+    if (!H.rateLimit(clientIp(req), pathname.startsWith('/provider/') ? 'p' : 'g', pathname.startsWith('/provider/') ? (Number(process.env.PROVIDER_RATE_LIMIT_PER_MIN) || 6000) : 600, 60000)) return H.json(res, 429, { ok: false, code: 'RATE_LIMITED', message: '请求过于频繁' });
+    if (pathname === '/api/auth/login' && !H.rateLimit(clientIp(req), 'login', Number(process.env.LOGIN_RATE_LIMIT_PER_MIN) || 30, 60000)) return H.json(res, 429, { ok: false, code: 'RATE_LIMITED', message: '登录尝试过多' });
+    let hit = null, params = {};
+    for (const [m, re, keys, h] of routes) {
+      if (m !== req.method) continue;
+      const mm = re.exec(pathname);
+      if (mm) { hit = h; keys.forEach((k, i) => (params[k] = decodeURIComponent(mm[i + 1]))); break; }
+    }
+    if (!hit) {
+      const pathMatch = routes.some(([, re]) => re.test(pathname));
+      return H.json(res, pathMatch ? 405 : 404, { ok: false, code: pathMatch ? 'METHOD_NOT_ALLOWED' : 'NOT_FOUND', message: pathMatch ? '方法不允许' : '接口不存在' });
+    }
+    let raw = '', body = {};
+    if (req.method === 'POST') {
+      raw = await H.readBody(req);
+      if (raw) { try { body = JSON.parse(raw); } catch { return /^\/provider\/[^/]+\/callback$/.test(pathname) ? H.json(res, 200, { code: 1, msg: 'payload error' }) : H.json(res, 400, { ok: false, code: 'INVALID_JSON', message: '请求体不是合法 JSON' }); } }
+      if (body === null || typeof body !== 'object' || Array.isArray(body)) return H.json(res, 400, { ok: false, code: 'INVALID_JSON', message: '请求体必须是 JSON 对象' });
+    }
+    const ctx = { req, res, path: pathname, query: url.searchParams, params, body, raw, optUser() { try { return requireUser(ctx); } catch { return null; } } };
+    const out = await hit(ctx);
+    if (out && typeof out.status === 'number' && out.body) return H.json(res, out.status, out.body);
+    return H.json(res, 200, out);
+  } catch (e) {
+    if (e instanceof WalletError || e.http) return H.json(res, e.http || 400, Object.assign({ ok: false, code: e.code || 'ERROR', message: e.message }, e.extra || {}));
+    console.error('[error]', req.method, pathname, e);
+    return H.json(res, 500, { ok: false, code: 'INTERNAL_ERROR', message: '服务器内部错误' });
+  } finally {
+    if (process.env.ACCESS_LOG === '1') console.log(req.method, pathname, res.statusCode, Date.now() - t0 + 'ms');
+  }
+});
+server.keepAliveTimeout = 65000;
+
+if (require.main === module) {
+  server.listen(config.env.port, config.env.host, () => {
+    console.log(`8K mock API + 前端: http://localhost:${server.address().port}  (signatureMode=${config.env.signatureMode}, adapters=${adapters.names().join(',')})`);
+  });
+}
+module.exports = { server };

@@ -1,0 +1,50 @@
+[
+ {
+  "engine": "chromium",
+  "vp": "m390",
+  "overflowPx": 0,
+  "offenders": [],
+  "smallTargets": 0,
+  "smallDetail": [],
+  "errors": [],
+  "dotAfterDotClick": 2,
+  "ctaTab": "slots",
+  "ctaCount": "80 款"
+ },
+ {
+  "engine": "chromium",
+  "vp": "d1280",
+  "overflowPx": 0,
+  "offenders": [],
+  "smallTargets": 0,
+  "smallDetail": [],
+  "errors": [],
+  "dotAfterDotClick": 2,
+  "ctaTab": "slots",
+  "ctaCount": "80 款"
+ },
+ {
+  "engine": "webkit",
+  "vp": "m390",
+  "overflowPx": 0,
+  "offenders": [],
+  "smallTargets": 0,
+  "smallDetail": [],
+  "errors": [],
+  "dotAfterDotClick": 2,
+  "ctaTab": "slots",
+  "ctaCount": "80 款"
+ },
+ {
+  "engine": "webkit",
+  "vp": "d1280",
+  "overflowPx": 0,
+  "offenders": [],
+  "smallTargets": 0,
+  "smallDetail": [],
+  "errors": [],
+  "dotAfterDotClick": 2,
+  "ctaTab": "slots",
+  "ctaCount": "80 款"
+ }
+]

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HUIDU 模拟器游戏（演示）</title>
+<link rel="stylesheet" href="/css/tokens.css"><link rel="stylesheet" href="/css/app.css">
+<script src="/js/boot.js"></script></head>
+<body style="padding:0;background:#150c38;color:#fff;min-height:100vh">
+<div class="sl" id="app">
+  <div style="text-align:center"><span class="demo-tag">演示 · HUIDU 本地模拟器</span>
+  <p style="font-size:12px;color:rgba(255,255,255,.8);margin-top:8px;max-width:24em">这是 iframe 内的模拟游戏：下注/派彩由 HUIDU 模拟器以 AES-256-ECB 加密的 settle 回调（单一回调 URL，bet+win 合并，serial_number 幂等）写入本平台账本。接入真实 HUIDU 后此页不再出现。</p></div>
+  <div class="reels" id="reels" aria-live="polite"><div class="reel">7</div><div class="reel">7</div><div class="reel">7</div></div>
+  <div style="width:min(320px,86vw)">
+    <div class="stake"><button id="m" type="button" aria-label="减少">−</button><input class="field" id="amt" inputmode="decimal" value="5" aria-label="投注额"><button id="p" type="button" aria-label="增加">+</button></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-foil btn-lg" id="spin" type="button">旋转</button>
+    <p id="res" class="gm" style="padding:8px 0 0;text-align:center;font-size:14px;min-height:30px;color:#F7D3C4"></p>
+  </div>
+</div>
+<script src="/demo/huidu-game.js"></script>
+</body></html>

@@ -1,0 +1,138 @@
+{
+  "_comment": "供应商配置。${VAR} 或 ${VAR:-默认值} 会在启动时从环境变量替换。所有 baseUrl/key/secret 均为占位，真实值请放入环境变量或密钥管理系统，切勿提交到仓库。 HUIDU：一个代理账号只能用一种钱包模式(10024)。huidu_seamless 的模式由 HUIDU_WALLET_MODE(shared|transfer) 选择，默认 shared；若同时要两种模式，需要向 HUIDU 申请两个代理账号并启用 huidu_transfer(HUIDU_TRANSFER_* 环境变量)。HUIDU_SIMULATOR=auto：凭据不全时自动使用本地模拟器(离线演示/测试)，on 强制模拟器，off 禁用(凭据不全则启动游戏报 PROVIDER_NOT_CONFIGURED)。",
+  "providers": {
+    "inhouse": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "8K 自研（演示）",
+      "walletMode": "shared",
+      "baseUrl": "${INHOUSE_BASE_URL:-http://localhost:8080}",
+      "apiKey": "${INHOUSE_API_KEY:-dev-inhouse-key}",
+      "secret": "${INHOUSE_SECRET:-dev-inhouse-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_live_a": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例视讯 A",
+      "walletMode": "shared",
+      "baseUrl": "${DEMO_LIVE_A_BASE_URL:-https://provider-a.example.invalid}",
+      "apiKey": "${DEMO_LIVE_A_API_KEY:-dev-live-a-key}",
+      "secret": "${DEMO_LIVE_A_SECRET:-dev-live-a-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_live_b": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例视讯 B",
+      "walletMode": "shared",
+      "baseUrl": "${DEMO_LIVE_B_BASE_URL:-https://provider-b.example.invalid}",
+      "apiKey": "${DEMO_LIVE_B_API_KEY:-dev-live-b-key}",
+      "secret": "${DEMO_LIVE_B_SECRET:-dev-live-b-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_slot_a": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例电子 A",
+      "walletMode": "shared",
+      "baseUrl": "${DEMO_SLOT_A_BASE_URL:-https://slots-a.example.invalid}",
+      "apiKey": "${DEMO_SLOT_A_API_KEY:-dev-slot-a-key}",
+      "secret": "${DEMO_SLOT_A_SECRET:-dev-slot-a-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_slot_b": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例电子 B",
+      "walletMode": "shared",
+      "baseUrl": "${DEMO_SLOT_B_BASE_URL:-https://slots-b.example.invalid}",
+      "apiKey": "${DEMO_SLOT_B_API_KEY:-dev-slot-b-key}",
+      "secret": "${DEMO_SLOT_B_SECRET:-dev-slot-b-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_table_a": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例棋牌 A",
+      "walletMode": "shared",
+      "baseUrl": "${DEMO_TABLE_A_BASE_URL:-https://table-a.example.invalid}",
+      "apiKey": "${DEMO_TABLE_A_API_KEY:-dev-table-a-key}",
+      "secret": "${DEMO_TABLE_A_SECRET:-dev-table-a-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "demo_transfer": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "示例转账钱包供应商",
+      "walletMode": "transfer",
+      "hidden": true,
+      "baseUrl": "${DEMO_TRANSFER_BASE_URL:-https://transfer.example.invalid}",
+      "apiKey": "${DEMO_TRANSFER_API_KEY:-dev-transfer-key}",
+      "secret": "${DEMO_TRANSFER_SECRET:-dev-transfer-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "sportsbook": {
+      "enabled": true,
+      "adapter": "mock",
+      "label": "体育博彩（演示）",
+      "walletMode": "shared",
+      "hidden": true,
+      "baseUrl": "${SPORTS_BASE_URL:-https://sports.example.invalid}",
+      "apiKey": "${SPORTS_API_KEY:-dev-sports-key}",
+      "secret": "${SPORTS_SECRET:-dev-sports-secret}",
+      "currency": "DEMO",
+      "ipAllowlist": []
+    },
+    "your_real_provider": {
+      "enabled": false,
+      "adapter": "_template",
+      "label": "（占位）真实供应商",
+      "walletMode": "shared",
+      "hidden": true,
+      "baseUrl": "${REAL_PROVIDER_BASE_URL:-}",
+      "apiKey": "${REAL_PROVIDER_API_KEY:-}",
+      "secret": "${REAL_PROVIDER_SECRET:-}",
+      "currency": "${REAL_PROVIDER_CURRENCY:-CNY}",
+      "ipAllowlist": []
+    },
+    "huidu_seamless": {
+      "enabled": true,
+      "adapter": "huidu",
+      "label": "HUIDU 聚合",
+      "walletMode": "${HUIDU_WALLET_MODE:-shared}",
+      "baseUrl": "${HUIDU_BASE_URL:-}",
+      "apiKey": "${HUIDU_AGENCY_UID:-}",
+      "secret": "${HUIDU_AES_KEY:-}",
+      "currency": "${HUIDU_CURRENCY:-USD}",
+      "aliasPrefix": "${HUIDU_ALIAS_PREFIX:-k8}",
+      "simulator": "${HUIDU_SIMULATOR:-auto}",
+      "autoTransfer": "${HUIDU_AUTO_TRANSFER:-all}",
+      "timeoutMs": 10000, "tsToleranceSec": "${HUIDU_TS_TOLERANCE_SEC:-86400}",
+      "ipAllowlist": []
+    },
+    "huidu_transfer": {
+      "enabled": false,
+      "adapter": "huidu",
+      "label": "HUIDU 聚合（转账钱包）",
+      "walletMode": "transfer",
+      "hidden": true,
+      "baseUrl": "${HUIDU_TRANSFER_BASE_URL:-}",
+      "apiKey": "${HUIDU_TRANSFER_AGENCY_UID:-}",
+      "secret": "${HUIDU_TRANSFER_AES_KEY:-}",
+      "currency": "${HUIDU_CURRENCY:-USD}",
+      "aliasPrefix": "${HUIDU_ALIAS_PREFIX:-k8}",
+      "simulator": "${HUIDU_SIMULATOR:-auto}",
+      "autoTransfer": "${HUIDU_AUTO_TRANSFER:-all}",
+      "timeoutMs": 10000, "tsToleranceSec": "${HUIDU_TS_TOLERANCE_SEC:-86400}",
+      "ipAllowlist": []
+    }
+  }
+}

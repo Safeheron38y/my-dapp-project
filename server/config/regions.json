@@ -1,0 +1,16 @@
+{
+  "_comment": "地区配置。本平台默认【全部地区、全部品类开放，不做地区过滤，不设固定投注/充值限额】：只有 default 一个地区，所有 limits 为 null（= 不设上限/下限）。geo.js 的开关机制保留（可按需新增地区并把某品类设为 false 关闭，或设置 limits），但默认不启用；平台不含任何“按国家过滤游戏”的逻辑——合规与上游供应商的地区限制（见 games.huidu-shortlist.json 的 regionNotes）由运营方自行确认。",
+  "defaultRegion": "default",
+  "currency": { "code": "DEMO", "label": "演示币", "symbol": "演示币 ", "decimals": 2 },
+  "startingBalance": 1000,
+  "regions": {
+    "default": {
+      "label": "全部地区（不限）",
+      "categories": { "slots": true, "fishing": true, "live": true, "table": true, "crash": true, "sports": true },
+      "limits": { "minBet": null, "maxBet": null, "minDeposit": null, "maxDeposit": null, "maxDailyDeposit": null },
+      "categoryLimits": {},
+      "realityCheckMinutes": null,
+      "ageGate": 18
+    }
+  }
+}

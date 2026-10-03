@@ -1,0 +1,258 @@
+{
+ "_comment": "基础目录：自研 Crash/Plinko/Mines 演示 + 真人视讯/体育演示外壳。电子/棋牌/捕鱼等由 games.huidu-shortlist.json 合并加载(见 lib/config.js)。接入更多供应商后可由 adapter.listGames() 同步。",
+ "categories": {
+  "slots": {
+   "label": "老虎机",
+   "en": "SLOTS"
+  },
+  "fishing": {
+   "label": "捕鱼",
+   "en": "FISHING"
+  },
+  "live": {
+   "label": "真人视讯",
+   "en": "LIVE"
+  },
+  "table": {
+   "label": "桌面游戏",
+   "en": "TABLE"
+  },
+  "crash": {
+   "label": "快节奏小游戏",
+   "en": "INSTANT"
+  },
+  "sports": {
+   "label": "体育博彩",
+   "en": "SPORTS"
+  }
+ },
+ "games": [
+  {
+   "id": "live-baccarat-a",
+   "name": "百家乐 · 示例厅 A",
+   "category": "live",
+   "subcategory": "baccarat",
+   "provider": "demo_live_a",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "hot",
+    "live"
+   ],
+   "demo": true,
+   "key": "baccarat"
+  },
+  {
+   "id": "live-blackjack-a",
+   "name": "二十一点 · 示例厅 A",
+   "category": "live",
+   "subcategory": "blackjack",
+   "provider": "demo_live_a",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "blackjack"
+  },
+  {
+   "id": "live-roulette-a",
+   "name": "轮盘 · 示例厅 A",
+   "category": "live",
+   "subcategory": "roulette",
+   "provider": "demo_live_a",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "roulette"
+  },
+  {
+   "id": "live-dragontiger-a",
+   "name": "龙虎 · 示例厅 A",
+   "category": "live",
+   "subcategory": "dragontiger",
+   "provider": "demo_live_a",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "dragontiger"
+  },
+  {
+   "id": "live-baccarat-b",
+   "name": "百家乐 · 示例厅 B",
+   "category": "live",
+   "subcategory": "baccarat",
+   "provider": "demo_live_b",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "baccarat"
+  },
+  {
+   "id": "live-blackjack-b",
+   "name": "二十一点 · 示例厅 B",
+   "category": "live",
+   "subcategory": "blackjack",
+   "provider": "demo_live_b",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "blackjack"
+  },
+  {
+   "id": "live-roulette-b",
+   "name": "轮盘 · 示例厅 B",
+   "category": "live",
+   "subcategory": "roulette",
+   "provider": "demo_live_b",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "roulette"
+  },
+  {
+   "id": "live-dragontiger-b",
+   "name": "龙虎 · 示例厅 B",
+   "category": "live",
+   "subcategory": "dragontiger",
+   "provider": "demo_live_b",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "live"
+   ],
+   "demo": true,
+   "key": "dragontiger"
+  },
+  {
+   "id": "live-baccarat-vip",
+   "name": "百家乐 · 示例贵宾厅",
+   "category": "live",
+   "subcategory": "baccarat",
+   "provider": "demo_live_b",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "new",
+    "live"
+   ],
+   "demo": true,
+   "key": "baccarat"
+  },
+  {
+   "id": "live-roulette-fast",
+   "name": "极速轮盘 · 示例",
+   "category": "live",
+   "subcategory": "roulette",
+   "provider": "demo_live_a",
+   "type": "live",
+   "orientation": "any",
+   "tags": [
+    "new",
+    "live"
+   ],
+   "demo": true,
+   "key": "roulette"
+  },
+  {
+   "id": "crash",
+   "name": "Crash 火箭",
+   "category": "crash",
+   "subcategory": "crash",
+   "provider": "inhouse",
+   "type": "inhouse",
+   "orientation": "any",
+   "tags": [
+    "hot",
+    "original"
+   ],
+   "demo": true,
+   "key": "crash"
+  },
+  {
+   "id": "plinko",
+   "name": "Plinko 弹珠",
+   "category": "crash",
+   "subcategory": "plinko",
+   "provider": "inhouse",
+   "type": "inhouse",
+   "orientation": "any",
+   "tags": [
+    "original"
+   ],
+   "demo": true,
+   "key": "plinko"
+  },
+  {
+   "id": "mines",
+   "name": "Mines 扫雷",
+   "category": "crash",
+   "subcategory": "mines",
+   "provider": "inhouse",
+   "type": "inhouse",
+   "orientation": "any",
+   "tags": [
+    "original",
+    "new"
+   ],
+   "demo": true,
+   "key": "mines"
+  },
+  {
+   "id": "sports-football",
+   "name": "足球滚球（示例）",
+   "category": "sports",
+   "subcategory": "football",
+   "provider": "sportsbook",
+   "type": "sports",
+   "orientation": "any",
+   "tags": [
+    "hot"
+   ],
+   "demo": true,
+   "key": "sports"
+  },
+  {
+   "id": "sports-basketball",
+   "name": "篮球盘口（示例）",
+   "category": "sports",
+   "subcategory": "basketball",
+   "provider": "sportsbook",
+   "type": "sports",
+   "orientation": "any",
+   "tags": [],
+   "demo": true,
+   "key": "sports"
+  },
+  {
+   "id": "sports-esports",
+   "name": "电竞竞猜（示例）",
+   "category": "sports",
+   "subcategory": "esports",
+   "provider": "sportsbook",
+   "type": "sports",
+   "orientation": "any",
+   "tags": [
+    "new"
+   ],
+   "demo": true,
+   "key": "sports"
+  }
+ ]
+}
