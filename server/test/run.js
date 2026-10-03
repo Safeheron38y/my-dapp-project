@@ -53,6 +53,9 @@ const P = 'demo_slot_a';
 
 // ---- 夹具(运行期注入，不属于发布配置) ----
 // 1) 一个 mock 电子游戏(发布目录里电子游戏都来自 HUIDU 清单)，用于覆盖 mock 适配器的 launch / mock 回调。
+const mockCfg = (label, extra) => Object.assign({ enabled: true, adapter: 'mock', label, walletMode: 'shared', baseUrl: 'https://mock.example.invalid', apiKey: 'dev-' + label + '-key', secret: 'dev-' + label + '-secret', currency: 'DEMO', ipAllowlist: [] }, extra);
+adapters.register('demo_slot_a', mockCfg('slot-a'));
+adapters.register('demo_transfer', mockCfg('transfer', { walletMode: 'transfer', hidden: true }));
 config.catalog.games.push({ id: 'slot-01', name: '测试老虎机', category: 'slots', subcategory: 'video', provider: 'demo_slot_a', type: 'iframe', orientation: 'landscape', tags: [], demo: true });
 // 2) 受限地区：发布的 regions.json 只有 default(全开放、无限额)；这里注入限制地区只为验证“开关/限额机制”仍可用。
 const ALL_ON = { slots: true, fishing: true, live: true, table: true, crash: true, sports: true };
@@ -66,15 +69,15 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
 
   await t('GET /api/games 过滤：category / provider / q / tag', async () => {
     const a = await api('GET', '/api/games?category=slots'); assert(a.body.games.length >= 10 && a.body.games.every((g) => g.category === 'slots'));
-    const b = await api('GET', '/api/games?provider=demo_live_a'); assert(b.body.games.length && b.body.games.every((g) => g.provider === 'demo_live_a'));
-    const c = await api('GET', '/api/games?q=' + encodeURIComponent('百家乐')); assert(c.body.games.length >= 2);
+    const b = await api('GET', '/api/games?provider=huidu_seamless&limit=1000'); assert(b.body.games.length === 170 && b.body.games.every((g) => g.provider === 'huidu_seamless'));
+    const c = await api('GET', '/api/games?q=' + encodeURIComponent('百家乐')); assert(c.body.games.length >= 2 && c.body.games.every((g) => g.category === 'live'));
     const d = await api('GET', '/api/games?tag=hot'); assert(d.body.games.every((g) => g.tags.includes('hot')));
   });
   await t('login → wallet', async () => {
     const u = await newUser(); assert.strictEqual(u.balance, 1000); assert.strictEqual(await bal(u), 1000);
     assert.strictEqual((await api('GET', '/api/wallet')).status, 401);
   });
-  // 玩家密码认证 / 后台管理 / 持久化（test/auth-admin.js）。放在目录被其它测试改动之前，便于断言 186 款。
+  // 玩家密码认证 / 后台管理 / 持久化（test/auth-admin.js）。放在目录被其它测试改动之前，便于断言 170 款。
   await require('./auth-admin')({ t, api, cb, base: () => base, uniq, config, store, P });
 
   await t('回调签名：缺失/错误/过期/篡改 → 401 且不动账', async () => {
@@ -175,10 +178,11 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     assert.strictEqual((await cb('nope', 'bet', { userId: 'x' }, { noSig: true })).status, 404);
     assert.strictEqual((await api('GET', '/provider/demo_slot_a/bet')).status, 405);
   });
-  await t('launch：返回 iframe URL + token；自研游戏返回内置窗口', async () => {
+  await t('launch：返回 iframe URL + token；HUIDU 真人/体育条目同样走供应商窗口', async () => {
     const u = await newUser();
     const a = await api('POST', '/api/games/slot-01/launch', { device: 'mobile' }, u.token); assert.strictEqual(a.status, 200); assert(a.body.url.includes('provider-game.html') && a.body.launchToken); assert.strictEqual(a.body.orientation, 'landscape');
-    const b = await api('POST', '/api/games/crash/launch', {}, u.token); assert.strictEqual(b.body.window, '/games/crash.html');
+    for (const id of ['evo-dragon-tiger', 'spribe-mines']) { const b = await api('POST', '/api/games/' + id + '/launch', {}, u.token); assert.strictEqual(b.status, 200, id); assert.strictEqual(b.body.type, 'iframe'); assert(b.body.url && !b.body.window); }
+    assert.strictEqual((await api('POST', '/api/games/crash/launch', {}, u.token)).status, 404, '自研 crash 已删除');
     assert.strictEqual((await api('POST', '/api/games/slot-01/launch', {})).status, 401);
     assert.strictEqual((await api('POST', '/api/games/nope/launch', {}, u.token)).status, 404);
     // 用 launchToken 驱动 mock iframe 游戏：bet+win 走回调
@@ -197,7 +201,7 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     const over = await cb(P, 'bet', { userId: a.id, txId: uniq('l'), amount: 6000, gameId: 'slot-01' }); assert.strictEqual(over.status, 400); assert.strictEqual(over.body.code, 'ABOVE_MAX_BET');
     const slotOver = await cb(P, 'bet', { userId: a.id, txId: uniq('l'), amount: 1500, gameId: 'slot-01' }); assert.strictEqual(slotOver.body.code, 'ABOVE_MAX_BET'); // 老虎机 1000
     const ok = await cb(P, 'bet', { userId: a.id, txId: uniq('l'), amount: 900, gameId: 'slot-01' }); assert.strictEqual(ok.status, 200);
-    const crash = await api('POST', '/api/inhouse/crash/start', { amount: 600 }, a.token); assert.strictEqual(crash.body.code, 'ABOVE_MAX_BET');
+    const crash = await cb(P, 'bet', { userId: a.id, txId: uniq('l'), amount: 600, category: 'crash' }); assert.strictEqual(crash.body.code, 'ABOVE_MAX_BET'); // crash 品类上限 500
     await api('POST', '/api/wallet/deposit', { amount: 1000000 }, d.token); // default 无充值上限
     assert.strictEqual(await bal(d), 1001000);
     const big = await cb(P, 'bet', { userId: d.id, txId: uniq('l'), amount: 900000 }); assert.strictEqual(big.status, 200);
@@ -208,38 +212,6 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     const ex = await api('POST', '/api/rg/exclude', { hours: 1 }, u.token); assert.strictEqual(ex.status, 200);
     const b = await cb(P, 'bet', { userId: u.id, txId: uniq('e'), amount: 5 }); assert.strictEqual(b.status, 403); assert.strictEqual(b.body.code, 'SELF_EXCLUDED');
     assert.strictEqual((await api('POST', '/api/games/slot-01/launch', {}, u.token)).status, 403);
-  });
-  await t('体育：下注、赔率变动保护、Idempotency-Key 重放、串关、结算', async () => {
-    const u = await newUser();
-    const ev = (await api('GET', '/api/sports/events')).body.events.find((e) => !e.live);
-    const o = ev.markets[0].outcomes[0];
-    const sel = [{ eventId: ev.id, marketId: ev.markets[0].id, outcomeId: o.id, odds: o.odds }];
-    const key = 'idem-' + uniq('k');
-    const r1 = await api('POST', '/api/sports/bets', { selections: sel, stake: 20, type: 'single' }, u.token, { 'Idempotency-Key': key });
-    assert.strictEqual(r1.status, 200); assert.strictEqual(r1.body.balance, 980);
-    const r2 = await api('POST', '/api/sports/bets', { selections: sel, stake: 20, type: 'single' }, u.token, { 'Idempotency-Key': key });
-    assert.strictEqual(r2.status, 200); assert.strictEqual(await bal(u), 980); assert.strictEqual(r2.body.bet.id, r1.body.bet.id);
-    const stale = [Object.assign({}, sel[0], { odds: o.odds + 0.5 })];
-    const ch = await api('POST', '/api/sports/bets', { selections: stale, stake: 5, type: 'single' }, u.token); assert.strictEqual(ch.status, 409); assert.strictEqual(ch.body.code, 'ODDS_CHANGED'); assert.strictEqual(await bal(u), 980);
-    const ev2 = (await api('GET', '/api/sports/events')).body.events.filter((e) => !e.live)[1]; const o2 = ev2.markets[0].outcomes[0];
-    const par = await api('POST', '/api/sports/bets', { type: 'parlay', stake: 10, selections: [sel[0], { eventId: ev2.id, marketId: 'm1', outcomeId: o2.id, odds: o2.odds }] }, u.token); assert.strictEqual(par.status, 200);
-    assert(Math.abs(par.body.bet.totalOdds - Math.round(o.odds * o2.odds * 100) / 100) < 0.011);
-    const s = await api('POST', `/api/sports/bets/${r1.body.bet.id}/settle`, { result: 'void' }, u.token); assert.strictEqual(s.status, 200); assert.strictEqual(await bal(u), 990);
-    const s2 = await api('POST', `/api/sports/bets/${r1.body.bet.id}/settle`, { result: 'won' }, u.token); assert.strictEqual(s2.status, 409);
-    assert.strictEqual((await api('POST', '/api/sports/bets', { selections: sel, stake: 1.234 }, u.token)).status, 400);
-  });
-  await t('自研小游戏：Plinko/Mines/Crash 账务一致，无法重复提现', async () => {
-    const u = await newUser();
-    const pl = await api('POST', '/api/inhouse/plinko/drop', { amount: 10, rows: 12, risk: 'med' }, u.token); assert.strictEqual(pl.status, 200);
-    assert.strictEqual(pl.body.path.length, 12); assert.strictEqual(Math.round(pl.body.balance * 100), Math.round((990 + pl.body.payout) * 100));
-    const m = await api('POST', '/api/inhouse/mines/start', { amount: 10, mines: 3 }, u.token); assert.strictEqual(m.status, 200);
-    assert.strictEqual((await api('POST', '/api/inhouse/mines/cashout', { roundId: m.body.roundId }, u.token)).body.code, 'NOTHING_OPENED');
-    let idx = 0, res; do { res = await api('POST', '/api/inhouse/mines/reveal', { roundId: m.body.roundId, idx: idx++ }, u.token); } while (!res.body.hit && idx < 3 && res.status === 200);
-    if (!res.body.hit) { const c1 = await api('POST', '/api/inhouse/mines/cashout', { roundId: m.body.roundId }, u.token); assert.strictEqual(c1.status, 200); const c2 = await api('POST', '/api/inhouse/mines/cashout', { roundId: m.body.roundId }, u.token); assert.strictEqual(c2.status, 409); }
-    const cr = await api('POST', '/api/inhouse/crash/start', { amount: 5 }, u.token); assert.strictEqual(cr.status, 200);
-    assert.strictEqual((await api('POST', '/api/inhouse/crash/start', { amount: 5 }, u.token)).status, 409);
-    const ck = await api('POST', '/api/inhouse/crash/cashout', { roundId: cr.body.roundId }, u.token); assert.strictEqual(ck.status, 200); // 起飞前 1.00x 立即提现 = 退回本金
-    assert.strictEqual((await api('POST', '/api/inhouse/crash/cashout', { roundId: cr.body.roundId }, u.token)).status, 409);
   });
   await t('转账钱包：转入/转出 + 幂等', async () => {
     const u = await newUser(); const key = 'tr-' + uniq('t');
@@ -271,16 +243,26 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     assert(a.body.categories.every((x) => x.enabled));
     assert.strictEqual(require('../lib/geo').categoryEnabled('default', 'brand_new_category_not_in_config'), true);
   });
-  await t('目录：HUIDU 清单 170 款已加载（含 fishing 10 款），保留自研 Crash/Plinko/Mines 与视讯/体育外壳', async () => {
-    const r = (await api('GET', '/api/games?limit=1000')).body;
+  await t('目录：只有 HUIDU 清单 170 款（六大品类齐全），无任何自研/演示游戏', async () => {
+    const r = (await api('GET', '/api/games?provider=huidu_seamless&limit=1000')).body; r.vendors = r.vendors.filter((v) => v.id !== 'slot-a'); // 夹具 slot-01 不计入
     const hd = r.games.filter((g) => g.provider === 'huidu_seamless');
     assert.strictEqual(hd.length, 170);
-    assert.deepStrictEqual(r.categories.map((c) => c.id), ['slots', 'fishing', 'live', 'table', 'crash', 'sports']);
-    assert.strictEqual(r.categories.find((c) => c.id === 'fishing').label, '捕鱼');
-    assert.strictEqual(r.games.filter((g) => g.category === 'fishing').length, 10);
-    assert.strictEqual(r.games.filter((g) => g.category === 'slots' && g.provider === 'huidu_seamless').length, 80);
-    for (const id of ['crash', 'plinko', 'mines']) assert(r.games.some((g) => g.id === id && g.provider === 'inhouse' && g.type === 'inhouse'), id);
-    assert(r.games.some((g) => g.category === 'live' && g.type === 'live') && r.games.some((g) => g.category === 'sports' && g.type === 'sports'));
+    assert.strictEqual(r.total, 170); assert.strictEqual(r.games.length, 170);
+    assert.deepStrictEqual(r.categories.map((c) => c.id), ['slots', 'live', 'table', 'fishing', 'crash', 'sports']);
+    const cnt = {}; for (const g of r.games) cnt[g.category] = (cnt[g.category] || 0) + 1;
+    assert.deepStrictEqual(cnt, { slots: 80, live: 30, table: 20, fishing: 10, crash: 25, sports: 5 });
+    assert(!r.games.some((g) => g.provider === 'inhouse' || g.type === 'inhouse' || g.type === 'live' || g.type === 'sports' || /^(crash|plinko|mines)$/.test(g.id)), '不得含自研游戏');
+    assert(r.games.every((g) => g.type === 'iframe' && g.provider === 'huidu_seamless'));
+    // 厂商列表覆盖清单里的每一个厂商（按字母序，含数量）
+    const csv = fs.readFileSync('/workspace/gameapi/shortlist.csv', 'utf8'); void csv;
+    assert.strictEqual(r.vendors.length, new Set(hd.map((g) => g.vendor)).size); assert.strictEqual(r.vendors.length, 40);
+    assert.deepStrictEqual(r.vendors.map((v) => v.id), r.vendors.map((v) => v.id).slice().sort((x, y) => (x.toLowerCase() < y.toLowerCase() ? -1 : 1)));
+    assert.strictEqual(r.vendors.reduce((a, v) => a + v.count, 0), 170);
+    // 默认顺序为混排：前 24 款覆盖 >=5 个品类，且不会连续 3 款同厂商
+    assert(new Set(r.games.slice(0, 24).map((g) => g.category)).size >= 5, '前 24 款应混合多个品类');
+    assert(new Set(r.games.slice(0, 24).map((g) => g.vendor)).size >= 12, '前 24 款应混合多个厂商');
+    for (let i = 2; i < r.games.length; i++) assert(!(r.games[i].vendor === r.games[i - 1].vendor && r.games[i].vendor === r.games[i - 2].vendor), '连续 3 款同厂商 @' + i);
+    assert.strictEqual(r.categories.find((c) => c.id === 'fishing').label, '捕鱼'); assert.strictEqual(r.categories.find((c) => c.id === 'table').label, '棋牌');
     assert(hd.every((g) => g.vendor && !('providerGameId' in g) && !('regionNotes' in g) && g.playable));
     assert.strictEqual(new Set(r.games.map((g) => g.id)).size, r.games.length);
     // 目录里的 providerGameId 全部唯一（内部字段，不对外）
@@ -295,7 +277,7 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
   });
   await t('限制地区机制仍可用（注入夹具）：region_c 仅体育；shipped default 不受影响', async () => {
     const r = (await api('GET', '/api/games?region=region_c&limit=1000')).body; assert(r.games.every((g) => g.category === 'sports'));
-    const d = (await api('GET', '/api/games?limit=1000')).body; assert(d.total > 150);
+    const d = (await api('GET', '/api/games?limit=1000')).body; assert.strictEqual(d.total, 171); // 170 + 夹具 slot-01
   });
 
   // =====================================================================

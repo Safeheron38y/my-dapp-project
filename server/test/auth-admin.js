@@ -134,7 +134,7 @@ module.exports = async function ({ t, api, cb, base, uniq, config, store, P }) {
   await t('仪表盘：玩家/钱包/投注/派彩/GGR 与账本一致（增量校验）', async () => {
     const d0 = (await adm.get('/api/admin/dashboard')).body;
     for (const k of ['players', 'wallet', 'totals', 'today', 'series', 'topGames', 'recent', 'games']) assert(d0[k] !== undefined, k);
-    assert.strictEqual(d0.series.length, 7); assert.strictEqual(d0.games.total, config.catalog.games.length); assert.strictEqual(A.BASE.size, 186, '目录共 186 款');
+    assert.strictEqual(d0.series.length, 7); assert.strictEqual(d0.games.total, config.catalog.games.length); assert.strictEqual(A.BASE.size, 170, '目录共 170 款');
     const u = await reg(uniq('dash').replace(/[^\w-]/g, ''));
     await cb(P, 'bet', { userId: u.id, txId: uniq('b'), amount: 10, roundId: 'rd1', gameId: 'slot-01', category: 'slots' });
     await cb(P, 'win', { userId: u.id, txId: uniq('w'), amount: 4, roundId: 'rd1', gameId: 'slot-01', category: 'slots' });
@@ -196,10 +196,10 @@ module.exports = async function ({ t, api, cb, base, uniq, config, store, P }) {
   });
 
   // ================= 游戏管理 =================
-  await t('游戏管理：186 款清单 / 过滤 / 启停影响前台目录与启动 / 热门·新游标记 / 排序 / 分类 / 批量 / 重置', async () => {
+  await t('游戏管理：170 款清单 / 过滤 / 启停影响前台目录与启动 / 热门·新游标记 / 排序 / 分类 / 批量 / 重置', async () => {
     const L = (await adm.get('/api/admin/games?limit=300')).body;
     assert.strictEqual(L.summary.total, config.catalog.games.length); assert.strictEqual(L.games.length, config.catalog.games.length);
-    const real = config.catalog.games.filter((g) => A.BASE.has(g.id)); assert.strictEqual(real.length, 186, '186 款目录'); assert.strictEqual(config.catalog.games.length, 187, '186 + 夹具 slot-01');
+    const real = config.catalog.games.filter((g) => A.BASE.has(g.id)); assert.strictEqual(real.length, 170, '170 款目录'); assert.strictEqual(config.catalog.games.length, 171, '170 + 夹具 slot-01');
     const g = real.find((x) => x.provider === 'huidu_seamless' && x.category === 'slots' && !x.tags.includes('hot') && !x.tags.includes('new'));
     assert((await adm.get('/api/admin/games?category=live&limit=300')).body.games.every((x) => x.category === 'live'));
     assert((await adm.get('/api/admin/games?q=' + encodeURIComponent(g.name.slice(0, 5)))).body.games.some((x) => x.id === g.id));
@@ -282,7 +282,7 @@ module.exports = async function ({ t, api, cb, base, uniq, config, store, P }) {
     assert.strictEqual((await adm.post('/api/admin/settings', { maintenance: { enabled: true, text: '  ' } })).body.code, 'TEXT_REQUIRED');
     const r = await adm.post('/api/admin/settings', { maintenance: { enabled: true, text: '今晚 02:00 例行维护', level: 'warn' } }); assert.strictEqual(r.status, 200);
     let c = (await api('GET', '/api/config')).body; assert.deepStrictEqual({ e: c.maintenance.enabled, t: c.maintenance.text, l: c.maintenance.level, b: c.maintenance.blockPlay }, { e: true, t: '今晚 02:00 例行维护', l: 'warn', b: false });
-    const u = await reg(uniq('mt').replace(/[^\w-]/g, '')); const inh = config.catalog.games.find((g) => g.type === 'inhouse');
+    const u = await reg(uniq('mt').replace(/[^\w-]/g, '')); const inh = config.catalog.games.find((g) => g.id === 'pg-mahjong-ways');
     assert.strictEqual((await api('POST', '/api/games/' + inh.id + '/launch', {}, u.token)).status, 200, '仅横幅时仍可玩');
     await adm.post('/api/admin/settings', { blockPlay: true });
     const l = await api('POST', '/api/games/' + inh.id + '/launch', {}, u.token); assert.strictEqual(l.status, 503); assert.strictEqual(l.body.code, 'MAINTENANCE');

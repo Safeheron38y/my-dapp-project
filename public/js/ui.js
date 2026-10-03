@@ -65,7 +65,7 @@ export function sheet(html, opt) {
 }
 
 // ---- 页眉 / 底部导航 ----
-var NAV = [['/', '大厅', 'home'], ['/sports.html', '体育', 'sports']];
+var NAV = [['/', '大厅', 'home'], ['/#sports', '体育', 'sports']];
 export function mountShell(active) {
   var sprite = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' + '</defs></svg>';
   var hdr = el('<header class="hdr"><div class="wrap">' +
@@ -78,7 +78,7 @@ export function mountShell(active) {
   document.body.insertBefore(hdr, document.body.firstChild);
   var tb = el('<nav class="tabbar" aria-label="底部导航"><ul>' +
     '<li><a href="/"' + (active === '/' ? ' class="on" aria-current="page"' : '') + '>' + icon('home') + '大厅</a></li>' +
-    '<li><a href="/sports.html"' + (active === '/sports.html' ? ' class="on" aria-current="page"' : '') + '>' + icon('sports') + '体育</a></li>' +
+    '<li><a href="/#sports">' + icon('sports') + '体育</a></li>' +
     '<li><a href="#" class="mid" id="tbDep" role="button"><span class="orbtn">' + icon('plus') + '</span><em>充值</em></a></li>' +
     '<li><a href="#" id="tbTx" role="button">' + icon('list') + '记录</a></li>' +
     '<li><a href="#" id="tbMe" role="button">' + icon('user') + '我的</a></li>' +

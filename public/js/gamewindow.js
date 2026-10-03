@@ -1,7 +1,7 @@
 /**
  * GameWindow —— 可复用的游戏窗口容器
  *  - 移动端全屏(含安全区)，顶栏：返回 / 标题 / 余额 / 声音 / 全屏
- *  - slot: 供自研 DOM/Canvas 游戏渲染；iframe: 供应商游戏，带 postMessage 桥
+ *  - slot: iframe: 供应商游戏，带 postMessage 桥
  *  - 状态：加载中 / 出错(含重连) / 离线横幅 / 横屏提示
  *  - 方向：orientation = 'landscape' | 'portrait' | 'any'
  *

@@ -11,9 +11,8 @@ const store = require('./lib/store');
 const geo = require('./lib/geo');
 const rg = require('./lib/rg');
 const wallet = require('./lib/wallet');
-const sports = require('./lib/sports');
-const live = require('./lib/live');
-const inhouse = require('./lib/inhouse');
+const fs = require('fs');
+const path = require('path');
 const search = require('./lib/search');
 const sign = require('./lib/sign');
 const { toMinor } = require('./lib/money');
@@ -53,9 +52,38 @@ function gameOf(id) {
 }
 // 对外游戏对象：去掉内部/冗余扩展字段(providerGameId、币种/语言/地区备注、数据来源)，补 vendor/providerLabel/demo。
 const INTERNAL = ['providerGameId', 'currencies', 'languages', 'regionNotes', 'source', 'extras', 'enabled', 'sort'];
+// ---- 封面：public/assets/covers/<game_uid>.webp（HUIDU 素材包，covers.json 可选，给出宽高）。文件存在才对外给 thumb，前端缺图时回退到占位封面 ----
+const COVER_DIR = path.join(config.env.publicDir, 'assets', 'covers');
+let coverSet = new Set(), coverDims = {}, coverAt = 0;
+function loadCovers() {
+  coverAt = Date.now();
+  try {
+    const set = new Set();
+    for (const f of fs.readdirSync(COVER_DIR)) { const m = /^([\w-]+)\.(webp|png|jpe?g)$/i.exec(f); if (m) set.add(m[1] + '.' + m[2].toLowerCase()); }
+    coverSet = set;
+  } catch { coverSet = new Set(); }
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(COVER_DIR, 'covers.json'), 'utf8')), d = {};
+    const rows = Array.isArray(j) ? j : Array.isArray(j.covers) ? j.covers : Object.entries(j.covers || j).map(([k, v]) => Object.assign({ game_uid: k }, typeof v === 'object' ? v : {}));
+    for (const r of rows) { const k = r && (r.game_uid || r.uid || r.id); if (k) d[k] = { w: +(r.width || r.w) || 0, h: +(r.height || r.h) || 0 }; }
+    coverDims = d;
+  } catch { coverDims = {}; }
+}
+function coverOf(g) {
+  if (Date.now() - coverAt > 60000) loadCovers();
+  const uid = g.providerGameId; if (!uid) return null;
+  for (const ext of ['webp', 'png', 'jpg', 'jpeg']) if (coverSet.has(uid + '.' + ext)) { const d = coverDims[uid] || {}; return { thumb: '/assets/covers/' + uid + '.' + ext, thumbW: d.w || 0, thumbH: d.h || 0 }; }
+  return null;
+}
+// 厂商 logo：public/assets/logos/logos.json（厂商名 → 相对路径）；文件存在才返回。部分 logo 是浅色透明底，前端放在深色底片上。
+let logoMap = null;
+function logoOf(v) {
+  if (!logoMap) { logoMap = {}; try { const j = JSON.parse(fs.readFileSync(path.join(config.env.publicDir, 'assets', 'logos', 'logos.json'), 'utf8')); for (const [k, f] of Object.entries(j)) if (fs.existsSync(path.join(config.env.publicDir, 'assets', f))) logoMap[k] = '/assets/' + f; } catch { /* 无 logo 包 */ } }
+  return logoMap[v] || null;
+}
 function pubGame(g, region) {
   const p = config.providers[g.provider] || {}, ad = adapters.get(g.provider);
-  const o = Object.assign({}, g);
+  const o = Object.assign({}, g, coverOf(g) || {});
   for (const k of INTERNAL) delete o[k];
   return Object.assign(o, { vendor: g.vendor || p.label || g.provider, providerLabel: p.label || g.provider, demo: !!(g.demo || (ad && ad.isDemo && ad.isDemo())), playable: geo.categoryEnabled(region, g.category) && !!ad });
 }
@@ -155,14 +183,15 @@ route('GET', '/api/games', (ctx) => {
   if (sub) list = list.filter((g) => g.subcategory === sub);
   if (tag) list = list.filter((g) => g.tags.includes(tag));
   if (q) list = list.filter((g) => search.matches(g, q, (config.catalog.categories[g.category] || {}).label));
-  list = list.slice().sort((a, b) => (a.sort != null ? a.sort : 1e9) - (b.sort != null ? b.sort : 1e9)); // 后台“排序”：数字越小越靠前（默认=目录顺序）
+  list = list.slice().sort((a, b) => (a.sort != null ? a.sort : 1e9) - (b.sort != null ? b.sort : 1e9)); // 默认=混排(见 lib/mix.js，由 adminstate 写入初始 sort)；后台“排序”：数字越小越靠前
   const total = list.length;
   const limit = Math.min(Math.max(parseInt(ctx.query.get('limit'), 10) || 100, 1), 1000);
   const page = Math.max(parseInt(ctx.query.get('page'), 10) || 1, 1);
   list = list.slice((page - 1) * limit, page * limit);
-  const provs = {};
-  for (const g of config.catalog.games) if (g.enabled !== false && enabled[g.category] && (!cat || g.category === cat) && adapters.get(g.provider)) provs[g.provider] = config.providers[g.provider].label;
-  return { region: r, total, page, limit, games: list.map((g) => pubGame(g, r)), providers: Object.entries(provs).map(([id, label]) => ({ id, label })), categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: !!enabled[id] }, c)), aliases: search.ALIASES, demo: true };
+  const provs = {}, vend = {};
+  for (const g of config.catalog.games) if (g.enabled !== false && enabled[g.category] && (!cat || g.category === cat) && adapters.get(g.provider)) { provs[g.provider] = config.providers[g.provider].label; const v = vendorOf(g); vend[v] = (vend[v] || 0) + 1; }
+  const vendors = Object.keys(vend).sort((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : 1).map((id) => ({ id, label: id, count: vend[id], logo: logoOf(id) }));
+  return { region: r, total, page, limit, games: list.map((g) => pubGame(g, r)), providers: Object.entries(provs).map(([id, label]) => ({ id, label })), vendors, categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: !!enabled[id] }, c)), aliases: search.ALIASES, demo: true };
 });
 route('GET', '/api/games/:id', (ctx) => { const u = ctx.optUser(); const g = gameOf(ctx.params.id); return { game: pubGame(g, u ? u.region : ctx.query.get('region')) }; });
 
@@ -195,53 +224,12 @@ route('POST', '/api/games/:id/launch', async (ctx) => {
   store.launches.set(launchToken, { userId: u.id, gameId: g.id, provider: g.provider, exp: Date.now() + LAUNCH_TTL });
   const base = config.env.publicBase || `${ctx.req.headers['x-forwarded-proto'] || 'http'}://${ctx.req.headers.host}`;
   let out;
-  if (g.type === 'inhouse' || g.type === 'live' || g.type === 'sports') {
-    // 自研/演示窗口：由前端内置页面渲染，不需要 iframe URL
-    out = { mode: 'demo', type: g.type, url: null, window: g.type === 'inhouse' ? `/games/${g.key}.html` : g.type === 'live' ? `/live.html?game=${g.key}&id=${g.id}` : '/sports.html' };
-    if (g.type === 'live') out.url = null;
-  } else {
+  {
     const r = await ad.launch({ user: u, game: g, device: ctx.body.device || 'mobile', lang: ctx.body.lang || 'zh-CN', currency: cur.code, launchToken, returnUrl: ctx.body.returnUrl || base + '/', callbackBase: `${base}/provider/${g.provider}`, publicBase: config.env.publicBase, demo: true, transferAmountMinor: ctx.body.transferAmount != null ? amountOf(ctx.body.transferAmount) : null });
     out = { type: 'iframe', mode: r.mode, url: r.url, method: r.method || 'GET', fields: r.fields || null, expiresIn: r.expiresIn || null };
     if (r.providerBalance != null) out.providerBalance = r.providerBalance;
   }
   return Object.assign({ game: pubGame(g, u.region), launchToken, orientation: g.orientation, walletMode: ad.walletMode, balance: u.balance / 100, currency: cur.code, allowedOrigins: [] }, out);
-});
-
-// ---- 自研演示游戏 ----
-const inh = (fn) => (ctx) => { const u = requireUser(ctx); return withIdem(ctx, () => fn(u, ctx.body, ctx)); };
-route('POST', '/api/inhouse/crash/start', inh((u, b) => inhouse.crashStart(u.id, amountOf(b.amount))));
-route('POST', '/api/inhouse/crash/cashout', inh((u, b) => inhouse.crashCash(u.id, b.roundId)));
-route('GET', '/api/inhouse/crash/poll', (ctx) => inhouse.crashPoll(requireUser(ctx).id, ctx.query.get('roundId')));
-route('GET', '/api/inhouse/plinko/table', () => ({ table: inhouse.plinkoTable(), demo: true }));
-route('POST', '/api/inhouse/plinko/drop', inh((u, b) => inhouse.plinkoDrop(u.id, amountOf(b.amount), b.rows, b.risk)));
-route('POST', '/api/inhouse/mines/start', inh((u, b) => inhouse.minesStart(u.id, amountOf(b.amount), b.mines)));
-route('POST', '/api/inhouse/mines/reveal', inh((u, b) => inhouse.minesReveal(u.id, b.roundId, b.idx)));
-route('POST', '/api/inhouse/mines/cashout', inh((u, b) => inhouse.minesCash(u.id, b.roundId)));
-route('GET', '/api/inhouse/mines/state', (ctx) => inhouse.minesState(requireUser(ctx).id));
-
-// ---- 真人视讯(演示结算) ----
-route('POST', '/api/live/:game/bet', (ctx) => {
-  const u = requireUser(ctx);
-  const g = config.catalog.games.find((x) => x.id === ctx.body.gameId) || null;
-  if (g && g.category !== 'live') throw bad('INVALID_GAME', '不是视讯游戏');
-  const bets = (ctx.body.bets || []).map((b) => ({ spot: String(b.spot), amountMinor: amountOf(b.amount) }));
-  return withIdem(ctx, () => live.play(u, { gameId: g ? g.id : 'live-' + ctx.params.game, game: ctx.params.game, bets, provider: g ? g.provider : 'demo_live_a' }));
-});
-
-// ---- 体育 ----
-route('GET', '/api/sports/events', (ctx) => { const u = ctx.optUser(); const region = u ? u.region : ctx.req.headers['x-region']; if (!geo.categoryEnabled(geo.resolveRegion(region), 'sports')) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放体育', 403); return { events: sports.listEvents({ sport: ctx.query.get('sport') || undefined, live: ctx.query.get('live') || undefined }), serverTime: Date.now(), demo: true }; });
-route('POST', '/api/sports/bets', (ctx) => {
-  const u = requireUser(ctx);
-  if (!geo.categoryEnabled(u.region, 'sports')) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放体育', 403);
-  const key = ctx.req.headers['idempotency-key'];
-  return sports.placeBet(u, { selections: ctx.body.selections, stakeMinor: amountOf(ctx.body.stake), type: ctx.body.type, acceptOddsChange: !!ctx.body.acceptOddsChange, clientKey: key && /^[\w.:\-]{8,90}$/.test(key) ? u.id + '-' + key : undefined });
-});
-route('GET', '/api/sports/bets', (ctx) => ({ bets: sports.listBets(requireUser(ctx).id) }));
-route('POST', '/api/sports/bets/:id/settle', (ctx) => { // 开发用，MOCK_ADMIN=0 关闭
-  if (!config.env.mockAdmin) throw bad('NOT_FOUND', '未找到', 404);
-  const u = requireUser(ctx);
-  const b = store.sportsBets.get(ctx.params.id); if (!b || b.userId !== u.id) throw bad('BET_NOT_FOUND', '注单不存在', 404);
-  return sports.settle(ctx.params.id, ctx.body.result);
 });
 
 // ---- 负责任博彩(桩) ----

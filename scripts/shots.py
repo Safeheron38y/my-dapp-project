@@ -17,14 +17,14 @@ def tab(p, c, expect_min=1, expect_max=None):
     n = int(p.inner_text("#secC").replace("款", "").strip())
     assert n >= expect_min and (expect_max is None or n <= expect_max), f"tab {c}: {n} games"
     assert p.get_attribute(f"#tabs button[data-c={c}]", "aria-selected") == "true"
-def act_lobby_slots(p): tab(p, "slots", 80)
+def act_lobby_slots(p): tab(p, "slots", 80, 80)
 def act_lobby_fishing(p): tab(p, "fishing", 10, 10)
 def act_lobby_filters(p):
     # 搜索 + 厂商过滤 + 麻将 chip；然后清空
     p.wait_for_selector(".tile"); p.click("#tabs button[data-c=slots]"); p.wait_for_timeout(300)
-    p.select_option("#vendor", label=[o for o in p.eval_on_selector_all("#vendor option", "os=>os.map(o=>o.textContent)") if o.startswith("PGSoft")][0])
+    p.click("#vendorBtn"); p.click(".vrow[data-v='PGSoft']"); p.wait_for_timeout(500)
     p.wait_for_timeout(300); n1 = int(p.inner_text("#secC").replace("款", "")); assert 5 <= n1 <= 30, n1
-    p.select_option("#vendor", value=""); p.fill("#q", "麻将"); p.wait_for_timeout(500)
+    p.click("#vendorBtn"); p.click(".vrow[data-v='']"); p.wait_for_timeout(500); p.fill("#q", "麻将"); p.wait_for_timeout(500)
     n2 = int(p.inner_text("#secC").replace("款", "")); assert n2 == 4, n2
     p.fill("#q", "zzzz-no-such"); p.wait_for_timeout(400); assert p.locator(".empty").count() == 1
     p.fill("#q", ""); p.wait_for_timeout(300)
@@ -37,23 +37,13 @@ def act_lobby_scroll(p):
         p.evaluate("window.scrollTo(0, document.body.scrollHeight)"); p.wait_for_timeout(60)
         if p.locator(".tile").count() >= int(p.inner_text("#secC").replace("款", "")): break
     SCROLL[0] = dict(tiles=p.locator(".tile").count(), ms=int((time.time() - t0) * 1000))
-    assert SCROLL[0]["tiles"] >= 180, SCROLL[0]
+    assert SCROLL[0]["tiles"] >= 170, SCROLL[0]
     p.evaluate("window.scrollTo(0, 0)"); p.wait_for_timeout(200)
 SCROLL = [None]
-def act_live(p):
-    p.wait_for_selector(".spot", timeout=8000); p.click(".spot[data-s=banker]"); p.click(".spot[data-s=player]"); p.wait_for_timeout(400)
 def act_slot(p):
     # HUIDU 精选游戏（模拟器模式）：launch → 同源 iframe → 点旋转 → 模拟器向平台发 AES 加密 settle 回调
     f = p.frame_locator("iframe"); f.locator("#spin").wait_for(timeout=10000); f.locator("#spin").click(); p.wait_for_timeout(1500)
     assert f.locator("#res").inner_text() != "", "no spin result"
-def act_crash(p):
-    p.wait_for_selector("#go", timeout=8000); p.click("#go"); p.wait_for_timeout(3200)
-def act_plinko(p):
-    p.wait_for_selector("#go", timeout=8000); p.click("#go"); p.wait_for_timeout(1200)
-def act_mines(p):
-    p.wait_for_selector("#go", timeout=8000); p.click("#go"); p.wait_for_timeout(300); p.click(".cell[data-i='12']"); p.wait_for_timeout(700)
-def act_sports(p):
-    p.wait_for_selector(".odd", timeout=8000); p.locator(".odd").nth(1).click(); p.locator(".odd").nth(4).click(); p.wait_for_timeout(400)
 
 PAGES = [
   ("lobby", "/", act_lobby, [MOBILE, DESK]),
@@ -61,13 +51,8 @@ PAGES = [
   ("lobby-fishing", "/", act_lobby_fishing, [MOBILE, DESK]),
   ("lobby-filters", "/", act_lobby_filters, [MOBILE]),
   ("lobby-scroll", "/", act_lobby_scroll, [MOBILE, DESK]),
-  ("live-baccarat", "/live.html?game=baccarat&id=live-baccarat-a", act_live, [MOBILE, DESK]),
   ("slot", "/game.html?id=pg-mahjong-ways", act_slot, [MOBILE, LAND, DESK]),
   ("fishing-game", "/game.html?id=jili-royal-fishing", act_slot, [MOBILE]),
-  ("crash", "/games/crash.html", act_crash, [MOBILE, DESK]),
-  ("plinko", "/games/plinko.html", act_plinko, [MOBILE, DESK]),
-  ("mines", "/games/mines.html", act_mines, [MOBILE, DESK]),
-  ("sports", "/sports.html", act_sports, [MOBILE, DESK]),
 ]
 def tag(ctx):
     v = ctx["viewport"]; return "land" if v["width"] > v["height"] and v["width"] < 1000 else ("m390" if v["width"] < 600 else "d1280")

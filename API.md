@@ -34,9 +34,7 @@
  │    └ iframe 内供应商游戏 ───────────────────────────────────────────────────────────▶ 供应商服务器
  │                                              ◀── POST /provider/:name/{balance|bet|win|rollback|refund} ──┘
  │                                                   (HMAC 验签 → adapter.parseCallback → lib/wallet.js → 账本)
- ├ 自研 Crash/Plinko/Mines ─POST /api/inhouse/*─▶ lib/inhouse.js ─▶ wallet.bet / wallet.win
- ├ 真人视讯演示窗口      ──POST /api/live/:game/bet─▶ lib/live.js (mock RNG 演示结算)
- └ 体育 /sports.html     ──/api/sports/*────▶ lib/sports.js (mock 赛事/赔率)
+ └ 大厅内全部游戏（电子/真人/棋牌/捕鱼/小游戏/体育）均来自 HUIDU 精选清单，统一走 huidu_seamless 供应商 iframe 窗口；平台不含任何自研/演示原创游戏
 ```
 
 关键分层：
@@ -66,7 +64,7 @@ node test/run.js                  # 运行集成测试(自带随机端口，不�
 | `SIGNATURE_TOLERANCE_SEC` | `300` | 时间戳容忍窗口 |
 | `ALLOWED_ORIGINS` | 空 | 前端与 API 不同域时，列出允许的 Origin(逗号分隔)；`*` 仅限开发 |
 | `PUBLIC_BASE_URL` | 空 | 对外域名，用于生成启动 URL/回调地址（反向代理后必填） |
-| `MOCK_ADMIN` | 开 | 设为 `0` 关闭 `/api/mock/*` 与体育模拟结算接口（生产必须关闭） |
+| `MOCK_ADMIN` | 开 | 设为 `0` 关闭 `/api/mock/*` 模拟接口（生产必须关闭） |
 | `CONFIG_DIR` / `PUBLIC_DIR` | 默认 | 自定义配置/静态目录 |
 | `*_BASE_URL` `*_API_KEY` `*_SECRET` | 占位 | 见 `providers.json`，`${VAR:-默认}` 语法 |
 
@@ -82,7 +80,7 @@ node test/run.js                  # 运行集成测试(自带随机端口，不�
   { "ok": false, "code": "INSUFFICIENT_FUNDS", "message": "余额不足", "balance": 12.5 }
   ```
   常见 `code`：`UNAUTHORIZED 401` · `INSUFFICIENT_FUNDS 402` · `INVALID_AMOUNT 400` · `ABOVE_MAX_BET / BELOW_MIN_BET 400` · `CATEGORY_DISABLED 403` · `SELF_EXCLUDED / COOL_OFF 403` · `IDEMPOTENCY_CONFLICT 409` · `TX_CANCELLED 409` · `ROUND_CANCELLED 409` · `ODDS_CHANGED 409` · `RATE_LIMITED 429`。
-- **客户端幂等**：下注类接口(`/api/inhouse/*`、`/api/live/*/bet`、`/api/sports/bets`、`/api/wallet/deposit|transfer`)支持请求头 `Idempotency-Key: <8-100 位 [\w.:-]>`。同 key + 同载荷 → 返回首次结果（`idempotentReplay: true`，不再扣款）；同 key 不同载荷 → `409`。**网络超时后重试必须复用同一个 key**。
+- **客户端幂等**：接口(`/api/wallet/deposit|transfer`)支持请求头 `Idempotency-Key: <8-100 位 [\w.:-]>`。同 key + 同载荷 → 返回首次结果（`idempotentReplay: true`，不再扣款）；同 key 不同载荷 → `409`。**网络超时后重试必须复用同一个 key**。
 
 ## 4. 玩家端接口
 
@@ -104,19 +102,21 @@ POST /api/auth/login      { "username": "alice", "password": "Abcd1234", "region
 返回币种、地区、品类启用状态、限额、可选地区列表（前端据此灰显未开放品类）。
 
 ### GET `/api/games`
-过滤参数：`category`(live|slots|table|crash|sports)、`provider`、`subcategory`、`tag`(hot|new|original)、`q`(名称/ID/子类关键词)、`region`、`page`、`limit`(≤200)。
+过滤参数：`category`(slots|live|table|fishing|crash|sports)、`provider`、`vendor`、`subcategory`、`tag`(hot|new)、`q`(名称/ID/子类关键词)、`region`、`page`、`limit`(≤200)。
 ```http
-GET /api/games?category=live&provider=demo_live_a&q=百家乐
+GET /api/games?category=live&vendor=Ezugi&q=Dragon
 ```
 ```json
-{ "region":"default","total":2,"page":1,"limit":100,
-  "games":[{"id":"live-baccarat-a","name":"百家乐 · 示例厅 A","category":"live","subcategory":"baccarat","provider":"demo_live_a","providerLabel":"示例视讯 A","type":"live","orientation":"any","tags":["hot","live"],"demo":true,"playable":true}],
-  "providers":[{"id":"demo_live_a","label":"示例视讯 A"}],
-  "categories":[{"id":"live","label":"真人视讯","en":"LIVE","enabled":true}], "demo":true }
+{ "region":"default","total":1,"page":1,"limit":100,
+  "games":[{"id":"ezugi-dragon-tiger","name":"Dragon Tiger","category":"live","subcategory":"dragontiger","provider":"huidu_seamless","providerLabel":"HUIDU 聚合","vendor":"Ezugi","type":"iframe","orientation":"any","tags":[],"demo":false,"playable":true,"thumb":"/assets/covers/<game_uid>.webp","thumbW":400,"thumbH":267}],
+  "providers":[{"id":"huidu_seamless","label":"HUIDU 聚合"}],
+  "vendors":[{"id":"Ezugi","label":"Ezugi","count":3,"logo":"/assets/logos/Ezugi.webp"}],
+  "categories":[{"id":"slots","label":"老虎机","en":"SLOTS","enabled":true},{"id":"live","label":"真人视讯","en":"LIVE","enabled":true}], "demo":true }
 ```
-**封面图（可选）**：游戏对象可带 `thumb`（兼容 `cover` / `coverUrl` / `image` / `imageUrl` / `img`），值为 `https://…`、站内 `/…` 路径或 `data:image/…`。大厅 `public/js/cover.js` 检测到该字段后自动用真实封面替换程序化占位封面（`<img loading=lazy>`，加载失败自动回退占位）；无此字段则维持占位封面。平台自带插画/图标/图案在 `public/assets/*.svg`（由 `scripts/build-art.py` 生成）。
+**默认顺序为“混排”**：同品类内按厂商轮流、再按各品类占比把品类穿插（不会先是一大片同一厂商/同一品类）；后台“排序”可覆盖。`vendors` 为清单中全部厂商（按字母序，含数量与 logo），大厅厂商选择器使用它。
+**封面图**：HUIDU 素材包的封面放在 `public/assets/covers/<game_uid>.webp`（+ `covers.json` 宽高），服务器检测到文件存在就在游戏对象里返回 `thumb/thumbW/thumbH`，缺图则不返回、前端用占位封面；厂商 logo 在 `public/assets/logos/`。游戏对象的 `thumb`（兼容 `cover` / `coverUrl` / `image` / `imageUrl` / `img`），值为 `https://…`、站内 `/…` 路径或 `data:image/…`。大厅 `public/js/cover.js` 检测到该字段后自动用真实封面替换程序化占位封面（`<img loading=lazy>`，加载失败自动回退占位）；无此字段则维持占位封面。平台自带插画/图标/图案在 `public/assets/*.svg`（由 `scripts/build-art.py` 生成）。
 
-未启用地区的品类、以及适配器未启用的供应商游戏**不会**出现在结果中。`type`：`iframe`(第三方网页游戏) / `live`(视讯) / `inhouse`(自研) / `sports`。
+未启用地区的品类、以及适配器未启用的供应商游戏**不会**出现在结果中。`type` 恒为 `iframe`（全部为 HUIDU 供应商游戏）。
 
 ### POST `/api/games/:id/launch`
 校验：登录、地区品类开关、负责任博彩状态；然后调用适配器 `launch()`。
@@ -124,7 +124,7 @@ GET /api/games?category=live&provider=demo_live_a&q=百家乐
 { "game": {…}, "launchToken": "lt_…", "orientation": "landscape", "walletMode": "shared", "balance": 1000, "currency": "DEMO",
   "type": "iframe", "mode": "demo", "url": "http://host/demo/provider-game.html?token=lt_…", "method": "GET", "fields": null, "expiresIn": 3600 }
 ```
-`type=inhouse/live/sports` 时返回 `window`（站内页面路径）而不是 `url`。前端把 `url` 放进 iframe（见 §9）。`method=POST` + `fields` 用于需要表单 POST 启动的供应商（前端自行构造隐藏表单提交到 iframe）。
+前端把 `url` 放进 iframe（见 §9）。`method=POST` + `fields` 用于需要表单 POST 启动的供应商（前端自行构造隐藏表单提交到 iframe）。
 
 ### GET `/api/wallet`
 ```json
@@ -136,24 +136,6 @@ GET /api/games?category=live&provider=demo_live_a&q=百家乐
 `{ "provider":"demo_transfer", "direction":"in|out", "amount":100 }`；`out` 省略 amount = 全部转出。见 §6。
 ### GET `/api/transactions?limit=50&type=bet`
 账本倒序：`txId, provider, type(bet|win|rollback|refund|deposit|transfer_in|transfer_out), amount, balanceAfter, status(ok|rolled_back), roundId, gameId, refTxId, createdAt`。
-
-### 体育
-- `GET /api/sports/events?sport=football&live=true` → 赛事 + 赔率（示例）。
-- `POST /api/sports/bets`
-  ```http
-  POST /api/sports/bets            Idempotency-Key: 7f3c…(8-90 位)
-  { "type":"parlay", "stake":10, "acceptOddsChange":false,
-    "selections":[{"eventId":"ev2","marketId":"m1","outcomeId":"h","odds":2.4},{"eventId":"ev3","marketId":"m1","outcomeId":"a","odds":5.4}] }
-  ```
-  成功：`{ "bet": {id,type,selections,stake,totalOdds,potentialPayout,status:"open"}, "balance": 990 }`。
-  **赔率保护**：提交的 `odds` 与当前不一致 → `409 ODDS_CHANGED` + `changed:[{eventId,outcomeId,oldOdds,odds}]`，前端提示用户确认后以 `acceptOddsChange:true` 重提。`type=single` 只能 1 个选项；`parlay` 2-10 个且不能同场重复。
-- `GET /api/sports/bets` 我的注单。`POST /api/sports/bets/:id/settle {result:"won|lost|void"}` 为**开发模拟结算**（`MOCK_ADMIN=0` 关闭），真实环境由赛果/体育供应商推送驱动结算（派彩走 `win`，作废走 `refund`）。
-
-### 自研演示小游戏（⚠ mock RNG，无公平性证明、未认证）
-`POST /api/inhouse/crash/{start|cashout}`、`GET /api/inhouse/crash/poll`、`POST /api/inhouse/plinko/drop`、`GET /api/inhouse/plinko/table`、`POST /api/inhouse/mines/{start|reveal|cashout}`、`GET /api/inhouse/mines/state`（断线重连恢复）。结果、地雷位置、崩盘点均由服务端决定，崩盘点在崩盘前不下发。
-
-### 真人视讯演示结算
-`POST /api/live/{baccarat|dragontiger|roulette|blackjack}/bet`：`{ "gameId":"live-baccarat-a","bets":[{"spot":"banker","amount":10}] }` → 服务器 mock RNG 开牌并结算。**仅演示**；真实视讯由供应商判定并通过 §5 回调结算。
 
 ### 负责任博彩（桩）
 `GET /api/rg/status`、`POST /api/rg/limits {dailyDepositLimit,dailyLossLimit}`、`POST /api/rg/exclude {hours,kind:"cooloff|exclude"}`。详见 §11。
@@ -264,7 +246,7 @@ launch 前(或 launch 内)：adapter.transferIn(amount)  → 平台余额 -amoun
 4. 游戏目录：在 `config/games.json` 增加条目（`provider` 填 providers.json 的键，`type:"iframe"`，`orientation:"landscape"` 用于老虎机），或用 `listGames()` 同步。
 5. 在供应商后台把回调 URL 配成 `https://<域名>/provider/acme/{balance|bet|win|rollback|refund}`。
 6. 验证清单：沙箱走通 `launch → bet → win → rollback → 重复请求`；跑 `node server/test/run.js`；参考 `test/run.js` 为新适配器增加用例（特别是签名与字段映射）。
-7. 去掉 mock：把 `inhouse / demo_*` 等演示供应商设为 `enabled:false`，并移除 `games.json` 中的演示游戏。
+7. 去掉 mock：发布配置里已不含任何演示供应商/演示游戏（`games.json` 只有品类定义）；`/api/mock/*` 在生产用 `MOCK_ADMIN=0` 关闭。
 
 ## 9. 前端 postMessage 桥
 
@@ -326,7 +308,7 @@ launch 前(或 launch 内)：adapter.transferIn(amount)  → 平台余额 -amoun
 - **金额**：整数分计算；服务端为准，永不信任前端金额/赔率（体育已做赔率二次校验）。
 - **CSP / iframe**：当前 `frame-src https:` 过宽，上线收窄；iframe 加 `sandbox`；postMessage 严格校验 origin。
 - **限流/风控**：内存限流仅为示意，生产在网关/WAF 实施，并做设备指纹、多账户、套利监控。
-- **RNG / 公平性**：`lib/inhouse.js`、`lib/live.js` 使用 `crypto.randomInt` 仅供演示，无 provably-fair/认证。上线自研游戏需认证实验室(GLI/iTech 等)与监管批准。
+- **RNG / 公平性**：平台已删除全部自研游戏；游戏结果与公平性由 HUIDU/各厂商负责（如日后自研需认证实验室 GLI/iTech 等)与监管批准。
 - **CORS**：默认同源，不开放跨域；需要时通过 `ALLOWED_ORIGINS` 精确列出。
 - **X-Region / X-Forwarded-For**：这些头只有在受信任代理后才可信；否则客户端可伪造。
 - **关闭演示端点**：生产 `MOCK_ADMIN=0`，并从 `providers.json` 移除 `mock` 适配器。
@@ -361,7 +343,7 @@ launch 前(或 launch 内)：adapter.transferIn(amount)  → 平台余额 -amoun
 
 - 存储：默认内存 + `DATA_DIR` 下的 JSON 文件快照（原子写，见 §17）。仅单实例；没有多实例一致性；账本只持久化最近 20000 条；体育注单、转账钱包的供应商侧余额镜像、会话不持久化。生产需上数据库并按 §7(10) 实现事务与唯一索引。
 - 玩家登录为用户名+密码（scrypt），但无邮箱/手机验证、找回密码、2FA、KYC；无真实支付、无提现。后台为单角色管理员（无 RBAC/2FA）。
-- 视讯无真实视频；路单为随机占位；二十一点演示规则极简化。
+- 真人/体育条目通过 HUIDU 供应商窗口进入（模拟器模式下为演示 iframe）。
 - Reality check 前端弹窗未实现；每日亏损限额仅留 TODO。
 - 通用供应商回调默认仍是 HMAC 占位方案；HUIDU 已按其文档实现（§15）。
 - HUIDU 对账仅提供按需调用的 `reconcile()`，没有定时任务/告警；转账钱包超时单只记录在 `pending`，无自动补偿。其余缺口见 §15.9。
@@ -456,10 +438,10 @@ HUIDU 要求仅 `a-z0-9` 且长度受限。`lib/alias.js`：`别名 = aliasPrefi
 
 ## 16. 大厅与目录（170 款精选 / 捕鱼）
 
-- **目录来源**：`config/games.json`（自研 Crash/Plinko/Mines 演示 + 真人/体育壳）合并 `config/games.huidu-shortlist.json`（170 款精选，详见 `shortlist.md/csv`）。`CATALOG_HUIDU=0` 可关闭合并。精选游戏均走 `huidu_seamless`，缺图，封面由前端按厂商生成渐变 + 品类图案（内联 CSS/SVG，无外网）。
-- **品类**（顺序）：老虎机 slots、**捕鱼 fishing**（新增，10 款）、真人 live、桌游 table、Crash、体育 sports。
+- **目录来源**：`config/games.json`（仅品类定义，**无任何自研/演示游戏**）合并 `config/games.huidu-shortlist.json`（170 款精选：老虎机 80 / 真人 30 / 棋牌 20 / 捕鱼 10 / 小游戏 25 / 体育 5，40 家厂商）。`CATALOG_HUIDU=0` 可关闭合并。精选游戏均走 `huidu_seamless`；封面用 HUIDU 素材包（`public/assets/covers/<game_uid>.webp`），缺图时前端生成“按游戏 id 确定的渐变 + 品类图案 + 游戏名”占位封面（内联 CSS/SVG，无外网）。注意：清单里 Spribe/JILI 等厂商自带的 Mines/Plinko/Crash 是 HUIDU 供应商游戏，不是自研，予以保留。
+- **品类**（顺序）：老虎机 slots、真人视讯 live、棋牌 table、捕鱼 fishing、小游戏 crash、体育 sports。
 - **`GET /api/games`**：新增 `vendor` 过滤；`q` 支持中文别名搜索（如 `麻将`→mahjong、`捕鱼`→fish，见 `lib/search.js`）；`limit` 最大 1000；响应含 `aliases`。内部字段（providerGameId、rawType 等）不对外。
-- **前端大厅**：一次拉取全部游戏、客户端筛选（品类标签带数量、厂商下拉、搜索、快捷 chip 含 麻将）；分批（24/批）懒渲染 + `IntersectionObserver` 哨兵（每批后重新观察，避免大屏/WebKit 卡住）+ `content-visibility:auto`，移动端 170+ 款流畅；所有可点击目标 ≥44px。
+- **前端大厅**：一次拉取全部游戏、客户端筛选（单行可横向滚动的分类横条（带数量）、搜索框（带清除按钮）、厂商选择面板（字母序+数量+logo）、快捷 chip 含 麻将；手机两列等高卡片）；分批（24/批）懒渲染 + `IntersectionObserver` 哨兵（每批后重新观察，避免大屏/WebKit 卡住）+ `content-visibility:auto`，移动端 170+ 款流畅；所有可点击目标 ≥44px。
 
 ---
 

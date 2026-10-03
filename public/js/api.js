@@ -87,12 +87,6 @@ export var api = {
   launch: function (id, extra) { return request('POST', '/api/games/' + encodeURIComponent(id) + '/launch', Object.assign({ device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop', lang: 'zh-CN', returnUrl: location.origin + '/' }, extra || {})); },
   // 以下均为带幂等键的下注类请求：同一 key 重放不会重复扣款
   bet: function (path, body, key) { return request('POST', path, body, { idempotencyKey: key || uuid() }).then(function (r) { if (typeof r.balance === 'number') setBalance(r.balance); return r; }); },
-  liveBet: function (game, gameId, bets, key) { return api.bet('/api/live/' + game + '/bet', { gameId: gameId, bets: bets }, key); },
-  sportsEvents: function (sport) { return request('GET', '/api/sports/events' + (sport ? '?sport=' + sport : '')); },
-  sportsBet: function (payload, key) { return api.bet('/api/sports/bets', payload, key); },
-  sportsBets: function () { return request('GET', '/api/sports/bets'); },
-  sportsSettle: function (id, result) { return request('POST', '/api/sports/bets/' + id + '/settle', { result: result }).then(function (r) { setBalance(r.balance); return r; }); },
-  inhouse: function (game, action, body, key) { return api.bet('/api/inhouse/' + game + '/' + action, body || {}, key); },
   get: function (p) { return request('GET', p); },
   post: function (p, b, o) { return request('POST', p, b, o); },
 };

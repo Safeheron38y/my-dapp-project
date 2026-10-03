@@ -28,7 +28,7 @@ persist.hookExit();
 
 // ---- 游戏运营覆盖 ----
 const BASE = new Map(); // gameId -> {category, tags, idx}
-config.catalog.games.forEach((g, i) => BASE.set(g.id, { category: g.category, tags: (g.tags || []).slice(), idx: i + 1 }));
+require('./mix').mixOrder(config.catalog.games).forEach((g, i) => BASE.set(g.id, { category: g.category, tags: (g.tags || []).slice(), idx: i + 1 }));
 const hasTag = (tags, t) => tags.indexOf(t) >= 0;
 
 function applyOne(g) {

@@ -22,7 +22,7 @@ DEV = {
 if A.devices: DEV = {k: v for k, v in DEV.items() if k in A.devices.split(",")}
 src = open(os.path.join(os.path.dirname(__file__), "shots.py")).read()
 JS_CHECK = src.split('JS_CHECK = """')[1].split('"""')[0]
-PAGES = [("lobby", "/", ".tile"), ("slot-window", "/game.html?id=pg-mahjong-ways", "iframe"), ("live", "/live.html?game=baccarat&id=live-baccarat-a", ".spot"), ("sports", "/sports.html", ".odd")]
+PAGES = [("lobby", "/", ".tile"), ("slot-window", "/game.html?id=pg-mahjong-ways", "iframe")]
 INIT = """(()=>{const w=window;w.__m={cls:0,lt:[],lcp:0,tile:0};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()) if(!e.hadRecentInput) w.__m.cls+=e.value}).observe({type:'layout-shift',buffered:true})}catch(e){}
 try{new PerformanceObserver(l=>{for(const e of l.getEntries()) w.__m.lt.push(e.duration)}).observe({type:'longtask',buffered:true})}catch(e){}

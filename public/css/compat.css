@@ -7,11 +7,8 @@
 .no-fg .tabs>*+*{margin-left:8px}
 .no-fg .bal>*+*{margin-left:8px}
 .no-fg .eyebrow>*+*{margin-left:10px}
-.no-fg .ctl .tabs button>*+*{margin-left:6px}
-.no-fg .row2>*+*{margin-left:8px}
 .no-fg .chips>*+*{margin-left:8px}
 .no-fg .sec-t>*+*{margin-left:10px}
-.no-fg .tile .tags>*+*{margin-top:4px}
 .no-fg .sheet .row>*+*{margin-left:8px}
 .no-fg .sheet .li>*+*{margin-left:10px}
 .no-fg .toasts>*+*{margin-top:8px}
@@ -38,11 +35,14 @@
 .no-fg .chip>*+*{margin-left:6px}
 .no-fg .bdg>*+*{margin-left:4px}
 .no-fg .ldr>*+*{margin-top:6px}
-.no-fg .ctl .tabs button>svg,.no-fg .chip>svg{margin-right:6px}.no-fg .bdg>svg{margin-right:4px}.no-fg .btn>svg{margin-right:8px}
-.no-ar .tile,.no-ar .skel{height:0;padding-top:112%}
-.no-ar .tile.w2{padding-top:47.62%}
-@media(min-width:640px){.no-ar .tile.w2{padding-top:45.45%}}
-.no-ar .tile.t2{height:auto;padding-top:0}
+.no-fg .row2>*+*{margin-left:8px}
+.no-fg .vbtn>*+*{margin-left:8px}
+.no-fg .vrow>*+*{margin-left:10px}
+.no-fg .catbar .tabs>*+*{margin-left:8px}
+.no-fg .catbar .tabs button>*+*{margin-left:6px}
+.no-fg .sec-t>*+*{margin-left:10px}
+.no-fg .cv .tags>*+*{margin-top:4px}
+.no-fg .info small>*+*{margin-left:6px}
+.no-fg .catbar .tabs button>svg,.no-fg .chip>svg{margin-right:6px}.no-fg .bdg>svg{margin-right:4px}.no-fg .btn>svg{margin-right:8px}
+.no-ar .cv{height:0;padding-top:100%}.no-ar .skel{height:0;padding-top:134%}
 .no-ar .vid{height:auto}.no-ar .vid:before{content:"";display:block;padding-top:56.25%}
-.no-ar .cell:before{content:"";display:block;padding-top:100%}
-.no-ar .sp-list .skel{height:auto;padding-top:0;min-height:96px}

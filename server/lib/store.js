@@ -13,7 +13,6 @@ const launches = new Map();    // launchToken -> {userId, gameId, provider, exp}
 const ledger = new Map();      // `${provider}:${txId}` -> entry
 const ledgerByUser = new Map();// userId -> entry[]
 const clientIdem = new Map();  // `${userId}:${key}` -> {hash,response}
-const sportsBets = new Map();  // betId -> bet
 const aliasToUser = new Map(); // `${provider}:${alias}` -> userId   (供应商 member_account 别名，仅 a-z0-9)
 const userToAlias = new Map(); // `${provider}:${userId}` -> alias
 const uid = (p) => p + '_' + crypto.randomBytes(8).toString('hex');
@@ -49,4 +48,4 @@ function addEntry(e) {
   ledgerByUser.get(e.userId).push(e);
   markDirty();
 }
-module.exports = { users, byName, sessions, launches, ledger, ledgerByUser, clientIdem, sportsBets, aliasToUser, userToAlias, uid, createUser, ledgerOf, addEntry, markDirty };
+module.exports = { users, byName, sessions, launches, ledger, ledgerByUser, clientIdem, aliasToUser, userToAlias, uid, createUser, ledgerOf, addEntry, markDirty };

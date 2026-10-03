@@ -17,7 +17,6 @@ function start() {
     gw.checkOrientation();
     return gw.loadIframe(function () {
       return api.launch(id).then(function (l) {
-        if (l.window) { location.replace(l.window); throw new Error('跳转中…'); }
         return l;
       });
     });

@@ -54,7 +54,7 @@ function serveStatic(req, res, urlPath) {
     const ext = path.extname(file).toLowerCase();
     const type = MIME[ext] || 'application/octet-stream';
     const etag = `W/"${st.size}-${Math.floor(st.mtimeMs)}"`;
-    const h = { 'Content-Type': type, ETag: etag, 'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=300, must-revalidate', Vary: 'Accept-Encoding' };
+    const h = { 'Content-Type': type, ETag: etag, 'Cache-Control': ext === '.html' ? 'no-cache' : /^\/assets\/(covers|logos)\//.test(urlPath) ? 'public, max-age=86400' : 'public, max-age=300, must-revalidate', Vary: 'Accept-Encoding' };
     if (req.headers['if-none-match'] === etag) { res.writeHead(304, h); return res.end(); }
     const compress = /\b(html|css|javascript|json|svg|yaml)\b/.test(type) && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
     if (!compress) { h['Content-Length'] = st.size; res.writeHead(200, h); return req.method === 'HEAD' ? res.end() : fs.createReadStream(file).pipe(res); }

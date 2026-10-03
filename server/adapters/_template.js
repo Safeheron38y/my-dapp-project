@@ -29,7 +29,7 @@ class TemplateAdapter {
 
   /**
    * (可选) 拉取供应商游戏列表，返回统一结构数组：
-   * [{ id, name, category: 'live|slots|table|crash|sports', subcategory, provider: this.name, type: 'iframe|live|inhouse|sports',
+   * [{ id, name, category: 'live|slots|table|crash|sports', subcategory, provider: this.name, type: 'iframe',
    *    orientation: 'any|landscape|portrait', tags: [], thumb?: '', providerGameId }]
    * 返回 null 表示使用 config/games.json 中的静态目录。
    */

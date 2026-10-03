@@ -27,14 +27,13 @@ const regions = load('regions.json');
 const catalog = load('games.json');
 
 // 合并 HUIDU 精选清单(games.huidu-shortlist.json)：品类取并集(以 shortlist 的顺序为准)，游戏按 id 去重追加。
-// 设置 CATALOG_HUIDU=0 可不加载（仅保留自研/演示外壳）。
+// 设置 CATALOG_HUIDU=0 可不加载（目录为空）。
 function mergeCatalog() {
   if (process.env.CATALOG_HUIDU === '0') return;
   const f = path.join(CONF_DIR, 'games.huidu-shortlist.json');
   if (!fs.existsSync(f)) return;
   const sl = load('games.huidu-shortlist.json');
-  const cats = {};
-  for (const [k, v] of Object.entries(Object.assign({}, sl.categories, catalog.categories))) cats[k] = (catalog.categories[k] || v);
+  const cats = Object.assign({}, catalog.categories); // 以 games.json 的品类顺序/名称为准，清单里多出的品类追加在后
   for (const k of Object.keys(sl.categories || {})) if (!cats[k]) cats[k] = sl.categories[k];
   catalog.categories = cats;
   const seen = new Set(catalog.games.map((g) => g.id));

@@ -28,13 +28,11 @@ def req(method, path, body=None, token=None):
         return json.loads(e.read() or b"{}")
 
 def seed_activity():
-    """让截图里有数据：test01/02/03 玩几局自研游戏 + 充值；再注册一个演示玩家。"""
+    """让截图里有数据：test01/02/03 充值；再注册一个演示玩家。"""
     for n in ("test01", "test02", "test03"):
         t = req("POST", "/api/auth/login", {"username": n, "password": "Test@2026"}).get("token")
         if not t: continue
         req("POST", "/api/wallet/deposit", {"amount": 200}, t)
-        for i in range(8): req("POST", "/api/inhouse/plinko/drop", {"amount": 20 + i * 5, "rows": 8, "risk": "med"}, t)
-        req("POST", "/api/live/baccarat/bet", {"gameId": "live-baccarat-a", "bets": [{"spot": "banker", "amount": 50}]}, t)
     req("POST", "/api/auth/register", {"username": "demo_%d" % int(time.time() % 100000), "password": "Demo1234x"})
 
 def save(page, name, full=True):

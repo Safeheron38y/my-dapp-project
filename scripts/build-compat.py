@@ -3,7 +3,7 @@
 import re, os
 D = os.path.join(os.path.dirname(__file__), "..", "public", "css")
 gap = []
-for f in ("tokens.css", "app.css", "art.css"):
+for f in ("tokens.css", "app.css", "art.css", "lobby.css"):
     s = open(os.path.join(D, f)).read()
     s = re.sub(r"/\*.*?\*/", "", s, flags=re.S)
     # 去掉 @media / @supports 块(含嵌套花括号)，只处理顶层规则；媒体查询内的 gap 另有处理
@@ -32,15 +32,10 @@ for sel, v, col in gap:
     prop = "margin-top" if col else "margin-left"
     out.append(",".join(".no-fg %s>*+*" % x for x in sels) + "{%s:%spx}" % (prop, v))
 # 特例：tabs 按钮里文本节点无法选中 → 图标右边距
-out.append(".no-fg .ctl .tabs button>svg,.no-fg .chip>svg{margin-right:6px}.no-fg .bdg>svg{margin-right:4px}.no-fg .btn>svg{margin-right:8px}")
+out.append(".no-fg .catbar .tabs button>svg,.no-fg .chip>svg{margin-right:6px}.no-fg .bdg>svg{margin-right:4px}.no-fg .btn>svg{margin-right:8px}")
 # aspect-ratio 回退（手工列表：这些容器的子元素均为绝对定位或自带高度）
-out.append(".no-ar .tile,.no-ar .skel{height:0;padding-top:112%}")
-out.append(".no-ar .tile.w2{padding-top:47.62%}")
-out.append("@media(min-width:640px){.no-ar .tile.w2{padding-top:45.45%}}")
-out.append(".no-ar .tile.t2{height:auto;padding-top:0}")
+out.append(".no-ar .cv{height:0;padding-top:100%}.no-ar .skel{height:0;padding-top:134%}")
 out.append(".no-ar .vid{height:auto}.no-ar .vid:before{content:\"\";display:block;padding-top:56.25%}")
-out.append(".no-ar .cell:before{content:\"\";display:block;padding-top:100%}")
-out.append(".no-ar .sp-list .skel{height:auto;padding-top:0;min-height:96px}")
 s = "\n".join(out)
 open(os.path.join(D, "compat.css"), "w").write(s)
 print("compat.css %d B, %d gap rules, aspect: manual" % (len(s.encode()), len(gap)))
