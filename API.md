@@ -75,7 +75,7 @@ node test/run.js                  # 运行集成测试(自带随机端口，不�
 ## 3. 通用约定
 
 - **金额**：JSON 中为主币单位的 number，**最多 2 位小数**；服务端内部一律转换为整数「分」，超过 2 位小数、负数、非数字 → `400 INVALID_AMOUNT`。
-- **鉴权**：玩家接口 `Authorization: Bearer <token>`（`/api/auth/login` 获得）。供应商回调使用 HMAC 签名，见 §5。
+- **鉴权**：玩家接口 `Authorization: Bearer <token>`（`/api/auth/login` 或 `/api/auth/register` 获得）。供应商回调使用 HMAC 签名，见 §5。
 - **地区**：优先使用账户地区；未登录的列表类接口可用 `?region=` 或 `X-Region` 头（⚠ 生产应由网关依据 IP 注入并剥离客户端同名头）。
 - **错误格式**（HTTP 状态码 + 统一 JSON）：
   ```json
@@ -86,16 +86,19 @@ node test/run.js                  # 运行集成测试(自带随机端口，不�
 
 ## 4. 玩家端接口
 
-### POST `/api/auth/login`（mock）
-⚠ 演示：不校验密码，任何用户名都能登录并自动创建账户（初始 1000 演示币，见 `regions.json.startingBalance`）。
+### POST `/api/auth/register` · POST `/api/auth/login`（用户名 + 密码）
+密码用 **scrypt**（Node 内置，N=16384,r=8,p=1，随机盐，恒定时间比较）哈希后存储，格式 `scrypt$N$r$p$salt$hash`。不存在的用户名也会做一次等价哈希，错误信息一致（防枚举）。
 ```http
-POST /api/auth/login
-{ "username": "alice", "region": "region_a" }
+POST /api/auth/register   { "username": "alice", "password": "Abcd1234" }     # 用户名 2-32 位(字母数字汉字 _ -)；密码 8-64 位，需含字母+数字
+POST /api/auth/login      { "username": "alice", "password": "Abcd1234", "region": "default" }
 ```
 ```json
-{ "token": "tk_…", "expiresIn": 43200, "user": {"id":"u_ab12…","username":"alice","region":"region_a"},
-  "wallet": {"balance":1000,"currency":"DEMO","currencyLabel":"演示币","demo":true,"region":"region_a","limits":{"minBet":1,"maxBet":5000,"minDeposit":10,"maxDeposit":50000,"maxDailyDeposit":100000}}, "mock": true }
+{ "token": "tk_…", "expiresIn": 43200, "user": {"id":"u_ab12…","username":"alice","region":"default"},
+  "wallet": {"balance":1000,"currency":"DEMO","currencyLabel":"演示币","demo":true,"region":"default","limits":{…}}, "registered": true }
 ```
+错误码：`INVALID_USERNAME` / `WEAK_PASSWORD` / `USERNAME_TAKEN`(409) / `INVALID_CREDENTIALS`(401) / `ACCOUNT_FROZEN`(403) / `ACCOUNT_LOCKED`(429，连续失败 8 次锁 10 分钟，`PLAYER_LOCK_THRESHOLD`/`PLAYER_LOCK_MINUTES`) / `REGISTRATION_CLOSED`(403，后台可关闭注册) / `RATE_LIMITED`(429，按 IP，`LOGIN_RATE_LIMIT_PER_MIN`)。
+新注册玩家初始 1000 演示币（`regions.json.startingBalance`）；种子演示玩家 `test01/02/03` 为 10000。**已不再支持免密登录。**
+冻结的玩家：已有会话立即失效，不能登录/充值/投注/启动游戏。
 
 ### GET `/api/config?region=`
 返回币种、地区、品类启用状态、限额、可选地区列表（前端据此灰显未开放品类）。
@@ -356,8 +359,8 @@ launch 前(或 launch 内)：adapter.transferIn(amount)  → 平台余额 -amoun
 
 ## 14. 已知缺口 / 生产化待办
 
-- 存储为内存：重启丢数据，没有持久化/多实例一致性；需上数据库并按 §7(10) 实现事务与唯一索引。
-- 登录为 mock（无密码/KYC）；无管理后台、无真实支付、无提现。
+- 存储：默认内存 + `DATA_DIR` 下的 JSON 文件快照（原子写，见 §17）。仅单实例；没有多实例一致性；账本只持久化最近 20000 条；体育注单、转账钱包的供应商侧余额镜像、会话不持久化。生产需上数据库并按 §7(10) 实现事务与唯一索引。
+- 玩家登录为用户名+密码（scrypt），但无邮箱/手机验证、找回密码、2FA、KYC；无真实支付、无提现。后台为单角色管理员（无 RBAC/2FA）。
 - 视讯无真实视频；路单为随机占位；二十一点演示规则极简化。
 - Reality check 前端弹窗未实现；每日亏损限额仅留 TODO。
 - 通用供应商回调默认仍是 HMAC 占位方案；HUIDU 已按其文档实现（§15）。
@@ -457,3 +460,52 @@ HUIDU 要求仅 `a-z0-9` 且长度受限。`lib/alias.js`：`别名 = aliasPrefi
 - **品类**（顺序）：老虎机 slots、**捕鱼 fishing**（新增，10 款）、真人 live、桌游 table、Crash、体育 sports。
 - **`GET /api/games`**：新增 `vendor` 过滤；`q` 支持中文别名搜索（如 `麻将`→mahjong、`捕鱼`→fish，见 `lib/search.js`）；`limit` 最大 1000；响应含 `aliases`。内部字段（providerGameId、rawType 等）不对外。
 - **前端大厅**：一次拉取全部游戏、客户端筛选（品类标签带数量、厂商下拉、搜索、快捷 chip 含 麻将）；分批（24/批）懒渲染 + `IntersectionObserver` 哨兵（每批后重新观察，避免大屏/WebKit 卡住）+ `content-visibility:auto`，移动端 170+ 款流畅；所有可点击目标 ≥44px。
+
+---
+
+## 17. 玩家认证、后台管理（/admin）与持久化
+
+### 17.1 持久化（`DATA_DIR`）
+- 目录：环境变量 `DATA_DIR`（默认 `<项目根>/data`，已在 `.gitignore`）；`DATA_DIR=off`（或 `memory`）关闭落盘。
+- 文件：`users.json`（玩家，含 scrypt 哈希与冻结状态）、`ledger.json`（最近 `LEDGER_PERSIST_MAX`=20000 条账本）、`admin.json`（管理员、站点设置、游戏运营覆盖、审计日志）。
+- **原子写**：写 `<file>.<pid>.<ts>.tmp` → `fsync` → `rename` 覆盖 → `fsync` 目录；写入防抖（`PERSIST_DELAY_MS`，默认 1500ms），进程退出 / `SIGTERM` / `SIGINT` 时同步落盘。读取到损坏 JSON 时改名为 `*.corrupt-<ts>` 并以默认值启动。
+- 免费托管的磁盘是临时的（见 `DEPLOY.md`）：重启/休眠/重新部署后数据重置。
+
+### 17.2 演示账号（仅演示！）
+| 角色 | 账号 | 密码 | 说明 |
+|---|---|---|---|
+| 玩家 | `test01` `test02` `test03` | `Test@2026` | 演示币余额 10000 |
+| 管理员 | `admin` | `Admin@2026!` | 登录 `/admin` |
+
+环境变量覆盖：`ADMIN_USERNAME`+`ADMIN_PASSWORD`（设置后每次启动以它们为准）、`DEMO_PLAYERS`、`DEMO_PLAYER_PASSWORD`、`DEMO_PLAYER_BALANCE`、`SEED_DEMO=0`（不创建演示玩家）、`SHOW_DEMO_ACCOUNTS=0`（登录页不显示演示账号提示）。已存在的账号不会被重置余额。
+
+### 17.3 后台 API（`/api/admin/*`）
+- **认证**：`POST /api/admin/login {username,password}` → `Set-Cookie: k8_admin=…; HttpOnly; SameSite=Strict; Path=/api/admin`（HTTPS 下加 `Secure`），响应里带 `csrf`。会话仅存内存（令牌只保留 SHA-256 摘要）：空闲 2 小时 / 绝对 12 小时过期。与玩家 Bearer 令牌**完全分离**（互不通用）。
+- **CSRF**：所有 `POST`（除登录）必须带 `X-CSRF-Token: <csrf>`，并校验 `Origin` 与 `Host` 同源。
+- **限流/锁定**：登录按 IP 限流（`ADMIN_LOGIN_RATE_LIMIT`，默认 10 次/5 分钟 → 429 + `Retry-After`）；同一账号连续失败 5 次锁 15 分钟（`ADMIN_LOCK_THRESHOLD`/`ADMIN_LOCK_MINUTES`）。
+- 变更类接口一律 `POST`（本服务器只实现 GET/POST）。所有写操作写入审计日志。
+
+| 接口 | 说明 |
+|---|---|
+| `GET /api/admin/session` | 无需登录，探测会话 `{authenticated, admin?, csrf?}` |
+| `POST /api/admin/login` · `/logout` · `/password` | 登录 / 登出 / 修改管理员密码（弱密码拒绝，其它会话下线） |
+| `GET /api/admin/me` | 当前管理员 + csrf |
+| `GET /api/admin/dashboard` | 玩家数(总/今日新增/24h 活跃/冻结)、钱包总额、累计与今日 投注/派彩/**GGR**/RTP、局数、充值、调整净额、近 7 日序列（UTC+8 切日，`ADMIN_TZ_OFFSET_MIN`）、热门游戏 TOP6、最近 10 笔交易、游戏上架数 |
+| `GET /api/admin/players?q=&status=active\|frozen&sort=created\|balance\|bet\|login&page=&limit=` | 玩家列表 + 统计 |
+| `GET /api/admin/players/:id?page=&limit=` | 玩家详情 + 钱包账本 |
+| `POST /api/admin/players/:id/adjust {amount, reason}` | 调整演示余额（可正可负，必填原因；不得扣成负数；写入账本 `type=adjust, provider=admin`） |
+| `POST /api/admin/players/:id/freeze {frozen, reason}` | 冻结/解冻（冻结必填原因，立即踢下线） |
+| `POST /api/admin/players/:id/password {password}` | 重置玩家密码 |
+| `GET /api/admin/games?q=&category=&provider=&enabled=1\|0&flag=hot\|new&page=&limit=` | 186 款游戏 + 运营覆盖状态 |
+| `POST /api/admin/games/:id {enabled?,hot?,isNew?,sort?,category?,reset?}` | 启停 / 热门 / 新游 / 排序(越小越靠前) / 分类；`reset:true` 恢复默认 |
+| `POST /api/admin/games/bulk {ids[], …同上}` | 批量（≤500） |
+| `GET /api/admin/providers` | 供应商状态：模式(simulator/live/mock/disabled)、钱包模式、凭据**是否已配置**（布尔，绝不返回值）、上游主机、IP 白名单条数、游戏数、24h 交易与 GGR |
+| `GET /api/admin/transactions?type=&status=&provider=&player=&game=&q=&from=&to=&min=&max=&page=&limit=` | 交易查询：多条件组合 + 汇总（投注/派彩/GGR）；`from/to` 支持 `YYYY-MM-DD`（按 UTC+8）或毫秒时间戳 |
+| `GET/POST /api/admin/settings` | 站点横幅 `maintenance{enabled,text,level}`、`blockPlay`（维护模式禁止启动游戏）、`registrationOpen`；另返回系统信息 |
+| `GET /api/admin/audit?limit=` | 审计日志 |
+
+公开接口的联动：`GET /api/config` 新增 `maintenance`（横幅，前台各页面顶部显示）、`registrationOpen`、`demoLogin`；`GET /api/games` 不返回已下架游戏并按后台“排序”输出，`/api/games/:id` 与启动接口对下架游戏返回 404；`blockPlay` 开启时启动游戏返回 `503 MAINTENANCE`。
+GGR（演示币）= 投注 − 派彩；已冲正的 bet/win 不计入，充值/调整/转账不计入 GGR。
+
+### 17.4 部署
+见 `DEPLOY.md`（Dockerfile、`render.yaml`、免费档限制）。反向代理后请设置 `TRUST_PROXY=1`。

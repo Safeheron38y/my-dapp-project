@@ -87,6 +87,7 @@ $('#slipOpen').addEventListener('click', function () {
 });
 var busy = false;
 function place() {
+  if (!api.requireLogin()) return;
   if (busy) return; var st = (S.stake + '').trim();
   if (!/^\d+(\.\d{1,2})?$/.test(st) || +st <= 0) return toast('请输入有效金额（最多两位小数）', 'err');
   if (S.type === 'parlay' && S.slip.length < 2) return toast('串关至少选择 2 场', 'err');
@@ -110,6 +111,7 @@ function place() {
   });
 }
 function myBets() {
+  if (!api.requireLogin()) return;
   var s = sheet('<h3>我的注单 <span class="demo-tag">演示</span></h3><div class="mybets" id="mb"><div class="empty">加载中…</div></div><p class="note">“模拟结算”仅为开发演示（MOCK_ADMIN），真实结算由体育数据/供应商推送。</p>');
   function ld() { api.sportsBets().then(function (r) {
     s.$('#mb').innerHTML = r.bets.length ? r.bets.map(function (b) { return '<div class="bt"><div class="r"><b>' + (b.type === 'parlay' ? '串关' : '单关') + ' · ' + fmt(b.stake) + ' @ ' + b.totalOdds.toFixed(2) + '</b><span>' + ({ open: '进行中', won: '已赢', lost: '已输', void: '已作废' })[b.status] + '</span></div>' +

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2B1B5E"><meta name="color-scheme" content="light">
+<title>8K｜注册（演示）</title>
+<link rel="icon" href="/assets/logo-mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/tokens.css"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/auth.css">
+<script src="/js/boot.js"></script></head>
+<body class="auth" data-mode="register">
+<main class="au-card" id="main">
+  <a class="au-brand" href="/" aria-label="返回 8K 首页"><img src="/assets/logo-mark.svg" alt="" width="44" height="44"><b>8K</b></a>
+  <h1>创建账号 <span class="demo-tag">演示</span></h1>
+  <p class="sub">注册即送演示币，免费体验全部游戏。仅用于演示，不涉及真实资金。</p>
+  <form id="af" novalidate>
+    <div><label for="u">用户名</label><input class="field" id="u" name="username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="32" required></div>
+    <div><label for="p">密码</label><div class="pw"><input class="field" id="p" name="password" type="password" autocomplete="new-password" maxlength="64" required><button type="button" id="sp" aria-label="显示密码" aria-pressed="false">显示</button></div></div>
+    <div id="cw" hidden><label for="p2">确认密码</label><input class="field" id="p2" type="password" autocomplete="new-password" maxlength="64"></div>
+    <p class="hint" id="ph" hidden>用户名 2-32 位（字母、数字、汉字、_ -）；密码 8-64 位，需同时包含字母和数字。</p>
+    <p class="msg" id="msg" role="alert"></p>
+    <button class="btn btn-foil shine" id="go" type="submit">注册并进入大厅</button>
+  </form>
+  <p class="alt" id="alt"></p>
+  <div class="demo" id="demo" hidden><b>演示账号</b>（仅限演示环境）：点击自动填入<br><span id="demos"></span></div>
+</main>
+<script nomodule src="/js/nomodule.js"></script>
+<script type="module" src="/js/auth-page.js"></script>
+</body></html>

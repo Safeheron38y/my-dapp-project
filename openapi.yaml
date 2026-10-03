@@ -157,15 +157,27 @@ paths:
       summary: 币种/地区/品类开关/限额
       parameters: [{ name: region, in: query, schema: { type: string } }]
       responses: { '200': { description: ok } }
-  /api/auth/login:
+  /api/auth/register:
     post:
       tags: [auth]
-      summary: Mock 登录（不校验密码）
+      summary: 注册（用户名 + 密码，scrypt 哈希）
       requestBody:
-        content: { application/json: { schema: { type: object, required: [username], properties: { username: { type: string }, region: { type: string } } } } }
+        content: { application/json: { schema: { type: object, required: [username, password], properties: { username: { type: string, description: '2-32 位 字母数字汉字 _ -' }, password: { type: string, description: '8-64 位，含字母+数字' } } } } }
       responses:
         '200': { description: token + wallet }
         '400': { $ref: '#/components/responses/Err' }
+        '409': { description: USERNAME_TAKEN }
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: 登录（用户名 + 密码）
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [username, password], properties: { username: { type: string }, password: { type: string }, region: { type: string } } } } }
+      responses:
+        '200': { description: token + wallet }
+        '401': { description: INVALID_CREDENTIALS }
+        '403': { description: ACCOUNT_FROZEN }
+        '429': { description: ACCOUNT_LOCKED / RATE_LIMITED }
   /api/auth/logout:
     post: { tags: [auth], security: [{ bearer: [] }], summary: 登出, responses: { '200': { description: ok } } }
   /api/me:
@@ -377,3 +389,18 @@ paths:
       parameters: [{ $ref: '#/components/parameters/Provider' }]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [agency_uid, timestamp, payload], properties: { agency_uid: { type: string }, timestamp: { type: string }, payload: { type: string } } } } } }
       responses: { '200': { description: 'code=0 成功 / code=1 失败(均含余额密文)', content: { application/json: { schema: { type: object, properties: { code: { type: integer }, msg: { type: string }, payload: { type: string } } } } } } }
+  # ---- 后台管理（Cookie k8_admin + X-CSRF-Token；详见 API.md §17）----
+  /api/admin/login: { post: { tags: [admin], summary: 管理员登录（Set-Cookie k8_admin, 返回 csrf）, responses: { '200': { description: ok }, '401': { description: INVALID_CREDENTIALS }, '429': { description: RATE_LIMITED / ACCOUNT_LOCKED } } } }
+  /api/admin/session: { get: { tags: [admin], summary: 探测会话, responses: { '200': { description: authenticated } } } }
+  /api/admin/dashboard: { get: { tags: [admin], summary: 仪表盘, responses: { '200': { description: ok }, '401': { description: ADMIN_UNAUTHORIZED } } } }
+  /api/admin/players: { get: { tags: [admin], summary: 玩家搜索/列表, responses: { '200': { description: ok } } } }
+  /api/admin/players/{id}: { get: { tags: [admin], summary: 玩家详情 + 账本, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: ok } } } }
+  /api/admin/players/{id}/adjust: { post: { tags: [admin], summary: 调整演示余额, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: ok } } } }
+  /api/admin/players/{id}/freeze: { post: { tags: [admin], summary: 冻结/解冻, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: ok } } } }
+  /api/admin/games: { get: { tags: [admin], summary: 游戏管理列表, responses: { '200': { description: ok } } } }
+  /api/admin/games/{id}: { post: { tags: [admin], summary: 启停/热门/新游/排序/分类, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: ok } } } }
+  /api/admin/games/bulk: { post: { tags: [admin], summary: 批量更新游戏, responses: { '200': { description: ok } } } }
+  /api/admin/providers: { get: { tags: [admin], summary: 供应商状态（不含密钥）, responses: { '200': { description: ok } } } }
+  /api/admin/transactions: { get: { tags: [admin], summary: 交易查询（多条件过滤）, responses: { '200': { description: ok } } } }
+  /api/admin/settings: { get: { tags: [admin], summary: 读取设置, responses: { '200': { description: ok } } }, post: { tags: [admin], summary: 保存设置（维护横幅等）, responses: { '200': { description: ok } } } }
+  /api/admin/audit: { get: { tags: [admin], summary: 审计日志, responses: { '200': { description: ok } } } }

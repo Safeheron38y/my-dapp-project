@@ -91,6 +91,13 @@ JS_CHECK = """() => {
   return { over, offenders: offenders.slice(0, 6), small: small.slice(0, 12), nsmall: small.length };
 }"""
 
+def player_token():
+    """玩家已改为用户名+密码：每个浏览器上下文注册一个全新玩家(避免互相占用进行中的回合)，令牌写入 localStorage。"""
+    import urllib.request, uuid
+    body = json.dumps({"username": "shot_" + uuid.uuid4().hex[:8], "password": "Shots1234x"}).encode()
+    r = urllib.request.Request(BASE + "/api/auth/register", data=body, headers={"Content-Type": "application/json"})
+    return json.loads(urllib.request.urlopen(r, timeout=20).read())["token"]
+
 def main():
     engines = sys.argv[1:] or ["webkit", "chromium"]
     report = []
@@ -103,6 +110,7 @@ def main():
             for name, path, act, ctxs in PAGES:
                 for c in ctxs:
                     ctx = browser.new_context(locale="zh-CN", **c)
+                    ctx.add_init_script("try{localStorage.setItem('8k.token','%s')}catch(e){}" % player_token())
                     page = ctx.new_page(); errs = []
                     page.on("console", lambda m: errs.append(f"console.{m.type}: {m.text}") if m.type in ("error",) else None)
                     page.on("pageerror", lambda e: errs.append(f"pageerror: {e}"))

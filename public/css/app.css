@@ -322,3 +322,9 @@ select.field option{color:#2A1D55}
 #tabs{min-height:50px}#chips{min-height:46px}
 #sp-tabs{min-height:50px}
 .sp-list[aria-busy=true]{min-height:calc(100vh - 260px)}
+/* 后台“站点横幅”（/admin → 系统设置） */
+.mt-banner{padding:10px var(--pad);text-align:center;font-size:14px;font-weight:600;line-height:1.5;color:#fff;background:linear-gradient(90deg,#5B3CC4,#9A44A8)}
+.mt-banner.warn{background:linear-gradient(90deg,#8a3a1a,#C2478A);}
+/* 桌面端页眉账户入口（≤899px 由底部导航承担） */
+.hdr .acct{display:none;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 16px;border-radius:99px;background:rgba(255,255,255,.12);box-shadow:0 0 0 1px var(--hair-w) inset;font-weight:600;font-size:15px;color:#fff;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:900px){.hdr .acct{display:inline-flex}.hdr .acct[hidden]{display:none}}

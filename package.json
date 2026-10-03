@@ -1,0 +1,11 @@
+{
+  "name": "8k-platform",
+  "version": "0.2.0",
+  "private": true,
+  "description": "8K 游戏平台（演示 / Mock）：零依赖 Node 20 服务 + 原生 JS 前端 + 后台管理",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node server/test/run.js"
+  }
+}

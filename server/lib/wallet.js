@@ -179,6 +179,18 @@ function deposit({ userId, amountMinor, txId }) {
   return { duplicate: false, view: view(e, u, { status: 'ok' }) };
 }
 
+// 运营后台手工调整演示币余额（可正可负；余额不得为负）。写入账本 type='adjust'、provider='admin'，便于对账与审计。
+function adminAdjust({ userId, deltaMinor, reason, admin }) {
+  const u = getUser(userId);
+  if (!Number.isSafeInteger(deltaMinor) || deltaMinor === 0) throw new WalletError('INVALID_AMOUNT', '调整金额必须是非零数字（最多两位小数）');
+  if (Math.abs(deltaMinor) > 1e9) throw new WalletError('INVALID_AMOUNT', '单次调整不能超过 1,000,0000.00');
+  if (u.balance + deltaMinor < 0) throw new WalletError('INSUFFICIENT_FUNDS', '调整后余额不能为负', 409, { balance: u.balance / 100 });
+  u.balance += deltaMinor;
+  const txId = 'adj_' + crypto.randomBytes(8).toString('hex');
+  const e = push({ txId, provider: 'admin', userId, type: 'adjust', amount: deltaMinor, status: 'ok', reqHash: txId, meta: { reason, admin, demo: true } }, u);
+  return { entry: e, user: u, view: view(e, u, { status: 'ok' }) };
+}
+
 // ---- 转账钱包(Transfer Wallet)：平台余额 <-> 供应商余额 ----
 const providerBal = new Map(); // `${provider}:${userId}` -> minor
 const pbKey = (p, u) => `${p}:${u}`;
@@ -211,4 +223,4 @@ function providerAdjust(provider, userId, deltaMinor) {
   return (cur + deltaMinor) / 100;
 }
 
-module.exports = { WalletError, balance, bet, settle, win, rollback, refund, deposit, transfer, providerBalance, providerAdjust };
+module.exports = { WalletError, adminAdjust, balance, bet, settle, win, rollback, refund, deposit, transfer, providerBalance, providerAdjust };

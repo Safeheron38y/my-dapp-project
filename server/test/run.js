@@ -1,6 +1,10 @@
 'use strict';
 // 启动服务器(随机端口、独立进程内) 并测试 bet/win/rollback/refund 幂等、签名、限额、地区等。运行：node test/run.js
 process.env.PORT = '0';
+// 持久化写入临时目录(测试结束即弃)；加快 scrypt 以缩短测试时间(生产默认 N=16384)
+process.env.DATA_DIR = require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), '8k-test-'));
+process.env.PERSIST_DELAY_MS = '50'; process.env.SCRYPT_N = '1024';
+process.env.ADMIN_LOGIN_RATE_LIMIT = '100000';
 // 测试必须离线且确定：强制使用 HUIDU 本地模拟器（随机凭据），不读取开发者环境里的任何 HUIDU_* 真实凭据
 process.env.LOGIN_RATE_LIMIT_PER_MIN = '100000';
 process.env.HUIDU_SIMULATOR = 'on'; process.env.HUIDU_WALLET_MODE = 'shared';
@@ -40,7 +44,8 @@ async function cb(provider, action, payload, opt = {}) {
 }
 let n = 0; const uniq = (p) => `${p}-${Date.now()}-${++n}`;
 async function newUser(region) {
-  const r = await api('POST', '/api/auth/login', { username: uniq('u').replace(/[^\w-]/g, ''), region });
+  const r = await api('POST', '/api/auth/register', { username: uniq('u').replace(/[^\w-]/g, ''), password: 'Pass1234x', region });
+  assert.strictEqual(r.status, 200, JSON.stringify(r.body));
   return { token: r.body.token, id: r.body.user.id, balance: r.body.wallet.balance };
 }
 const bal = async (u) => (await api('GET', '/api/wallet', null, u.token)).body.balance;
@@ -69,6 +74,9 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     const u = await newUser(); assert.strictEqual(u.balance, 1000); assert.strictEqual(await bal(u), 1000);
     assert.strictEqual((await api('GET', '/api/wallet')).status, 401);
   });
+  // 玩家密码认证 / 后台管理 / 持久化（test/auth-admin.js）。放在目录被其它测试改动之前，便于断言 186 款。
+  await require('./auth-admin')({ t, api, cb, base: () => base, uniq, config, store, P });
+
   await t('回调签名：缺失/错误/过期/篡改 → 401 且不动账', async () => {
     const u = await newUser(); const p = { userId: u.id, txId: uniq('s'), amount: 10, roundId: 'r1' };
     assert.strictEqual((await cb(P, 'bet', p, { noSig: true })).status, 401);

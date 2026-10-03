@@ -48,24 +48,34 @@ export function retrying(fn, n) {
   return fn().catch(function (e) { if (n > 0 && e.code === 'NETWORK') return new Promise(function (r) { setTimeout(r, 600); }).then(function () { return retrying(fn, n - 1); }); throw e; });
 }
 
+function clearAuth() { state.token = null; store('token', null); state.user = null; state.wallet = null; }
+function goLogin(frozen) {
+  var next = location.pathname + location.search + location.hash;
+  if (location.pathname !== '/login.html' && location.pathname !== '/register.html') location.replace('/login.html?next=' + encodeURIComponent(next) + (frozen ? '&frozen=1' : ''));
+  return new Promise(function () {}); // 跳转中，页面后续逻辑不再执行
+}
+function authCall(path, username, password) {
+  return request('POST', path, { username: username, password: password }).then(function (r) {
+    state.token = r.token; store('token', r.token); store('username', r.user.username);
+    applyWallet(r.wallet, r.user); return r;
+  });
+}
 function applyWallet(w, user) { if (w) state.wallet = w; if (user) state.user = user; emit(); }
 
 export var api = {
   config: function () { return request('GET', '/api/config?region=' + encodeURIComponent(state.region)); },
-  login: function (username, region) {
-    return request('POST', '/api/auth/login', { username: username, region: region || state.region }).then(function (r) {
-      state.token = r.token; store('token', r.token); store('username', username);
-      if (region) { state.region = region; store('region', region); }
-      applyWallet(r.wallet, r.user); return r;
-    });
-  },
-  // 演示环境：没有令牌时自动以访客身份登录，方便直接体验
-  ensure: function () {
-    var go = function () { var n = store('username') || ('演示玩家' + uuid().slice(0, 4)); return api.login(n); };
-    if (!state.token) return go();
+  // 用户名 + 密码登录 / 注册（密码由服务器 scrypt 哈希；演示环境账号见 README）
+  login: function (username, password) { return authCall('/api/auth/login', username, password); },
+  register: function (username, password) { return authCall('/api/auth/register', username, password); },
+  // 确保已登录：soft=true 时游客也可继续(返回 null)；否则跳转 /login.html?next=当前页
+  ensure: function (soft) {
+    var out = function (frozen) { clearAuth(); return soft ? null : goLogin(frozen); };
+    if (!state.token) return Promise.resolve(out());
     return request('GET', '/api/me').then(function (r) { if (r.user.region !== state.region) { state.region = r.user.region; store('region', state.region); } applyWallet(r.wallet, r.user); return r; })
-      .catch(function (e) { if (e.status === 401) return go(); throw e; });
+      .catch(function (e) { if (e.status === 401) return out(); if (e.code === 'ACCOUNT_FROZEN') return out(true); throw e; });
   },
+  // 需要登录的操作：未登录则跳登录页并返回 false
+  requireLogin: function () { if (state.user) return true; goLogin(); return false; },
   logout: function () { var p = state.token ? request('POST', '/api/auth/logout', {}).catch(function () {}) : Promise.resolve(); return p.then(function () { state.token = null; store('token', null); state.user = null; state.wallet = null; emit(); }); },
   wallet: function () { return request('GET', '/api/wallet').then(function (w) { applyWallet(w); return w; }); },
   deposit: function (amount) { return request('POST', '/api/wallet/deposit', { amount: amount }, { idempotencyKey: uuid() }).then(function (r) { setBalance(r.balance); return r; }); },
@@ -95,6 +105,6 @@ export function fmt(n) {
   return (neg ? '-' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + p[1];
 }
 export function errText(e) {
-  var m = { INSUFFICIENT_FUNDS: '余额不足，请先充值（演示币）', ABOVE_MAX_BET: '超过单笔最高投注', BELOW_MIN_BET: '低于最低投注', CATEGORY_DISABLED: '您所在地区暂未开放该品类', SELF_EXCLUDED: '账户处于自我排除期', COOL_OFF: '账户处于冷静期', NETWORK: '网络连接失败，请重试', UNAUTHORIZED: '登录已过期，请刷新页面', ODDS_CHANGED: '赔率已变动，请确认', ROUND_ACTIVE: '已有进行中的回合' };
+  var m = { INSUFFICIENT_FUNDS: '余额不足，请先充值（演示币）', ABOVE_MAX_BET: '超过单笔最高投注', BELOW_MIN_BET: '低于最低投注', CATEGORY_DISABLED: '您所在地区暂未开放该品类', SELF_EXCLUDED: '账户处于自我排除期', COOL_OFF: '账户处于冷静期', NETWORK: '网络连接失败，请重试', UNAUTHORIZED: '请先登录（登录可能已过期）', ACCOUNT_FROZEN: '账户已被冻结，请联系客服', MAINTENANCE: '平台维护中，暂时无法开始游戏', INVALID_CREDENTIALS: '用户名或密码错误', USERNAME_TAKEN: '该用户名已被注册', WEAK_PASSWORD: '密码需 8-64 位，且同时包含字母和数字', REGISTRATION_CLOSED: '暂未开放注册', ACCOUNT_LOCKED: '尝试次数过多，请稍后再试', RATE_LIMITED: '请求过于频繁，请稍后再试', ODDS_CHANGED: '赔率已变动，请确认', ROUND_ACTIVE: '已有进行中的回合' };
   return m[e.code] ? m[e.code] + (e.body && e.body.maxBet ? '（' + e.body.maxBet + '）' : e.body && e.body.minBet ? '（' + e.body.minBet + '）' : '') : (e.message || '请求失败');
 }

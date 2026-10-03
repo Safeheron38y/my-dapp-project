@@ -1,0 +1,14 @@
+.git
+.gitignore
+node_modules
+data
+shots
+docs
+scripts
+*.md
+!README.md
+Dockerfile
+render.yaml
+.venv
+**/*.log
+**/.env*

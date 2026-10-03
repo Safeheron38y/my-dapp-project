@@ -18,6 +18,10 @@ const search = require('./lib/search');
 const sign = require('./lib/sign');
 const { toMinor } = require('./lib/money');
 const adapters = require('./adapters');
+const passwords = require('./lib/passwords');
+const A = require('./lib/adminstate');
+const seed = require('./lib/seed');
+const adminRoutes = require('./admin/routes');
 const { WalletError } = wallet;
 
 const SESSION_TTL = 12 * 3600 * 1000;
@@ -30,17 +34,25 @@ function requireUser(ctx) {
   const m = /^Bearer\s+(\S+)$/.exec(ctx.req.headers.authorization || '');
   const s = m && store.sessions.get(m[1]);
   if (!s || s.exp < Date.now()) throw bad('UNAUTHORIZED', '未登录或会话已过期', 401);
+  const u = store.users.get(s.userId);
+  if (!u) throw bad('UNAUTHORIZED', '未登录或会话已过期', 401);
+  if (u.frozen) { store.sessions.delete(m[1]); throw bad('ACCOUNT_FROZEN', '账户已被冻结，请联系客服', 403); }
   ctx.token = m[1];
-  return (ctx.user = store.users.get(s.userId));
+  return (ctx.user = u);
+}
+function userByName(name) { // 精确匹配优先，其次不区分大小写
+  const id = store.byName.get(name); if (id) return store.users.get(id);
+  const low = name.toLowerCase(); for (const [n, uid] of store.byName) if (n.toLowerCase() === low) return store.users.get(uid);
+  return null;
 }
 function amountOf(v) { const m = toMinor(v); if (m == null || m <= 0) throw bad('INVALID_AMOUNT', '金额必须大于 0，最多两位小数'); return m; }
 function gameOf(id) {
   const g = config.catalog.games.find((x) => x.id === id);
-  if (!g) throw bad('GAME_NOT_FOUND', '游戏不存在', 404);
+  if (!g || g.enabled === false) throw bad('GAME_NOT_FOUND', '游戏不存在或已下架', 404);
   return g;
 }
 // 对外游戏对象：去掉内部/冗余扩展字段(providerGameId、币种/语言/地区备注、数据来源)，补 vendor/providerLabel/demo。
-const INTERNAL = ['providerGameId', 'currencies', 'languages', 'regionNotes', 'source', 'extras'];
+const INTERNAL = ['providerGameId', 'currencies', 'languages', 'regionNotes', 'source', 'extras', 'enabled', 'sort'];
 function pubGame(g, region) {
   const p = config.providers[g.provider] || {}, ad = adapters.get(g.provider);
   const o = Object.assign({}, g);
@@ -50,7 +62,11 @@ function pubGame(g, region) {
 function walletOut(u) {
   return { balance: u.balance / 100, currency: cur.code, currencyLabel: cur.label, demo: true, region: u.region, limits: geo.limitsFor(u.region) };
 }
-function clientIp(req) { return req.socket.remoteAddress; } // 反向代理后请改读受信任的 X-Forwarded-For
+// 部署在反向代理(Render/Nginx)之后时设置 TRUST_PROXY=1，才读取 X-Forwarded-For 的第一个地址作为客户端 IP（否则所有人共用代理 IP，限流会互相影响）。
+function clientIp(req) {
+  if (process.env.TRUST_PROXY === '1') { const x = req.headers['x-forwarded-for']; if (x) return String(x).split(',')[0].trim(); }
+  return req.socket.remoteAddress;
+}
 
 // 客户端 Idempotency-Key：同一用户+key+路径+载荷 → 返回首次响应
 function withIdem(ctx, fn) {
@@ -79,20 +95,48 @@ route('GET', '/api/health', () => ({ ok: true, time: Date.now(), env: 'mock', pr
 
 route('GET', '/api/config', (ctx) => {
   const region = geo.resolveRegion(ctx.query.get('region') || ctx.req.headers['x-region']);
-  return { currency: cur, region, categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: geo.categoryEnabled(region, id) }, c)), limits: geo.limitsFor(region), ageGate: geo.regionCfg(region).ageGate, regions: Object.entries(config.regions.regions).map(([id, r]) => ({ id, label: r.label })), demo: true };
+  return { currency: cur, region, categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: geo.categoryEnabled(region, id) }, c)), limits: geo.limitsFor(region), ageGate: geo.regionCfg(region).ageGate, regions: Object.entries(config.regions.regions).map(([id, r]) => ({ id, label: r.label })), maintenance: A.publicMaintenance(), registrationOpen: !!A.settings.registrationOpen, demoLogin: process.env.SEED_DEMO !== '0' && !process.env.DEMO_PLAYER_PASSWORD && process.env.SHOW_DEMO_ACCOUNTS !== '0', demo: true };
 });
 
-route('POST', '/api/auth/login', (ctx) => {
-  // ⚠ MOCK：不校验密码，任何用户名即可登录。生产请接入真实账号体系 + KYC + 2FA。
-  const name = String(ctx.body.username || '').trim();
-  if (!/^[\w\u4e00-\u9fa5\-]{2,32}$/.test(name)) throw bad('INVALID_USERNAME', '用户名 2-32 位(字母数字汉字 _ -)');
-  const region = geo.resolveRegion(ctx.body.region || ctx.req.headers['x-region']);
-  let u = store.users.get(store.byName.get(name));
-  if (!u) u = store.createUser(name, region); else u.region = region; // mock：允许演示时切换地区
+// ---- 玩家认证：用户名 + 密码（scrypt）。⚠ 仅演示：未做邮箱/手机验证、KYC、2FA、找回密码。----
+const USERNAME_RE = /^[\w\u4e00-\u9fa5\-]{2,32}$/;
+const pfails = new Map(); // usernameLower -> {n, until}  玩家登录连续失败锁定
+const P_LOCK_MAX = () => Number(process.env.PLAYER_LOCK_THRESHOLD) || 8, P_LOCK_MS = () => (Number(process.env.PLAYER_LOCK_MINUTES) || 10) * 60000;
+function startSession(u) {
   const token = 'tk_' + crypto.randomBytes(24).toString('hex');
   store.sessions.set(token, { userId: u.id, exp: Date.now() + SESSION_TTL });
-  rg.state(u.id).sessionStart = Date.now();
-  return { token, expiresIn: SESSION_TTL / 1000, user: { id: u.id, username: u.username, region: u.region }, wallet: walletOut(u), mock: true };
+  rg.state(u.id).sessionStart = Date.now(); u.lastLoginAt = Date.now(); store.markDirty('users');
+  return { token, expiresIn: SESSION_TTL / 1000, user: { id: u.id, username: u.username, region: u.region }, wallet: walletOut(u) };
+}
+route('POST', '/api/auth/register', async (ctx) => {
+  if (!A.settings.registrationOpen) throw bad('REGISTRATION_CLOSED', '暂未开放注册', 403);
+  const name = String(ctx.body.username || '').trim();
+  if (!USERNAME_RE.test(name)) throw bad('INVALID_USERNAME', '用户名 2-32 位(字母数字汉字 _ -)');
+  const pe = passwords.policy(ctx.body.password); if (pe) throw bad('WEAK_PASSWORD', pe);
+  if (userByName(name)) throw bad('USERNAME_TAKEN', '该用户名已被注册', 409);
+  const region = geo.resolveRegion(ctx.body.region || ctx.req.headers['x-region']);
+  const pw = await passwords.hash(ctx.body.password);
+  if (userByName(name)) throw bad('USERNAME_TAKEN', '该用户名已被注册', 409); // 哈希期间可能有并发注册
+  const u = store.createUser(name, region, { pw });
+  return Object.assign(startSession(u), { registered: true });
+});
+route('POST', '/api/auth/login', async (ctx) => {
+  const name = String(ctx.body.username || '').trim().slice(0, 64), password = typeof ctx.body.password === 'string' ? ctx.body.password.slice(0, 256) : '';
+  if (!name || !password) throw bad('INVALID_CREDENTIALS', '请输入用户名和密码', 400);
+  const k = name.toLowerCase(), f = pfails.get(k), now = Date.now();
+  if (f && f.until > now) return { status: 429, body: { ok: false, code: 'ACCOUNT_LOCKED', message: `登录失败次数过多，请 ${Math.ceil((f.until - now) / 60000)} 分钟后再试` } };
+  const u = userByName(name);
+  const ok = u && u.pw ? await passwords.verify(password, u.pw) : await passwords.verifyDummy(password);
+  if (!ok) {
+    const x = f && f.until && f.until <= now ? { n: 0, until: 0 } : f || { n: 0, until: 0 };
+    x.n++; if (x.n >= P_LOCK_MAX()) { x.until = now + P_LOCK_MS(); x.n = 0; }
+    pfails.set(k, x); if (pfails.size > 5000) pfails.delete(pfails.keys().next().value);
+    throw bad('INVALID_CREDENTIALS', '用户名或密码错误', 401);
+  }
+  pfails.delete(k);
+  if (u.frozen) throw bad('ACCOUNT_FROZEN', '账户已被冻结，请联系客服', 403);
+  if (ctx.body.region) u.region = geo.resolveRegion(ctx.body.region); // 演示：允许切换地区以体验品类开关/限额
+  return startSession(u);
 });
 route('POST', '/api/auth/logout', (ctx) => { requireUser(ctx); store.sessions.delete(ctx.token); return { ok: true }; });
 route('GET', '/api/me', (ctx) => { const u = requireUser(ctx); return { user: { id: u.id, username: u.username, region: u.region }, wallet: walletOut(u), rg: rg.status(u.id), categories: geo.categoriesFor(u.region) }; });
@@ -104,19 +148,20 @@ route('GET', '/api/games', (ctx) => {
   const cat = ctx.query.get('category'), prov = ctx.query.get('provider'), tag = ctx.query.get('tag'), sub = ctx.query.get('subcategory'), vendor = ctx.query.get('vendor');
   const enabled = geo.categoriesFor(r);
   const vendorOf = (g) => g.vendor || (config.providers[g.provider] || {}).label || g.provider;
-  let list = config.catalog.games.filter((g) => enabled[g.category] && adapters.get(g.provider));
+  let list = config.catalog.games.filter((g) => g.enabled !== false && enabled[g.category] && adapters.get(g.provider));
   if (cat) list = list.filter((g) => g.category === cat);
   if (prov) list = list.filter((g) => g.provider === prov);
   if (vendor) list = list.filter((g) => vendorOf(g) === vendor);
   if (sub) list = list.filter((g) => g.subcategory === sub);
   if (tag) list = list.filter((g) => g.tags.includes(tag));
   if (q) list = list.filter((g) => search.matches(g, q, (config.catalog.categories[g.category] || {}).label));
+  list = list.slice().sort((a, b) => (a.sort != null ? a.sort : 1e9) - (b.sort != null ? b.sort : 1e9)); // 后台“排序”：数字越小越靠前（默认=目录顺序）
   const total = list.length;
   const limit = Math.min(Math.max(parseInt(ctx.query.get('limit'), 10) || 100, 1), 1000);
   const page = Math.max(parseInt(ctx.query.get('page'), 10) || 1, 1);
   list = list.slice((page - 1) * limit, page * limit);
   const provs = {};
-  for (const g of config.catalog.games) if (enabled[g.category] && (!cat || g.category === cat) && adapters.get(g.provider)) provs[g.provider] = config.providers[g.provider].label;
+  for (const g of config.catalog.games) if (g.enabled !== false && enabled[g.category] && (!cat || g.category === cat) && adapters.get(g.provider)) provs[g.provider] = config.providers[g.provider].label;
   return { region: r, total, page, limit, games: list.map((g) => pubGame(g, r)), providers: Object.entries(provs).map(([id, label]) => ({ id, label })), categories: Object.entries(config.catalog.categories).map(([id, c]) => Object.assign({ id, enabled: !!enabled[id] }, c)), aliases: search.ALIASES, demo: true };
 });
 route('GET', '/api/games/:id', (ctx) => { const u = ctx.optUser(); const g = gameOf(ctx.params.id); return { game: pubGame(g, u ? u.region : ctx.query.get('region')) }; });
@@ -144,6 +189,7 @@ route('POST', '/api/games/:id/launch', async (ctx) => {
   if (!geo.categoryEnabled(u.region, g.category)) throw bad('CATEGORY_DISABLED', '您所在地区暂未开放该品类', 403);
   const ad = adapters.get(g.provider);
   if (!ad) throw bad('PROVIDER_UNAVAILABLE', '供应商未启用', 503);
+  const mt = A.publicMaintenance(); if (mt.blockPlay) throw bad('MAINTENANCE', mt.text || '平台维护中，暂时无法开始游戏', 503);
   const blk = rg.beforeBet(u.id, 0, {}); if (blk) throw bad(blk.code, blk.message, 403);
   const launchToken = 'lt_' + crypto.randomBytes(18).toString('hex');
   store.launches.set(launchToken, { userId: u.id, gameId: g.id, provider: g.provider, exp: Date.now() + LAUNCH_TTL });
@@ -320,6 +366,10 @@ route('POST', '/api/mock/huidu-spin', async (ctx) => { // 演示 iframe（模拟
   return { reels: r.reels, win: r.win, balance: r.balance, roundId: r.round, demo: true };
 });
 
+// ---- 后台 /api/admin/*（独立会话，见 admin/routes.js）----
+adminRoutes.install(route, { clientIp });
+seed.seedPlayers();
+
 // ---------- HTTP 服务器 ----------
 const server = http.createServer(async (req, res) => {
   const t0 = Date.now();
@@ -331,10 +381,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     if (!isApi) {
       if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
+      if (pathname === '/admin' || pathname === '/admin/') { res.setHeader('X-Robots-Tag', 'noindex, nofollow'); return H.serveStatic(req, res, '/admin/index.html'); }
+      if (pathname.startsWith('/admin/')) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
       return H.serveStatic(req, res, pathname);
     }
     if (!H.rateLimit(clientIp(req), pathname.startsWith('/provider/') ? 'p' : 'g', pathname.startsWith('/provider/') ? (Number(process.env.PROVIDER_RATE_LIMIT_PER_MIN) || 6000) : 600, 60000)) return H.json(res, 429, { ok: false, code: 'RATE_LIMITED', message: '请求过于频繁' });
-    if (pathname === '/api/auth/login' && !H.rateLimit(clientIp(req), 'login', Number(process.env.LOGIN_RATE_LIMIT_PER_MIN) || 30, 60000)) return H.json(res, 429, { ok: false, code: 'RATE_LIMITED', message: '登录尝试过多' });
+    if ((pathname === '/api/auth/login' || pathname === '/api/auth/register') && !H.rateLimit(clientIp(req), 'login', Number(process.env.LOGIN_RATE_LIMIT_PER_MIN) || 30, 60000)) return H.json(res, 429, { ok: false, code: 'RATE_LIMITED', message: '登录尝试过多' });
     let hit = null, params = {};
     for (const [m, re, keys, h] of routes) {
       if (m !== req.method) continue;
@@ -353,7 +405,7 @@ const server = http.createServer(async (req, res) => {
     }
     const ctx = { req, res, path: pathname, query: url.searchParams, params, body, raw, optUser() { try { return requireUser(ctx); } catch { return null; } } };
     const out = await hit(ctx);
-    if (out && typeof out.status === 'number' && out.body) return H.json(res, out.status, out.body);
+    if (out && typeof out.status === 'number' && out.body) return H.json(res, out.status, out.body, out.headers);
     return H.json(res, 200, out);
   } catch (e) {
     if (e instanceof WalletError || e.http) return H.json(res, e.http || 400, Object.assign({ ok: false, code: e.code || 'ERROR', message: e.message }, e.extra || {}));

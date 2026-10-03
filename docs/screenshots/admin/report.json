@@ -1,0 +1,436 @@
+[
+ {
+  "browser": "chromium",
+  "base": "http://localhost:8099",
+  "pages": [
+   {
+    "page": "00-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/00-login-m390-chromium.png"
+   },
+   {
+    "page": "01-dashboard",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/01-dashboard-m390-chromium.png"
+   },
+   {
+    "page": "02-players",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/02-players-m390-chromium.png"
+   },
+   {
+    "page": "03-player-detail",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/03-player-detail-m390-chromium.png"
+   },
+   {
+    "page": "04-games",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/04-games-m390-chromium.png"
+   },
+   {
+    "page": "05-providers",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/05-providers-m390-chromium.png"
+   },
+   {
+    "page": "06-transactions",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/06-transactions-m390-chromium.png"
+   },
+   {
+    "page": "07-settings",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/07-settings-m390-chromium.png"
+   },
+   {
+    "page": "09-player-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-login-m390-chromium.png"
+   },
+   {
+    "page": "09-player-register",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-register-m390-chromium.png"
+   },
+   {
+    "page": "10-player-lobby-after-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [
+     "DIV.orb a o1",
+     "DIV.arc",
+     "ARTICLE.bn-s b2",
+     "IMG.art",
+     "SPAN.sc"
+    ],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/10-player-lobby-after-login-m390-chromium.png"
+   },
+   {
+    "page": "00-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/00-login-d1280-chromium.png"
+   },
+   {
+    "page": "01-dashboard",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/01-dashboard-d1280-chromium.png"
+   },
+   {
+    "page": "02-players",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/02-players-d1280-chromium.png"
+   },
+   {
+    "page": "03-player-detail",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/03-player-detail-d1280-chromium.png"
+   },
+   {
+    "page": "04-games",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/04-games-d1280-chromium.png"
+   },
+   {
+    "page": "05-providers",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/05-providers-d1280-chromium.png"
+   },
+   {
+    "page": "06-transactions",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/06-transactions-d1280-chromium.png"
+   },
+   {
+    "page": "07-settings",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/07-settings-d1280-chromium.png"
+   },
+   {
+    "page": "09-player-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-login-d1280-chromium.png"
+   },
+   {
+    "page": "09-player-register",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-register-d1280-chromium.png"
+   },
+   {
+    "page": "10-player-lobby-after-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [
+     "DIV.orb a o1",
+     "DIV.arc",
+     "ARTICLE.bn-s b3",
+     "IMG.art",
+     "SPAN.sc"
+    ],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/10-player-lobby-after-login-d1280-chromium.png"
+   }
+  ],
+  "failures": []
+ },
+ {
+  "browser": "webkit",
+  "base": "http://localhost:8099",
+  "pages": [
+   {
+    "page": "00-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/00-login-m390-webkit.png"
+   },
+   {
+    "page": "01-dashboard",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/01-dashboard-m390-webkit.png"
+   },
+   {
+    "page": "02-players",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/02-players-m390-webkit.png"
+   },
+   {
+    "page": "03-player-detail",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/03-player-detail-m390-webkit.png"
+   },
+   {
+    "page": "04-games",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/04-games-m390-webkit.png"
+   },
+   {
+    "page": "05-providers",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/05-providers-m390-webkit.png"
+   },
+   {
+    "page": "06-transactions",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/06-transactions-m390-webkit.png"
+   },
+   {
+    "page": "07-settings",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/07-settings-m390-webkit.png"
+   },
+   {
+    "page": "09-player-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-login-m390-webkit.png"
+   },
+   {
+    "page": "09-player-register",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-register-m390-webkit.png"
+   },
+   {
+    "page": "10-player-lobby-after-login",
+    "view": "m390",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [
+     "DIV.orb a o1",
+     "DIV.arc",
+     "ARTICLE.bn-s b2",
+     "IMG.art",
+     "SPAN.sc"
+    ],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/10-player-lobby-after-login-m390-webkit.png"
+   },
+   {
+    "page": "00-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/00-login-d1280-webkit.png"
+   },
+   {
+    "page": "01-dashboard",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/01-dashboard-d1280-webkit.png"
+   },
+   {
+    "page": "02-players",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/02-players-d1280-webkit.png"
+   },
+   {
+    "page": "03-player-detail",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/03-player-detail-d1280-webkit.png"
+   },
+   {
+    "page": "04-games",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/04-games-d1280-webkit.png"
+   },
+   {
+    "page": "05-providers",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/05-providers-d1280-webkit.png"
+   },
+   {
+    "page": "06-transactions",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/06-transactions-d1280-webkit.png"
+   },
+   {
+    "page": "07-settings",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/07-settings-d1280-webkit.png"
+   },
+   {
+    "page": "09-player-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-login-d1280-webkit.png"
+   },
+   {
+    "page": "09-player-register",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/09-player-register-d1280-webkit.png"
+   },
+   {
+    "page": "10-player-lobby-after-login",
+    "view": "d1280",
+    "overflow_px": 0,
+    "small_targets": [],
+    "wide": [
+     "DIV.orb a o1",
+     "DIV.arc",
+     "ARTICLE.bn-s b3",
+     "IMG.art",
+     "SPAN.sc"
+    ],
+    "console_errors": [],
+    "screenshot": "docs/screenshots/admin/10-player-lobby-after-login-d1280-webkit.png"
+   }
+  ],
+  "failures": []
+ }
+]

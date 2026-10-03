@@ -12,6 +12,7 @@ function state(userId) {
 // 返回 null 表示允许；否则 {code,message}
 function beforeBet(userId, amountMinor, ctx) {
   const s = state(userId), now = Date.now();
+  if (store.users.get(userId).frozen) return { code: 'ACCOUNT_FROZEN', message: '账户已被冻结，请联系客服' };
   if (s.selfExcludedUntil > now) return { code: 'SELF_EXCLUDED', message: '账户处于自我排除期，暂不可投注' };
   if (s.coolOffUntil > now) return { code: 'COOL_OFF', message: '账户处于冷静期，暂不可投注' };
   // TODO: dailyLossLimit —— 需要按日汇总净输额，此处留桩
@@ -19,6 +20,7 @@ function beforeBet(userId, amountMinor, ctx) {
 }
 function beforeDeposit(userId, amountMinor) {
   const s = state(userId), now = Date.now();
+  if (store.users.get(userId).frozen) return { code: 'ACCOUNT_FROZEN', message: '账户已被冻结，请联系客服' };
   if (s.selfExcludedUntil > now) return { code: 'SELF_EXCLUDED', message: '账户处于自我排除期，暂不可充值' };
   if (s.dailyDepositLimit != null) {
     const since = now - 24 * 3600 * 1000;
