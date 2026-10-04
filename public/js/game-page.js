@@ -12,7 +12,7 @@ function start() {
   }).then(function (r) {
     var g = r.game;
     document.title = g.name + '｜8K（演示）';
-    gw.root.querySelector('.gw-ttl b').textContent = g.name;
+    gw.opt.title = g.name;
     gw.opt.orientation = g.orientation; gw.opt.provider = g.providerLabel;
     gw.checkOrientation();
     return gw.loadIframe(function () {

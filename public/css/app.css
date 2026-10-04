@@ -98,38 +98,34 @@ select.field option{color:#2A1D55}
 .btn[disabled],.btn.dis{opacity:.5;pointer-events:none}
 .btn-lg{min-height:54px;font-size:17px;width:100%}
 /* 游戏窗口 */
-.gw{position:fixed;left:0;right:0;top:0;bottom:0;z-index:100;display:flex;flex-direction:column;background:#1d1145;color:#fff;overflow:hidden;height:100vh}
+/* 沉浸式游戏窗口：iframe 铺满整个视口(含刘海/Home 条下方)，唯一宿主 UI = 左上角半透明圆形返回钮 */
+html.gw-open,html.gw-open body{background:#000;margin:0;padding:0;min-height:0;overflow:hidden;overscroll-behavior:none;-webkit-overflow-scrolling:auto}
+html.gw-open body{position:fixed;left:0;top:0;right:0;bottom:0;width:100%}
+.gw{position:fixed;left:0;top:0;right:0;bottom:0;width:100%;height:100vh;z-index:100;background:#000;color:#fff;overflow:hidden;overscroll-behavior:none}
 .no-dvh .gw{height:calc(var(--vh,1vh)*100)}
+@supports (height:100dvh){.gw{height:100dvh}}
+.gw-body{position:absolute;left:0;top:0;right:0;bottom:0;background:#000}
+.gw-body iframe{position:absolute;left:0;top:0;width:100%;height:100%;border:0;margin:0;padding:0;background:#000;display:block}
+.gw-back{position:absolute;z-index:10;top:calc(var(--sat) + 6px);left:calc(var(--sal) + 6px);width:48px;height:48px;padding:0;margin:0;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:opacity .35s;opacity:1;touch-action:manipulation}
+.gw-back>span{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.38);box-shadow:0 0 0 1px rgba(255,255,255,.22) inset;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.gw-back svg{width:20px;height:20px}
+.gw-back.dim{opacity:.22}
+.gw-bar{position:absolute;z-index:9;left:50%;top:calc(var(--sat) + 10px);max-width:calc(100% - 140px);transform:translate3d(-50%,0,0);text-align:center;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;background:#ff9a76;color:var(--indigo);pointer-events:none}
+.gw-bar:not(.in){display:none}
 .no-dvh .sheet{max-height:calc(var(--vh,1vh)*86)}
 @supports (height:100dvh){.sheet{max-height:86dvh}}
-@supports (height:100dvh){.gw{height:100dvh}}
-.gw-top{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:calc(6px + var(--sat)) var(--tpr) 6px var(--tpl);min-height:calc(56px + var(--sat));background:linear-gradient(180deg,rgba(58,35,128,.98),rgba(43,27,94,.98));border-bottom:1px solid rgba(255,255,255,.14);position:relative;z-index:3}
-.gw-ttl{min-width:0;flex:1;line-height:1.2;display:flex;flex-direction:column;gap:2px}
-.gw-ttl b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gw-ttl span{display:flex;gap:6px;align-items:center}
-.gw-top .bal{padding-left:10px;gap:5px}
-.gw-top .bal small{display:none}
-.gw-top .bal b{font-size:16px}
-.gw-body{position:relative;flex:1 1 auto;min-height:0;background:#150c38}
-.gw-body iframe{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:#150c38}
 .gw-body .slot{position:absolute;left:0;right:0;top:0;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.gw-state{position:absolute;left:0;right:0;top:0;bottom:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:radial-gradient(80% 50% at 50% 30%,rgba(122,91,224,.4),#150c38 70%)}
+.gw-state{position:absolute;left:0;right:0;top:0;bottom:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:radial-gradient(80% 50% at 50% 30%,rgba(122,91,224,.4),#150c38 70%)}
 .gw-state[hidden]{display:none}
 .gw-state p{font-size:14px;color:rgba(255,255,255,.86);max-width:22em}
 .gw-state .btn{min-height:48px}
 .spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:var(--rg3);animation:rot .9s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
 .lp .spin{animation-duration:1.6s}
-.gw-bar{position:absolute;left:0;right:0;top:0;z-index:4;text-align:center;font-size:13px;font-weight:600;padding:8px 12px;background:#ff9a76;color:var(--indigo);transform:translate3d(0,-100%,0);transition:transform .25s}
-.gw-bar.in{transform:none}
 .gw-rot{position:absolute;left:0;right:0;top:0;bottom:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(21,12,56,.94);text-align:center;padding:24px}
 .gw-rot[hidden]{display:none}
 .gw-rot svg{width:72px;height:72px;color:var(--rg3);animation:tilt 2.4s ease-in-out infinite}
 @keyframes tilt{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
-.gw.imm .gw-top{position:absolute;left:0;right:0;top:0;transform:translate3d(0,calc(-100% + 18px),0);transition:transform .25s;opacity:.92}
-.gw.imm .gw-top.show{transform:none}
-.gw.imm .gw-body{position:absolute;left:0;right:0;top:0;bottom:0}
-@media(max-height:480px) and (orientation:landscape){.gw-top{min-height:calc(50px + var(--sat));padding-top:calc(3px + var(--sat));padding-bottom:3px}.gw-ttl span{display:none}}
 /* 游戏通用布局 */
 .gm{display:flex;flex-direction:column;min-height:100%;padding:12px var(--tpr) calc(14px + var(--sab)) var(--tpl);gap:12px}
 .gm .stage{position:relative;flex:1 1 auto;min-height:240px;border-radius:24px;overflow:hidden;background:radial-gradient(90% 70% at 50% 0,#4A2FA3,#201250 70%);box-shadow:0 0 0 1px rgba(255,255,255,.18) inset}
@@ -257,7 +253,6 @@ select.field option{color:#2A1D55}
 @media(max-width:359px){.bal small{display:none}.brand b{font-size:19px}.hdr .wrap{gap:6px}}
 @media(prefers-reduced-motion:reduce){.gw-rot svg,.pulse-ring,.spin{animation:none!important}}
 .gw-body .slot:empty{display:none}
-.gw-body iframe{z-index:1}
 .gw-state{z-index:3}
 /* 桌面端：隐藏底栏、显示顶部导航（取自 index-v3-opt.html 的 ≥900px 规则） */
 @media(min-width:900px){:root{--tab-h:0px;--pad:32px;--padr:32px}@supports (padding:max(1px,2px)){:root{--pad:max(32px,var(--sal));--padr:max(32px,var(--sar))}}.tabbar{display:none}.nav{display:flex;gap:2px;margin:0 auto}.nav a{min-height:44px;padding:0 14px;display:inline-flex;align-items:center;color:rgba(255,255,255,.9);font-size:15px;font-weight:500;border-radius:99px}.hdr .wrap{height:68px}.brand{margin-right:0}.wrap{padding:0 32px}}

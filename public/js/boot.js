@@ -19,5 +19,5 @@
   h.className += c;
   // iOS 视口高度变量(--vh)：为不支持 dvh 的旧浏览器兜底
   function vh() { h.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
-  vh(); window.addEventListener('resize', vh); window.addEventListener('orientationchange', function () { setTimeout(vh, 250); });
+  vh(); window.addEventListener('resize', vh); if (window.visualViewport) window.visualViewport.addEventListener('resize', vh); window.addEventListener('orientationchange', function () { setTimeout(vh, 250); });
 })();

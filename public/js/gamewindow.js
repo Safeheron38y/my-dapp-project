@@ -1,6 +1,7 @@
 /**
  * GameWindow —— 可复用的游戏窗口容器
- *  - 移动端全屏(含安全区)，顶栏：返回 / 标题 / 余额 / 声音 / 全屏
+ *  - 沉浸式：iframe 铺满整个视口(position:fixed; inset:0; 100dvh; viewport-fit=cover，延伸到刘海/Home 条下)；
+ *    唯一的宿主 UI 是左上角半透明圆形返回钮(3 秒后自动变淡，轻触左上角唤回)；无顶栏/无占位条。
  *  - slot: iframe: 供应商游戏，带 postMessage 桥
  *  - 状态：加载中 / 出错(含重连) / 离线横幅 / 横屏提示
  *  - 方向：orientation = 'landscape' | 'portrait' | 'any'
@@ -23,32 +24,33 @@ export function GameWindow(opt) {
   this.listeners = [];
   this.fsSupported = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   this.root = el('<div class="gw" role="main">' +
-    '<div class="gw-top" id="gwTop">' +
-    '<button class="ibtn" id="gwBack" aria-label="返回大厅" type="button">' + icon('back') + '</button>' +
-    '<div class="gw-ttl"><b>' + esc(opt.title) + '</b><span>' + (opt.demo ? '<span class="demo-tag">演示 DEMO</span>' : '') + (opt.provider ? '<span style="font-size:11px;color:rgba(255,255,255,.75)">' + esc(opt.provider) + '</span>' : '') + '</span></div>' +
-    '<div class="bal" aria-label="余额"><small>余额</small><b id="gwBal">--</b></div>' +
-    '<button class="ibtn" id="gwSnd" aria-label="声音" aria-pressed="' + (this.muted ? 'false' : 'true') + '" type="button"><span class="on">' + icon('snd') + '</span><span class="off">' + icon('mute') + '</span></button>' +
-    '<button class="ibtn" id="gwFs" aria-label="全屏" type="button">' + icon('fs') + '</button>' +
-    '</div>' +
     '<div class="gw-body" id="gwBody">' +
-    '<div class="gw-bar" id="gwBar" role="alert"></div>' +
     '<div class="slot" id="gwSlot"></div>' +
     '<div class="gw-state" id="gwState"><div class="spin"></div><p id="gwMsg">加载中…</p></div>' +
     '<div class="gw-rot" id="gwRot" hidden>' + icon('rotate') + '<p>此游戏需要横屏体验<br>请旋转您的设备</p><button class="btn btn-ghost" id="gwRotSkip" type="button" style="min-height:44px">仍以竖屏继续</button></div>' +
-    '</div></div>');
+    '</div>' +
+    '<div class="gw-bar" id="gwBar" role="alert"></div>' +
+    '<button class="gw-back" id="gwBack" aria-label="返回" type="button"><span>' + icon('back') + '</span></button>' +
+    '</div>');
   document.body.appendChild(this.root);
   document.documentElement.classList.add('gw-open');
   document.body.style.overflow = 'hidden';
   this.slot = $('#gwSlot', this.root);
   this.body = $('#gwBody', this.root);
-  this.balEl = $('#gwBal', this.root);
-  this.unw = onWallet(function (w) { if (w) self.balEl.textContent = fmt(w.balance); });
 
-  $('#gwBack', this.root).addEventListener('click', function () { self.back(); });
-  $('#gwSnd', this.root).addEventListener('click', function () { self.setMuted(!self.muted); });
-  $('#gwFs', this.root).addEventListener('click', function () { self.toggleFs(); });
+  // 返回钮：变淡状态下的第一次轻触只“唤回”，再次轻触才返回（避免误触退出游戏）
+  this.backBtn = $('#gwBack', this.root);
+  this.backBtn.addEventListener('click', function (e) {
+    if (self.wasDim) { self.wasDim = false; e.preventDefault(); self.wakeBack(); return; }
+    self.back();
+  });
+  this.backBtn.addEventListener('pointerdown', function () { self.wasDim = self.backBtn.classList.contains('dim'); self.wakeBack(); });
+  this.on(document, 'touchmove', function (e) { if (!self.slot.contains(e.target)) e.preventDefault(); }, { passive: false });
+  this.wakeBack();
   $('#gwRotSkip', this.root).addEventListener('click', function () { self.rotDismissed = true; self.checkOrientation(); });
   this.on(window, 'resize', function () { self.checkOrientation(); });
+  // 地址栏收起/展开：visualViewport 变化时同步 --vh（不支持 dvh 的旧浏览器的回退），并让页面回到 (0,0)
+  if (window.visualViewport) this.on(window.visualViewport, 'resize', function () { document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); if (window.scrollY || window.scrollX) window.scrollTo(0, 0); });
   this.on(window, 'orientationchange', function () { setTimeout(function () { self.checkOrientation(); self.post('orientation', { landscape: self.isLandscape() }); }, 250); });
   this.on(document, 'visibilitychange', function () { self.post('visibility', { hidden: document.hidden }); if (self.opt.onVisibility) self.opt.onVisibility(document.hidden); });
   this.on(window, 'offline', function () { self.banner('网络已断开，正在等待恢复…'); });
@@ -60,7 +62,13 @@ export function GameWindow(opt) {
 }
 var P = GameWindow.prototype;
 
-P.on = function (t, ev, fn) { t.addEventListener(ev, fn); this.listeners.push([t, ev, fn]); };
+P.on = function (t, ev, fn, o) { t.addEventListener(ev, fn, o); this.listeners.push([t, ev, fn, o]); };
+// 返回钮：显示后 3 秒自动变淡（不隐藏，仍可轻触唤回）
+P.wakeBack = function () {
+  var b = this.backBtn, self = this; if (!b) return;
+  b.classList.remove('dim'); clearTimeout(this.dimTimer);
+  this.dimTimer = setTimeout(function () { b.classList.add('dim'); }, 3000);
+};
 P.isLandscape = function () { return window.innerWidth > window.innerHeight; };
 P.isPhone = function () { return Math.min(window.innerWidth, window.innerHeight) < 700; };
 P.checkOrientation = function () {
@@ -68,15 +76,21 @@ P.checkOrientation = function () {
   $('#gwRot', this.root).hidden = !need;
 };
 P.back = function () {
+  var href = this.opt.backHref || '/';
   this.destroy();
-  var same = document.referrer && document.referrer.indexOf(location.origin) === 0;
   if (this.opt.onBack) this.opt.onBack();
-  if (same && history.length > 1) history.back(); else location.href = this.opt.backHref;
+  // 仅当上一页是本站(从大厅点进来)时 history.back()；否则(新开标签/外链/无历史)跳首页
+  var same = document.referrer && document.referrer.indexOf(location.origin) === 0;
+  if (same && history.length > 1) {
+    history.back();
+    // 兜底：历史记录无法回退(例如新开标签页)时跳转首页
+    setTimeout(function () { if (document.visibilityState !== 'hidden') location.href = href; }, 900);
+  } else location.href = href;
 };
 P.destroy = function () {
-  this.listeners.forEach(function (l) { l[0].removeEventListener(l[1], l[2]); });
+  this.listeners.forEach(function (l) { l[0].removeEventListener(l[1], l[2], l[3]); });
   this.listeners = []; if (this.unw) this.unw();
-  clearTimeout(this.loadTimer);
+  clearTimeout(this.loadTimer); clearTimeout(this.dimTimer);
   try { if (this.fsActive()) this.exitFs(); } catch (e) {}
   try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
   document.documentElement.classList.remove('gw-open'); document.body.style.overflow = '';
@@ -120,7 +134,7 @@ P.loadIframe = function (getLaunch) {
     f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
     f.addEventListener('load', function () { if (!self.readyMsg) self.hideState(); self.loaded = true; self.post('init', self.initPayload()); });
     f.addEventListener('error', function () { self.showError('游戏页面加载失败'); });
-    self.iframe = f; self.body.insertBefore(f, $('#gwBar', self.root));
+    self.iframe = f; self.body.insertBefore(f, self.body.firstChild);
     f.src = u.href;
     self.readyMsg = false;
     clearTimeout(self.loadTimer);
@@ -158,7 +172,6 @@ P.onMessage = function (e) {
 /* ---- 声音 / 全屏 ---- */
 P.setMuted = function (m) {
   this.muted = m; store('muted', m ? '1' : '0');
-  $('#gwSnd', this.root).setAttribute('aria-pressed', m ? 'false' : 'true');
   window.__8kMuted = m; this.post('sound', { muted: m });
   if (this.opt.onMute) this.opt.onMute(m);
 };
@@ -177,23 +190,6 @@ P.lockLandscape = function () {
   if (this.opt.orientation !== 'landscape') return;
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {}); } catch (e) {}
 };
-P.pseudoFs = function () {
-  var on = !this.root.classList.contains('imm'), top = $('#gwTop', this.root), self = this;
-  this.root.classList.toggle('imm', on); top.classList.remove('show');
-  if (on) {
-    toast('已进入沉浸模式：轻触屏幕顶部边缘可唤出菜单');
-    if (!this.edge) {
-      this.edge = el('<div style="position:absolute;left:0;right:0;top:0;height:28px;z-index:6"></div>');
-      this.edge.addEventListener('click', function () { top.classList.toggle('show'); });
-    }
-    this.root.appendChild(this.edge);
-  } else if (this.edge && this.edge.parentNode) this.edge.parentNode.removeChild(this.edge);
-  this.fsUpdate();
-  window.dispatchEvent(new Event('resize'));
-};
-P.fsUpdate = function () {
-  var on = this.fsActive() || this.root.classList.contains('imm');
-  var b = $('#gwFs', this.root); b.innerHTML = icon(on ? 'fsx' : 'fs'); b.setAttribute('aria-label', on ? '退出全屏' : '全屏');
-  window.dispatchEvent(new Event('resize'));
-};
+P.pseudoFs = function () { /* 已是沉浸式全屏：无顶栏可收起 */ };
+P.fsUpdate = function () { window.dispatchEvent(new Event('resize')); };
 P.setBalance = function (b) { setBalance(b); };
