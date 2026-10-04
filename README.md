@@ -44,4 +44,4 @@ BASE=http://localhost:8088 /workspace/.venv/bin/python scripts/shots.py chromium
 `Dockerfile` + `render.yaml`（Render 免费 Web 服务，`healthCheckPath: /api/health`）+ 中文 `DEPLOY.md`（含免费档休眠 / 冷启动 / 临时磁盘说明）。已部署在 Render：https://eightk-platform.onrender.com（公开 Git 仓库 Safeheron38y/my-dapp-project，main 推送后自动部署）。
 
 ## 文档
-`API.md`（中文）· `openapi.yaml` · `DEPLOY.md`。HUIDU 集成见 `API.md` §15（环境变量 `HUIDU_BASE_URL/HUIDU_AGENCY_UID/HUIDU_AES_KEY`，未配置时自动使用本地模拟器；Docker/Render 默认 `HUIDU_SIMULATOR=on`）。**真实密钥只放环境变量，切勿提交。**
+`API.md`（中文）· `openapi.yaml` · `DEPLOY.md`。HUIDU 集成见 `API.md` §15（环境变量 `HUIDU_BASE_URL/HUIDU_AGENCY_UID/HUIDU_AES_KEY`，未配置时自动使用本地模拟器；Docker/Render 默认 `HUIDU_SIMULATOR=on`）。**真实密钥只放环境变量（本地可用未提交的 `.env.local`），切勿提交。** 接真实 HUIDU：`HUIDU_MODE=live` + `HUIDU_SERVER_URL/HUIDU_AGENCY_UID/HUIDU_AES_KEY/HUIDU_PLAYER_PREFIX`，见 `DEPLOY.md` §6。

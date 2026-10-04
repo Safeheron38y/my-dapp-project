@@ -31,4 +31,5 @@ services:
       #   sync: false
       # - key: SEED_DEMO              # 设为 "0" = 不创建演示玩家
       #   value: "0"
-      # - key: HUIDU_BASE_URL / HUIDU_AGENCY_UID / HUIDU_AES_KEY   # 接真实 HUIDU 时在 Dashboard 里填（切勿提交到仓库）
+      # 接真实 HUIDU：在 Dashboard 里设置 HUIDU_MODE=live、HUIDU_SERVER_URL、HUIDU_AGENCY_UID、HUIDU_AES_KEY、HUIDU_PLAYER_PREFIX（及 PUBLIC_BASE_URL），
+      # 并删除上面的 HUIDU_SIMULATOR（HUIDU_MODE 优先）。见 DEPLOY.md §6。切勿把真实值提交到仓库。

@@ -119,7 +119,7 @@ function route(method, pattern, handler) {
   routes.push([method, re, keys, handler]);
 }
 
-route('GET', '/api/health', () => ({ ok: true, time: Date.now(), env: 'mock', providers: adapters.names() }));
+route('GET', '/api/health', () => ({ ok: true, time: Date.now(), env: 'mock', providers: adapters.names(), providerModes: Object.fromEntries(adapters.names().map((n) => [n, adapters.get(n).modeLabel || 'n/a'])) }));
 
 route('GET', '/api/config', (ctx) => {
   const region = geo.resolveRegion(ctx.query.get('region') || ctx.req.headers['x-region']);
@@ -407,7 +407,7 @@ server.keepAliveTimeout = 65000;
 
 if (require.main === module) {
   server.listen(config.env.port, config.env.host, () => {
-    console.log(`8K mock API + 前端: http://localhost:${server.address().port}  (signatureMode=${config.env.signatureMode}, adapters=${adapters.names().join(',')})`);
+    console.log(`8K mock API + 前端: http://localhost:${server.address().port}  (signatureMode=${config.env.signatureMode}, adapters=${adapters.names().map((n) => n + ':' + (adapters.get(n).modeLabel || '-')).join(',')})`);
   });
 }
 module.exports = { server };

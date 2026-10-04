@@ -13,7 +13,7 @@ const ALIAS_RE = /^[a-z0-9]{3,20}$/;
 const isValidAlias = (a) => typeof a === 'string' && ALIAS_RE.test(a);
 
 function cleanPrefix(p) {
-  const x = String(p == null ? 'k8' : p).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6);
+  const x = String(p == null ? 'k8' : p).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10); // HUIDU 要求 member_account 以代理前缀开头；前缀过长会挤占随机部分(总长≤20)
   return x || 'k8';
 }
 function aliasFor(provider, userId, prefix) {
@@ -33,9 +33,14 @@ function aliasFor(provider, userId, prefix) {
   }
   throw new Error('alias space exhausted');
 }
-function resolve(provider, alias) {
+/** 别名 → 内部用户 id。别名是确定性哈希：进程重启后映射表为空时，传入 prefix 可惰性重建（回调可能先于任何 launch 到达）。 */
+function resolve(provider, alias, prefix) {
   if (!isValidAlias(alias)) return null;
-  const uid = store.aliasToUser.get(`${provider}:${alias}`);
+  let uid = store.aliasToUser.get(`${provider}:${alias}`);
+  if (!uid && prefix !== undefined && alias.startsWith(cleanPrefix(prefix))) {
+    for (const id of store.users.keys()) aliasFor(provider, id, prefix);
+    uid = store.aliasToUser.get(`${provider}:${alias}`);
+  }
   return uid && store.users.get(uid) ? uid : null;
 }
 module.exports = { aliasFor, resolve, isValidAlias, ALIAS_RE };

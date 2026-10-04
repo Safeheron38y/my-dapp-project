@@ -7,6 +7,7 @@ process.env.PERSIST_DELAY_MS = '50'; process.env.SCRYPT_N = '1024';
 process.env.ADMIN_LOGIN_RATE_LIMIT = '100000';
 // 测试必须离线且确定：强制使用 HUIDU 本地模拟器（随机凭据），不读取开发者环境里的任何 HUIDU_* 真实凭据
 process.env.LOGIN_RATE_LIMIT_PER_MIN = '100000';
+process.env.ENV_LOCAL = 'off'; delete process.env.HUIDU_MODE; // 不读取 .env.local
 process.env.HUIDU_SIMULATOR = 'on'; process.env.HUIDU_WALLET_MODE = 'shared';
 for (const k of ['HUIDU_BASE_URL', 'HUIDU_AGENCY_UID', 'HUIDU_AES_KEY']) delete process.env[k];
 const assert = require('assert');
@@ -310,7 +311,7 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     assert(hc.validKey('a'.repeat(32)) && !hc.validKey('a'.repeat(31)));
   });
   await t('源码不含硬编码密钥/32 位十六进制凭据（adapters/huidu.js、sim、huidu-crypto、providers.json）', async () => {
-    for (const f of ['adapters/huidu.js', 'sim/huidu-sim.js', 'lib/huidu-crypto.js', 'lib/alias.js', 'config/providers.json']) {
+    for (const f of ['adapters/huidu.js', 'sim/huidu-sim.js', 'lib/huidu-crypto.js', 'lib/alias.js', 'lib/env.js', 'scripts/huidu-live-check.js', 'scripts/huidu-callback-test.js', 'config/providers.json']) {
       const src = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
       assert(!/\b[0-9a-f]{32}\b/i.test(src), f + ' 含 32 位十六进制串');
       assert(!/jsgame\.live/.test(src), f + ' 含文档示例地址');
@@ -482,6 +483,45 @@ config.regions.regions.region_c = { label: 'T-C', categories: Object.assign({}, 
     sim.playerOf(HDMEM(u2)); sim.state.players.set(HDMEM(u2), { member: HDMEM(u2), currency: 'EUR', balance: 0 });
     const c = await api('POST', '/api/games/pg-mahjong-ways/launch', {}, u2.token); assert.strictEqual(c.status, 409); assert.strictEqual(c.body.code, 'CURRENCY_MISMATCH');
     config.catalog.games = config.catalog.games.filter((x) => !/^tmp-/.test(x.id)); void g;
+  });
+  await t('env.js：HUIDU_MODE / SERVER_URL / PLAYER_PREFIX 归一；.env.local 不覆盖真实环境变量；默认=模拟器', async () => {
+    const E = require('../lib/env');
+    const n = (o) => E.normalize(Object.assign({}, o));
+    assert.strictEqual(n({}).HUIDU_SIMULATOR, 'on'); // 默认模拟器，即使凭据就位也不会误连真实环境
+    assert.strictEqual(n({ HUIDU_AGENCY_UID: 'x', HUIDU_AES_KEY: 'y', HUIDU_SERVER_URL: 'https://x.test' }).HUIDU_SIMULATOR, 'on');
+    assert.strictEqual(n({ HUIDU_MODE: 'live' }).HUIDU_SIMULATOR, 'off');
+    assert.strictEqual(n({ HUIDU_MODE: 'LIVE', HUIDU_SIMULATOR: 'on' }).HUIDU_SIMULATOR, 'off'); // MODE 优先
+    assert.strictEqual(n({ HUIDU_MODE: 'sim', HUIDU_SIMULATOR: 'off' }).HUIDU_SIMULATOR, 'on');
+    assert.strictEqual(n({ HUIDU_SIMULATOR: 'auto' }).HUIDU_SIMULATOR, 'auto'); // 旧用法保持
+    const a = n({ HUIDU_SERVER_URL: 'https://s.test', HUIDU_PLAYER_PREFIX: 'zz1234' });
+    assert.strictEqual(a.HUIDU_BASE_URL, 'https://s.test'); assert.strictEqual(a.HUIDU_ALIAS_PREFIX, 'zz1234');
+    const b = n({ HUIDU_SERVER_URL: 'https://s.test', HUIDU_BASE_URL: 'https://orig.test' }); assert.strictEqual(b.HUIDU_BASE_URL, 'https://orig.test'); // 原名优先
+    const f = path.join(require('os').tmpdir(), 'envtest-' + uniq('e')); fs.writeFileSync(f, '# c\nA_ONE=1\nexport A_TWO="two words"\nA_THREE=3 # tail\nA_EXIST=file\n');
+    const env = { A_EXIST: 'real' }; E.loadFile(f, env); fs.unlinkSync(f);
+    assert.deepStrictEqual(env, { A_EXIST: 'real', A_ONE: '1', A_TWO: 'two words', A_THREE: '3' });
+    assert.deepStrictEqual(E.loadFile('off', {}), []); assert.deepStrictEqual(E.loadFile('/nonexistent/.env', {}), []);
+  });
+  await t('玩家 ID 映射尊重 player_prefix：member_account 以前缀开头、≤20 位；重启后回调可惰性反查', async () => {
+    const pre = 'zz1234'; const u = store.createUser(uniq('pf').replace(/[^\w-]/g, ''), 'default');
+    const a = alias.aliasFor('p_pref', u.id, pre);
+    assert(a.startsWith(pre) && /^[a-z0-9]{3,20}$/.test(a) && a.length === 20, a);
+    store.aliasToUser.clear(); store.userToAlias.clear(); // 模拟进程重启：内存映射表丢失
+    assert.strictEqual(alias.resolve('p_pref', a), null); // 不带前缀不重建
+    assert.strictEqual(alias.resolve('p_pref', a, pre), u.id); // 带前缀 → 重建
+    assert.strictEqual(alias.resolve('p_pref', 'qq9999' + a.slice(6), pre), null); // 前缀不符不重建
+    assert.strictEqual(alias.aliasFor('p_pref', u.id, pre), a); // 稳定
+    assert(alias.aliasFor('p_pref2', u.id, 'abcdefghijklmnop').startsWith('abcdefghij')); // 前缀上限 10
+  });
+  await t('HUIDU live 配置：callbackUrl 覆盖默认回调地址；member_account 带 player_prefix 发往供应商', async () => {
+    const key = crypto.randomBytes(16).toString('hex'), uid = crypto.randomBytes(16).toString('hex');
+    const sim = createSimulator({ agencyUid: uid, aesKey: key, walletMode: 'shared' }); const url = await sim.listen(0, '127.0.0.1');
+    const cfg = Object.assign({}, HDCFG, { enabled: true, simulator: 'off', baseUrl: url, apiKey: uid, secret: key, aliasPrefix: 'zz1234', callbackUrl: 'https://cb.example.test/provider/huidu_seamless/callback', timeoutMs: 3000 });
+    const real = adapters.register('huidu_pref', cfg); const u = await newUser();
+    const r = await real.launch({ user: store.users.get(u.id), game: GAME, device: 'desktop', lang: 'zh-CN', currency: 'DEMO', launchToken: 'x', returnUrl: 'https://h.test/', callbackBase: `${base}/provider/huidu_pref` });
+    const s = sim.session(new URL(r.url).searchParams.get('session'));
+    assert(s.member.startsWith('zz1234') && s.member.length === 20); assert.strictEqual(s.callback_url, 'https://cb.example.test/provider/huidu_seamless/callback');
+    assert.strictEqual(real.modeLabel, 'live'); assert.strictEqual(r.mode, 'real'); await sim.close();
+    const h = await api('GET', '/api/health'); assert.strictEqual(h.body.providerModes.huidu_seamless, 'simulator'); // 测试进程默认模拟器
   });
   await t('HUIDU 真实模式配置路径：凭据来自配置(环境变量)，指向独立模拟器进程；错误密钥/长度非法/缺凭据', async () => {
     const key = crypto.randomBytes(16).toString('hex'), uid = crypto.randomBytes(16).toString('hex');

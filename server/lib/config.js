@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+require('./env'); // 先装载 .env.local(若有) 并归一 HUIDU_* 别名/模式，再做 ${VAR} 替换
 
 const CONF_DIR = process.env.CONFIG_DIR || path.join(__dirname, '..', 'config');
 
@@ -23,6 +24,10 @@ function load(name) {
 }
 
 const providers = load('providers.json').providers;
+// HUIDU 回调来源 IP 白名单：HUIDU_CALLBACK_IPS=1.2.3.4,5.6.7.8（逗号分隔；空 = 不限制，仅靠 AES 密钥 + agency_uid 认证）
+if (process.env.HUIDU_CALLBACK_IPS && providers.huidu_seamless) {
+  providers.huidu_seamless.ipAllowlist = process.env.HUIDU_CALLBACK_IPS.split(',').map((s) => s.trim()).filter(Boolean);
+}
 const regions = load('regions.json');
 const catalog = load('games.json');
 

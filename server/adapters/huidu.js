@@ -92,6 +92,8 @@ class HuiduAdapter extends Base {
   get walletMode() { return this.cfg.walletMode === 'transfer' ? 'transfer' : 'shared'; }
   get currency() { return String(this.cfg.currency || 'USD').toUpperCase(); }
   isDemo() { return this.useSim; }
+  /** 'simulator' | 'live' | 'misconfigured'（不含任何密钥） */
+  get modeLabel() { return this.useSim ? 'simulator' : this.configError ? 'misconfigured' : 'live'; }
 
   // ---------- 连接 ----------
   async ensureReady() {
@@ -151,7 +153,7 @@ class HuiduAdapter extends Base {
     if (!uid) throw new WalletError('GAME_NOT_FOUND', '游戏缺少 providerGameId(HUIDU game_uid)', 404);
     let url, extra = {};
     if (this.walletMode === 'shared') {
-      const body = Object.assign(this._common(ctx, member), { game_uid: uid, credit_amount: fmt(ctx.user.balance), callback_url: `${ctx.callbackBase}/callback` });
+      const body = Object.assign(this._common(ctx, member), { game_uid: uid, credit_amount: fmt(ctx.user.balance), callback_url: this.cfg.callbackUrl || `${ctx.callbackBase}/callback` });
       if (g.extras) body.extras = g.extras;
       url = (await this._post('/game/v1', body)).payload.game_launch_url;
     } else {
@@ -254,7 +256,7 @@ class HuiduAdapter extends Base {
   parseCallback(action, req, info) {
     const b = req.body || {};
     if (typeof b.member_account !== 'string' || !b.member_account) throw new WalletError('INVALID_PARAMS', '缺少或非法字段 member_account', 400);
-    const userId = alias.resolve(this.name, b.member_account);
+    const userId = alias.resolve(this.name, b.member_account, this.cfg.aliasPrefix);
     if (info && userId) info.userId = userId; // 先定位玩家：后续任何校验失败都能返回其余额（文档：无论成功失败均需返回余额）
     for (const k of ['serial_number', 'game_uid', 'game_round', 'currency_code']) if (typeof b[k] !== 'string' || !b[k]) throw new WalletError('INVALID_PARAMS', `缺少或非法字段 ${k}`, 400);
     if (String(b.currency_code).toUpperCase() !== this.currency) throw new WalletError('CURRENCY_MISMATCH', '币种不匹配', 409);

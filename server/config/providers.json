@@ -27,6 +27,7 @@
       "autoTransfer": "${HUIDU_AUTO_TRANSFER:-all}",
       "timeoutMs": 10000,
       "tsToleranceSec": "${HUIDU_TS_TOLERANCE_SEC:-86400}",
+      "callbackUrl": "${HUIDU_CALLBACK_URL:-}",
       "ipAllowlist": []
     },
     "huidu_transfer": {
