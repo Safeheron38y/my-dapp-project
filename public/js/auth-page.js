@@ -5,7 +5,7 @@ var mode = document.body.getAttribute('data-mode');
 var q = new URLSearchParams(location.search);
 var next = q.get('next');
 // 登录/注册成功后：默认回大厅 /。只允许站内路径；登录页/注册页本身、以及已删除的旧页面(/games/*、live.html、sports.html)一律回大厅
-if (!next || next.charAt(0) !== '/' || next.charAt(1) === '/' || next.indexOf('\\') >= 0 || /^\/(login|register)\.html/.test(next) || /^\/(games\/|live\.html|sports\.html)/.test(next)) next = '/';
+next = '/'; // 用户要求：登录/注册成功后一律回游戏大厅，不再按 ?next= 跳回任何游戏页
 var $ = function (s) { return document.querySelector(s); };
 var msg = $('#msg'), go = $('#go');
 
