@@ -22,8 +22,10 @@ export function coverUrl(g) {
 }
 export function placeholder(g) {
   var k = String(g.id), hg = h(k), hg2 = h(k + '#'), hg3 = h('#' + k);
-  var h1 = hg % 360, h2 = (h1 + 38 + hg2 % 70) % 360, ang = 120 + (hg3 % 8) * 14, sat = 52 + hg2 % 14, l1 = 40 + hg3 % 8;
-  var bg = 'linear-gradient(' + ang + 'deg,hsl(' + h1 + ',' + sat + '%,' + l1 + '%),hsl(' + h2 + ',' + (sat - 4) + '%,' + (l1 - 22) + '%))';
+  // 玉漆色系：玉/青瓷/墨绿为主，偶尔朱砂或拉丝金（不出现紫色）
+  var PAL = [[162, 45, 40], [158, 38, 34], [150, 30, 44], [168, 42, 30], [12, 58, 46], [38, 52, 46]];
+  var c = PAL[hg % PAL.length], h1 = c[0] + (hg2 % 7) - 3, h2 = c[0] < 100 ? c[0] - 4 : 164, ang = 120 + (hg3 % 8) * 14, sat = c[1], l1 = c[2] + hg3 % 6;
+  var bg = 'linear-gradient(' + ang + 'deg,hsl(' + h1 + ',' + sat + '%,' + l1 + '%),hsl(' + h2 + ',' + (sat - 6) + '%,' + Math.max(14, l1 - 22) + '%))';
   var m = MOTIF[g.category] || MOTIF.slots;
   var sx = (hg % 24) - 8, sy = (hg2 % 16) - 12, rot = (hg3 % 15) - 7, sc = 1 + (hg % 5) / 20;
   var dots = '';

@@ -1,72 +1,18 @@
-/* 8K 平台装饰层：横幅轮播 / 分类图标 / 徽章 / 按钮与卡片边框 / 加载与空状态 / 图案背景 / Logo。
-   动画只用 transform 与 opacity；无 filter / backdrop-filter / mask；assets 见 /assets/*.svg（全部矢量）。 */
-
-/* ---- Logo ---- */
-.brand .mk{background:none;box-shadow:none;border-radius:12px;overflow:hidden;width:38px;height:38px;display:block;flex:0 0 38px}
-.brand .mk img{width:38px;height:38px;display:block;border-radius:12px}
-.brand b{background:var(--foil);-webkit-background-clip:text;background-clip:text;color:#F7D3C4;-webkit-text-fill-color:transparent;letter-spacing:.04em}
-
-/* ---- 分类图标(双色) ---- */
-.ico{width:1.25em;height:1.25em;flex:0 0 auto;display:block}
-.chip{display:inline-flex;align-items:center;gap:6px}
-.chip .ico{width:18px;height:18px}
-
-/* ---- 徽章 ---- */
-.bdg{display:inline-flex;align-items:center;gap:4px;min-height:20px;padding:2px 8px 2px 6px;border-radius:99px;font-size:11px;line-height:1.2;font-weight:700;letter-spacing:.06em;white-space:nowrap;color:var(--rg3);background:rgba(43,27,94,.55);box-shadow:0 0 0 1px rgba(247,211,196,.45) inset}
-.bdg .ico{width:14px;height:14px}
-.bdg.hot{color:#fff;background:linear-gradient(135deg,#FF9A76,#C2478A);box-shadow:0 1px rgba(255,255,255,.45) inset,0 0 0 1px rgba(255,255,255,.28) inset}
-.bdg.hot .ico{--i1:#fff;--i2:#C2478A;--i3:#FFE1D2}
-.bdg.new{color:var(--indigo);background:var(--foil);box-shadow:0 1px rgba(255,255,255,.8) inset,0 0 0 1px rgba(255,255,255,.35)}
-.bdg.new .ico{--i1:#5B3CC4;--i2:#2B1B5E;--i3:#C2478A}
-.bdg.live{color:var(--indigo);background:linear-gradient(135deg,#FFE1D2,#FF9A76)}
-.bdg.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#C2478A;animation:pulse 1.6s ease-in-out infinite}
-.bdg.vip{color:#5A2E1A;background:linear-gradient(135deg,#FFF0C9,#F5BE6B 55%,#E39A55)}
-
-/* ---- 按钮 / 边框 ---- */
-.btn-royal{box-shadow:0 1px rgba(255,255,255,.95) inset,0 -2px 6px rgba(217,154,139,.5) inset,0 10px 22px -8px rgba(255,154,118,.7),0 0 0 1px rgba(255,255,255,.4)}
-.btn-royal:before{content:"";position:absolute;top:3px;right:3px;bottom:3px;left:3px;border-radius:99px;border:1px solid rgba(138,63,66,.28);pointer-events:none}
-.btn-royal:active{transform:scale(.97)}
-.btn-twi{background:linear-gradient(135deg,var(--violet2),var(--rose));color:#fff;box-shadow:0 1px rgba(255,255,255,.4) inset,0 0 0 1px rgba(247,211,196,.5),0 10px 22px -10px rgba(194,71,138,.8)}
-.btn-twi:before{content:"";position:absolute;top:3px;right:3px;bottom:3px;left:3px;border-radius:99px;border:1px solid rgba(255,255,255,.3);pointer-events:none}
+/* 8K 装饰层（玉漆月门）：徽章 / 回纹角框 / 图案。装饰元素一律 pointer-events:none、位于内容之下，窄屏缩小或隐藏。 */
+.bdg{display:inline-flex;align-items:center;gap:4px;min-height:20px;padding:3px 8px;border-radius:6px 6px 6px 2px;font:700 10px/1.2 var(--f-sans);letter-spacing:.06em;white-space:nowrap;color:var(--jade-900);background:var(--g-gold);box-shadow:0 1px 0 rgba(255,255,255,.6) inset}
+.bdg .ico{width:13px;height:13px;--i1:var(--jade-900);--i2:var(--paper);--i3:var(--cinnabar)}
+.bdg.hot{color:#fff;background:var(--g-cinnabar);box-shadow:0 4px 8px -3px rgba(179,65,46,.6)}
+.bdg.hot .ico{--i1:#fff;--i2:var(--cinnabar);--i3:#FFE9D6}
+.bdg.new{color:var(--on-primary);background:var(--g-jade-lin)}
+.bdg.new .ico{--i1:var(--gold-300);--i2:var(--jade-900);--i3:var(--cinnabar)}
+.bdg.live{color:#fff;background:var(--g-cinnabar)}
+.bdg.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.6s ease-in-out infinite}
+/* 回纹角框（设计稿 frame-corner.svg） */
 .frame{position:relative}
-.frame:before,.frame:after{content:"";position:absolute;width:26px;height:26px;background:url(/assets/frame-corner.svg) no-repeat 0 0/100% 100%;pointer-events:none;z-index:3;opacity:.9}
-.frame:before{left:7px;top:7px}
-.frame:after{right:7px;bottom:7px;-webkit-transform:rotate(180deg);transform:rotate(180deg)}
-
-/* ---- 游戏卡片框 ---- */
-
-/* ---- 分隔线 / 图案背景 ---- */
-.orn{height:20px;margin:2px auto 12px;max-width:340px;background:url(/assets/divider.svg) no-repeat 50% 50%/contain;opacity:.95}
-.orn-f{margin:0;padding:6px 0;background:var(--indigo)}
-.sec-t{position:relative}
-.sec-t h2:before{content:"";display:inline-block;width:8px;height:8px;margin:0 9px 2px 0;background:var(--foil);-webkit-transform:rotate(45deg);transform:rotate(45deg);border-radius:2px;vertical-align:middle}
-.lob-main{position:relative;background:linear-gradient(180deg,#33207a 0,#2B1B5E 220px,#2B1B5E 100%)}
-.lob-main:before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:url(/assets/pattern-wave.svg) 0 0/48px 16px repeat,url(/assets/pattern-sparkle.svg) 0 0/150px 150px repeat;opacity:.55;pointer-events:none}
-.lob-main>.wrap{position:relative;z-index:1}
-.lob-hero .bg:before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:url(/assets/pattern-cloud.svg) 0 0/96px 64px repeat;opacity:.5}
-
-/* ---- 横幅轮播 ---- */
-.lob-hero{padding-bottom:18px}
-.lob-hero h1{font-size:clamp(22px,6vw,34px)}
-.lob-hero .no{display:none}
-@keyframes twk{50%{opacity:.15}}
-@media(min-width:900px){.lob-hero{padding-bottom:22px}}
-
-/* ---- 加载 / 空状态 ---- */
-.ldr{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0 6px;color:var(--rg3);font-size:13px;letter-spacing:.12em}
-.ld{position:relative;display:block;width:64px;height:64px}
-.ld img{position:absolute;display:block}
-.ld .r{top:0;left:0;width:64px;height:64px;animation:ldspin 1.1s linear infinite}
-.ld .m{top:15px;left:15px;width:34px;height:34px;border-radius:10px;animation:ldpulse 1.6s ease-in-out infinite}
-@keyframes ldspin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
-@keyframes ldpulse{50%{-webkit-transform:scale(.88);transform:scale(.88);opacity:.75}}
-.skel{background:rgba(255,255,255,.06)}
-.skel:before{content:"";position:absolute;top:50%;left:50%;width:36px;height:36px;margin:-18px 0 0 -18px;background:url(/assets/logo-mark.svg) no-repeat 0 0/100% 100%;opacity:.22}
-.empty img{width:160px;height:120px;margin:0 auto 6px;display:block}
-
-/* ---- 低性能 / 减少动态 ---- */
-.lp .ld .r,.lp .ld .m,.lp .bdg.live:before{animation:none}
-.lp .ld .r{opacity:.8}
-@media(prefers-reduced-motion:reduce){
-  .ld .r,.ld .m,.bdg.live:before,.shine:after,.tag.live:before,.skel:after{animation:none!important}
-}
+.frame:before,.frame:after{content:"";position:absolute;z-index:0;width:30px;height:30px;background:url(/assets/frame-corner.svg) no-repeat 0 0/100% 100%;pointer-events:none}
+.frame:before{left:6px;top:6px}
+.frame:after{right:6px;bottom:6px;-webkit-transform:rotate(180deg);transform:rotate(180deg)}
+.frame>*{position:relative;z-index:1}
+@media(max-width:359px){.frame:before,.frame:after{width:22px;height:22px}}
+.lp .bdg.live:before{animation:none}
+@media(prefers-reduced-motion:reduce){.bdg.live:before{animation:none!important}}

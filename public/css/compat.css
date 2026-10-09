@@ -1,47 +1,32 @@
 /* 自动生成：python3 scripts/build-compat.py。flex-gap 回退(.no-fg) 与 aspect-ratio 回退(.no-ar) */
-.no-fg .tag>*+*{margin-left:4px}
-.no-fg .btn>*+*{margin-left:8px}
+.no-fg .btn>*+*{margin-left:6px}
 .no-fg .hdr .wrap>*+*{margin-left:10px}
 .no-fg .brand>*+*{margin-left:9px}
-.no-fg .tabbar a>*+*{margin-top:3px}
-.no-fg .tabs>*+*{margin-left:8px}
 .no-fg .bal>*+*{margin-left:8px}
-.no-fg .eyebrow>*+*{margin-left:10px}
+.no-fg .bal>span>*+*{margin-top:2px}
+.no-fg .tabbar a>*+*{margin-top:3px}
+.no-fg .eyebrow>*+*{margin-left:8px}
 .no-fg .chips>*+*{margin-left:8px}
-.no-fg .sec-t>*+*{margin-left:10px}
+.no-fg .chip>*+*{margin-left:6px}
+.no-fg .ldr>*+*{margin-top:8px}
+.no-fg .ftr2 .rg>*+*{margin-left:14px}
 .no-fg .sheet .row>*+*{margin-left:8px}
 .no-fg .sheet .li>*+*{margin-left:10px}
 .no-fg .toasts>*+*{margin-top:8px}
-.no-fg .seg>*+*{margin-left:6px}
+.no-fg .seg>*+*{margin-left:8px}
 .no-fg .stake>*+*{margin-left:6px}
-.no-fg .gw-top>*+*{margin-left:8px}
-.no-fg .gw-ttl>*+*{margin-top:2px}
-.no-fg .gw-ttl span>*+*{margin-left:6px}
-.no-fg .gw-state>*+*{margin-top:14px}
-.no-fg .gw-rot>*+*{margin-top:16px}
-.no-fg .gm>*+*{margin-top:12px}
-.no-fg .gm .hist>*+*{margin-left:6px}
-.no-fg .vid .ph>*+*{margin-left:8px}
-.no-fg .phase>*+*{margin-left:6px}
-.no-fg .road .lg>*+*{margin-left:12px}
-.no-fg .spot>*+*{margin-top:2px}
-.no-fg .tray>*+*{margin-left:8px}
-.no-fg .cards-r>*+*{margin-left:6px}
-.no-fg .ev .lh>*+*{margin-left:8px}
-.no-fg .ev .tm>*+*{margin-left:8px}
-.no-fg .mybets .bt .r>*+*{margin-left:8px}
+.no-fg .gw-state>*+*,.no-fg .gw-rot>*+*{margin-top:14px}
 .no-fg .sl>*+*{margin-top:16px}
 .no-fg .reels>*+*{margin-left:8px}
-.no-fg .chip>*+*{margin-left:6px}
 .no-fg .bdg>*+*{margin-left:4px}
-.no-fg .ldr>*+*{margin-top:6px}
-.no-fg .row2>*+*{margin-left:8px}
+.no-fg .catbar .tabs>*+*{margin-left:22px}
+.no-fg .cat>*+*{margin-top:6px}
+.no-fg .row2>*+*{margin-left:10px}
 .no-fg .vbtn>*+*{margin-left:8px}
-.no-fg .vrow>*+*{margin-left:10px}
-.no-fg .catbar .tabs>*+*{margin-left:8px}
-.no-fg .catbar .tabs button>*+*{margin-left:6px}
-.no-fg .sec-t>*+*{margin-left:10px}
-.no-fg .cv .tags>*+*{margin-top:4px}
+.no-fg .vrow>*+*{margin-left:12px}
+.no-fg .sh>*+*{margin-left:10px}
+.no-fg .strip>*+*{margin-left:12px}
+.no-fg .cv .tags>*+*{margin-left:4px}
 .no-fg .info small>*+*{margin-left:6px}
 .no-fg .catbar .tabs button>svg,.no-fg .chip>svg{margin-right:6px}.no-fg .bdg>svg{margin-right:4px}.no-fg .btn>svg{margin-right:8px}
 .no-ar .cv{height:0;padding-top:100%}.no-ar .skel{height:0;padding-top:134%}

@@ -18,7 +18,10 @@ var ICONS = {
   mute: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></g>'],
   fs: ['0 0 24 24', '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
   fsx: ['0 0 24 24', '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
-  home: ['0 0 24 24', '<path d="M4 11 12 4l8 7v9H14v-6h-4v6H4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>'],
+  home: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5V20h-5v-5H9v5H4z"/><circle cx="12" cy="10.5" r="1.6" fill="currentColor"/></g>'],
+  ball: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><path d="M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4z"/></g>'],
+  rec: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M9 9h6M9 13h6M9 17h3"/></g>'],
+  me: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="3.6"/><path d="M5 20c1.2-3.6 4-5.4 7-5.4s5.8 1.8 7 5.4"/></g>'],
   list: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></g>'],
   user: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-4 4-6 7.5-6s6.700 2 7.500 6"/></g>'],
   refresh: ['0 0 24 24', '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.500-5.800M20 4v4.500h-4.500"/></g>'],
@@ -31,7 +34,7 @@ export function icon(n, cls) {
   var i = ICONS[n]; if (!i) return '';
   return '<svg viewBox="' + i[0] + '" aria-hidden="true" focusable="false"' + (cls ? ' class="' + cls + '"' : '') + '>' + i[1] + '</svg>';
 }
-/* 分类图标（双色玫瑰金 sprite：/assets/icons.svg）。颜色通过 CSS 变量 --i1(主体) --i2(细节) --i3(点缀) 覆盖 */
+/* 分类图标（双色金/玉 sprite：/assets/icons.svg）。颜色通过 CSS 变量 --i1(主体) --i2(细节) --i3(点缀) 覆盖 */
 export function cicon(n, cls) { return '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><use href="/assets/icons.svg#i-' + n + '"/></svg>'; }
 export function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 export function $(s, r) { return (r || document).querySelector(s); }
@@ -67,21 +70,21 @@ export function sheet(html, opt) {
 // ---- 页眉 / 底部导航 ----
 var NAV = [['/', '大厅', 'home'], ['/#sports', '体育', 'sports']];
 export function mountShell(active) {
-  var sprite = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' + '</defs></svg>';
   var hdr = el('<header class="hdr"><div class="wrap">' +
-    '<a class="brand" href="/" aria-label="8K 首页"><span class="mk"><img src="/assets/logo-mark.svg" alt="" width="38" height="38" decoding="async"></span><b>8K</b><small>游戏大厅</small></a>' +
+    '<a class="brand" href="/" aria-label="8K 首页"><span class="seal" aria-hidden="true"></span><span><b>8K</b><small>JADE&nbsp;HALL</small></span></a>' +
     '<nav class="nav" aria-label="主导航">' + NAV.map(function (n) { return '<a href="' + n[0] + '"' + (active === n[0] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
-    '<button class="acct" id="hdrTx" type="button">交易记录</button><button class="acct" id="hdrMe" type="button" aria-label="我的账户">我的</button>' +
-        '<button class="bal" id="balBtn" aria-label="钱包余额，点击充值"><small>演示币</small><b id="balV">--</b><span class="plus">' + icon('plus') + '</span></button>' +
+    '<button class="acct" id="hdrTx" type="button">交易记录</button>' +
+    '<button class="bal" id="balBtn" aria-label="钱包余额，点击充值"><span><small>余额</small><b id="balV">--</b></span><span class="plus">' + icon('plus') + '</span></button>' +
+    '<button class="av" id="hdrMe" type="button" aria-label="我的账户">' + icon('me') + '</button>' +
     '</div></header>');
   var ph = document.querySelector('.hdr-ph'); if (ph) ph.parentNode.removeChild(ph);  // 去掉预留占位(避免页眉插入造成布局位移 CLS)
   document.body.insertBefore(hdr, document.body.firstChild);
   var tb = el('<nav class="tabbar" aria-label="底部导航"><ul>' +
     '<li><a href="/"' + (active === '/' ? ' class="on" aria-current="page"' : '') + '>' + icon('home') + '大厅</a></li>' +
-    '<li><a href="/#sports">' + icon('sports') + '体育</a></li>' +
+    '<li><a href="/#sports">' + icon('ball') + '体育</a></li>' +
     '<li><a href="#" class="mid" id="tbDep" role="button"><span class="orbtn">' + icon('plus') + '</span><em>充值</em></a></li>' +
-    '<li><a href="#" id="tbTx" role="button">' + icon('list') + '记录</a></li>' +
-    '<li><a href="#" id="tbMe" role="button">' + icon('user') + '我的</a></li>' +
+    '<li><a href="#" id="tbTx" role="button">' + icon('rec') + '记录</a></li>' +
+    '<li><a href="#" id="tbMe" role="button">' + icon('me') + '我的</a></li>' +
     '</ul></nav>');
   document.body.appendChild(tb);
   var balV = $('#balV');
@@ -90,16 +93,16 @@ export function mountShell(active) {
   $('#tbDep').addEventListener('click', function (e) { e.preventDefault(); openDeposit(); });
   $('#tbTx').addEventListener('click', function (e) { e.preventDefault(); openTx(); });
   $('#tbMe').addEventListener('click', function (e) { e.preventDefault(); openMe(); });
-  $('#hdrMe').addEventListener('click', openMe); $('#hdrTx').addEventListener('click', openTx); // 桌面端没有底部导航，账户入口放在页眉
-  // 游客可浏览大厅/赛事；充值、记录、我的、下注需要登录
+  $('#hdrMe').addEventListener('click', openMe); $('#hdrTx').addEventListener('click', openTx);
+  // 游客可浏览大厅；充值、记录、我的需要登录
   return api.ensure(true).then(function (r) {
-    if (!r) guestHeader(); else { var hm = $('#hdrMe'); hm.textContent = state.user.username; hm.setAttribute('aria-label', '我的账户：' + state.user.username); }
+    if (!r) guestHeader(); else { var hm = $('#hdrMe'), n = String(state.user.username || ''); hm.textContent = n.charAt(0).toUpperCase(); hm.setAttribute('aria-label', '我的账户：' + n); hm.title = n; }
     return api.config().then(maintenanceBanner).catch(function () {});
   }).catch(function (e) { toast(errText(e), 'err'); });
 }
 function guestHeader() {
-  $('#hdrMe').textContent = '登录'; $('#hdrTx').hidden = true;
-  var b = $('#balBtn'); b.innerHTML = '<b style="min-width:0;font-style:normal;font-family:inherit;font-size:15px;padding-right:14px">登录 / 注册</b>'; b.setAttribute('aria-label', '登录或注册');
+  $('#hdrTx').hidden = true; $('#hdrMe').setAttribute('aria-label', '登录');
+  var b = $('#balBtn'); b.className = 'bal guest'; b.innerHTML = '登录 / 注册'; b.setAttribute('aria-label', '登录或注册');
 }
 // 后台“系统设置”里的站点横幅
 function maintenanceBanner(c) {
@@ -114,7 +117,7 @@ export function openDeposit() {
   var s = sheet('<h3>充值 <span class="demo-tag">演示</span></h3><p class="sub">演示币，仅用于体验流程，没有任何真实资金。真实上线需接入支付通道。</p>' +
     '<label for="depA">金额</label><div class="stake"><input id="depA" class="field" inputmode="decimal" value="100" autocomplete="off"></div>' +
     '<div class="row seg" id="depQ">' + [50, 100, 500, 1000].map(function (v) { return '<button type="button" data-v="' + v + '">' + v + '</button>'; }).join('') + '</div>' +
-    '<button class="btn btn-foil" id="depGo" type="button">确认充值</button><p class="note" id="depLim"></p>');
+    '<button class="btn btn-jade" id="depGo" type="button">确认充值</button><p class="note" id="depLim"></p>');
   var lim = state.wallet && state.wallet.limits;
   if (lim) s.$('#depLim').textContent = '本地区充值限额：' + (lim.minDeposit != null ? '最低 ' + lim.minDeposit : '无最低') + ' / ' + (lim.maxDeposit != null ? '单笔最高 ' + lim.maxDeposit : '单笔不设上限') + (lim.maxDailyDeposit != null ? ' / 每日最高 ' + lim.maxDailyDeposit : '') + '。';
   s.el.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('#depQ button'); if (b) s.$('#depA').value = b.getAttribute('data-v'); });
@@ -141,7 +144,7 @@ export function openMe() {
   if (!api.requireLogin()) return;
   var u = state.user || {};
   var s = sheet('<h3>我的账户 <span class="demo-tag">演示</span></h3><p class="sub">' + esc(u.username || '') + ' · 演示币余额 ' + fmt(state.wallet ? state.wallet.balance : 0) + '</p>' +
-    '<div class="row"><button class="btn btn-foil" id="meOut" type="button">退出登录</button></div>' +
+    '<div class="row"><button class="btn btn-jade" id="meOut" type="button">退出登录</button></div>' +
     '<div class="row"><a class="btn btn-ghost" href="/login.html?switch=1" style="min-height:44px">切换账号</a></div>' +
     '<label>负责任博彩（桩功能）</label><div class="row"><button class="btn btn-ghost" id="rg1" type="button" style="min-height:44px;width:auto;flex:1">冷静 1 小时</button><button class="btn btn-ghost" id="rg2" type="button" style="min-height:44px;width:auto;flex:1">设每日充值上限 500</button></div>' +
     '<p class="note">18+ 理性游戏。需要帮助请联系当地求助热线（占位，待填写）。自我排除/限额均为演示桩，真实环境需接入合规系统。</p>');

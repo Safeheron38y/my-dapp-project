@@ -107,7 +107,7 @@ P.showError = function (msg, canRetry) {
   var self = this; clearTimeout(this.loadTimer); this.errored = true;
   var s = $('#gwState', this.root); s.hidden = false;
   s.innerHTML = '<p style="font-size:18px;font-weight:800">无法加载游戏</p><p>' + esc(msg || '请检查网络后重试') + '</p>' +
-    (canRetry === false ? '' : '<button class="btn btn-foil" id="gwRetry" type="button">' + icon('refresh') + ' 重新连接</button>') +
+    (canRetry === false ? '' : '<button class="btn btn-jade" id="gwRetry" type="button">' + icon('refresh') + ' 重新连接</button>') +
     '<button class="btn btn-ghost" id="gwBack2" type="button">返回大厅</button>';
   var r = $('#gwRetry', s); if (r) r.addEventListener('click', function () { self.reconnect(); });
   $('#gwBack2', s).addEventListener('click', function () { self.back(); });
