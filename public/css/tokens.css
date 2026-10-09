@@ -29,7 +29,7 @@
   --lacquer-sheen:linear-gradient(180deg,rgba(255,255,255,.38) 0%,rgba(255,255,255,.06) 42%,rgba(255,255,255,0) 60%);
   /* texture */
   --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .45 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --fibre:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .3' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .6 0 0 0 0 .5 0 0 0 0 .32 0 0 0 .38 -.16'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --paper-tex:url(/assets/pattern-paper.svg);
   /* shadows (warm, never grey-black) */
   --sh-1:0 1px 0 rgba(255,255,255,.8) inset,0 1px 2px rgba(92,68,30,.10),0 4px 12px -4px rgba(92,68,30,.16);
   --sh-2:0 1px 0 rgba(255,255,255,.7) inset,0 10px 24px -10px rgba(70,52,22,.30),0 2px 6px rgba(70,52,22,.08);
@@ -59,10 +59,10 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:112px;background:var(--bg)}
 body{background:transparent;color:var(--text);font-family:var(--f-sans);line-height:1.6;overflow-x:hidden;overflow-x:clip;min-height:100vh;position:relative;
   padding-bottom:calc(var(--tab-h) + var(--sab));-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
-/* rice-paper: mist + fibre + grain behind all content (fixed layers; fibre kept very subtle so it never reads as wood grain) */
+/* rice-paper: mist + isotropic paper tile (designer pattern-paper.svg) + fine grain behind all content (fixed layers) */
 body:before,body:after{content:"";position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:-1}
-body:before{background:var(--g-mist),var(--fibre);background-size:auto,240px 240px;opacity:.32}
-body:after{background:var(--grain);opacity:.3;mix-blend-mode:multiply}
+body:before{background:var(--g-mist),var(--paper-tex) 0 0/256px 256px;opacity:.85}
+body:after{background:var(--grain);opacity:.2;mix-blend-mode:multiply}
 .lp body:after{display:none}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
