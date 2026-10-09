@@ -36,7 +36,11 @@
 .bn-dots button[aria-current=true]{width:26px}
 .bn-dots button[aria-current=true]:before{width:18px;margin-left:-9px;background:var(--g-jade-lin)}
 .bn-arr{display:none}
-@media(max-width:359px){.bn-s{height:204px;border-radius:100px 22px 22px 22px}.bn-t{left:24px;top:24px}.bn-t h3{font-size:26px}}
+/* narrow phones: keep the HTML headline on the paper side, clear of the illustration's moon-gate ring (art x≥446) */
+@media(max-width:440px){.bn-t .eyebrow .xw{display:none}}
+@media(max-width:400px){.bn-t{left:24px}.bn-t h3{font-size:26px}.bn-t .eyebrow{letter-spacing:.22em}}
+@media(max-width:374px){.bn-t h3{font-size:23px}}
+@media(max-width:359px){.bn-s{height:204px;border-radius:100px 22px 22px 22px}.bn-t{left:20px;top:24px}.bn-t h3{font-size:22px}}
 @media(min-width:640px){
   .bn-s{height:280px;border-radius:160px 28px 28px 28px}
   .bn-t{left:64px;top:60px;width:44%}.bn-t h3{font-size:38px}.bn-t p{font-size:14px}

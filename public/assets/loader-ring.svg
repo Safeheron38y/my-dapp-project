@@ -1,5 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C59B4F" stop-opacity="0"/><stop offset=".6" stop-color="#C59B4F"/><stop offset="1" stop-color="#8F6A2E"/></linearGradient></defs>
-<circle cx="32" cy="32" r="28" fill="none" stroke="#C59B4F" stroke-opacity=".22" stroke-width="2.5"/>
-<circle cx="32" cy="32" r="28" fill="none" stroke="#C59B4F" stroke-opacity=".35" stroke-width="1" stroke-dasharray="1.5 5" transform="scale(.86) translate(5.2 5.2)"/>
-<path d="M32 4A28 28 0 0 1 60 32" fill="none" stroke="url(#g)" stroke-width="3.2" stroke-linecap="round"/>
-<circle cx="60" cy="32" r="3.4" fill="#B3412E" stroke="#F5E6BE" stroke-width="1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="64" height="64">
+<title>Loading</title>
+<!-- static ring: the app rotates it with CSS (app.css .ld .r / .spin) and centres logo-mark.svg inside -->
+<defs>
+<linearGradient id="au" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5E6BE"/><stop offset=".45" stop-color="#C59B4F"/><stop offset="1" stop-color="#8F6A2E"/></linearGradient>
+<linearGradient id="tail" gradientUnits="userSpaceOnUse" x1="20" y1="3" x2="40" y2="40"><stop offset="0" stop-color="#E8D3A0" stop-opacity="0"/><stop offset=".45" stop-color="#D9B46C"/><stop offset="1" stop-color="#A97C36"/></linearGradient>
+<radialGradient id="j" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#7FC3A9"/><stop offset=".5" stop-color="#2F7D68"/><stop offset="1" stop-color="#1F5E4E"/></radialGradient>
+</defs>
+<circle cx="24" cy="24" r="20" fill="none" stroke="#C59B4F" stroke-opacity=".2" stroke-width="3"/>
+<g><circle cx="24" cy="24" r="14.5" fill="none" stroke="#C59B4F" stroke-opacity=".5" stroke-width=".9" stroke-dasharray="1.2 3.35"/></g>
+<g>
+ <circle class="arc" cx="24" cy="24" r="20" fill="none" stroke="url(#tail)" stroke-width="3" stroke-linecap="round" stroke-dasharray="50 76" transform="rotate(-90 24 24)"/>
+ <circle cx="35.97" cy="40.02" r="3.3" fill="url(#j)" stroke="#F5E6BE" stroke-width="1"/>
+</g>
+</svg>

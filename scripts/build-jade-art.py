@@ -124,3 +124,12 @@ empty("empty-fav.svg", '<g transform="translate(80 58)"><g fill="#B3412E"><circl
 for old in ("pattern-cloud.svg", "pattern-sparkle.svg", "pattern-wave.svg"):
     p = os.path.join(OUT, old)
     if os.path.exists(p): os.remove(p); print("removed", old)
+
+# ---- 设计师终稿（2026-10 交付）：存在则原样覆盖上面的临时组合稿 ----
+# 横幅只用无字插画版（标题保留为 HTML 文本）；*-titled.svg 不用于卡片。
+# loader.svg 自带动画，不使用：应用沿用静态 loader-ring.svg + CSS 旋转。
+FINAL = ["banner-slots.svg", "banner-live.svg", "banner-fish.svg", "empty-search.svg", "empty-error.svg", "empty-fav.svg",
+         "logo-mark.svg", "logo-mark-mono.svg", "loader-ring.svg", "pattern-paper.svg"]
+for f in FINAL:
+    p = os.path.join(SRC, f)
+    if os.path.exists(p): shutil.copy(p, os.path.join(OUT, f)); print("designer", f)
