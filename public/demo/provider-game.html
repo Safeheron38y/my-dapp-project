@@ -4,16 +4,16 @@
 <title>示例供应商游戏（演示）</title>
 <link rel="stylesheet" href="/css/tokens.css"><link rel="stylesheet" href="/css/app.css">
 <script src="/js/boot.js"></script></head>
-<body style="padding:0;background:#150c38;color:#fff;min-height:100vh">
+<body class="demo-game">
 <div class="sl" id="app">
   <div style="text-align:center"><span class="demo-tag">演示 · 模拟第三方供应商游戏</span>
-  <p style="font-size:12px;color:rgba(255,255,255,.8);margin-top:8px;max-width:24em">这是一个 iframe 内的模拟游戏，通过 postMessage 与宿主通信；下注/派彩经由“供应商回调”(带 HMAC 签名)写入账本。</p></div>
+  <p style="font-size:12px;color:rgba(251,246,234,.82);margin-top:8px;max-width:24em">这是一个 iframe 内的模拟游戏，通过 postMessage 与宿主通信；下注/派彩经由“供应商回调”(带 HMAC 签名)写入账本。</p></div>
   <div class="reels" id="reels" aria-live="polite"><div class="reel">7</div><div class="reel">7</div><div class="reel">7</div></div>
   <div style="width:min(320px,86vw)">
     <div class="stake"><button id="m" type="button" aria-label="减少">−</button><input class="field" id="amt" inputmode="decimal" value="5" aria-label="投注额"><button id="p" type="button" aria-label="增加">+</button></div>
     <div style="height:10px"></div>
-    <button class="btn btn-foil btn-lg" id="spin" type="button">旋转</button>
-    <p id="res" class="gm" style="padding:8px 0 0;text-align:center;font-size:14px;min-height:30px;color:#F7D3C4"></p>
+    <button class="btn btn-gold btn-lg" id="spin" type="button">旋转</button>
+    <p id="res" class="gm" style="padding:8px 0 0;text-align:center;font-size:14px;min-height:30px;color:#E8D3A0"></p>
   </div>
 </div>
 <script src="/demo/provider-game.js"></script>

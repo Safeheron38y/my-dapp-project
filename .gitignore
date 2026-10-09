@@ -21,3 +21,7 @@ shots/*.webp
 .DS_Store
 *.pem
 *.key
+
+# all screenshot sub-folders (e.g. shots/jade/)
+shots/**/*.png
+shots/**/*.jpg

@@ -1,6 +1,6 @@
 import { api, state, errText } from './api.js';
 import { mountShell, icon, cicon, esc, $, $$, toast, sheet as sheetUI } from './ui.js';
-import { cover, watchCovers } from './cover.js';
+import { cover, coverUrl, watchCovers } from './cover.js';
 import { initBanners } from './banners.js';
 
 /* 大厅：一次拉取全部游戏(<=1000)，在客户端做 分类/厂商/子类/标签/搜索 过滤——切换零延迟；
@@ -10,6 +10,7 @@ var SUB = { baccarat: '百家乐', blackjack: '二十一点', roulette: '轮盘'
 var BATCH = 24;
 var S = { cat: '', q: '', vendor: '', tag: '', sub: '' };
 var D = { all: [], cats: [], vendors: [], logos: {}, aliases: {}, view: [], shown: 0, seq: 0 };
+var ed = $('#ed'), cats = $('#cats');
 var grid = $('#grid'), tabs = $('#tabs'), chips = $('#chips'), vendorBtn = $('#vendorBtn'), moreBtn = $('#more'), qIn = $('#q'), qClear = $('#qc');
 
 function href(g) { return '/game.html?id=' + encodeURIComponent(g.id); }
@@ -20,7 +21,7 @@ function tile(g, i) {
   var tags = (g.tags.indexOf('hot') >= 0 ? '<span class="bdg hot">' + cicon('hot') + '热门</span>' : '') + (g.tags.indexOf('new') >= 0 ? '<span class="bdg new">' + cicon('new') + '新品</span>' : '');
   return '<a class="tile' + (g.playable ? '' : ' dis') + (c.has ? ' hasimg' : '') + '" style="--tg:' + c.bg + '" href="' + href(g) + '" data-id="' + esc(g.id) + '" aria-label="' + esc(g.name) + '，' + esc(g.vendor) + '">' +
     '<span class="cv" aria-hidden="true"><span class="art"></span>' + c.svg + '<span class="pn s' + c.sz + '">' + esc(g.name) + '</span>' + c.img +
-    '<span class="ic">' + cicon(CAT_ICON[g.category] || 'all') + '</span><span class="tags">' + tags + '</span></span>' +
+    (tags ? '<span class="tags">' + tags + '</span>' : '') + '</span>' +
     '<span class="info"><b>' + esc(g.name) + '</b><small>' + (D.logos[g.vendor] ? '<span class="vlg">' + logoImg(g.vendor) + '</span>' : '') + '<span class="vt">' + esc(g.vendor) + ' · ' + esc(SUB[g.subcategory] || g.subcategory) + '</span></small></span></a>';
 }
 
@@ -42,7 +43,7 @@ function renderMore() {
   if (sio && D.shown < D.view.length) requestAnimationFrame(function () { sio.unobserve(sentinel); sio.observe(sentinel); });
 }
 function skeleton() {
-  var s = '<div class="ldr" role="status"><span class="ld" aria-hidden="true"><img class="r" src="/assets/loader-ring.svg" alt="" width="64" height="64"><img class="m" src="/assets/logo-mark.svg" alt="" width="34" height="34"></span><b>加载中…</b></div>';
+  var s = '<div class="ldr" role="status"><span class="ld" aria-hidden="true"><img class="r" src="/assets/loader-ring.svg" alt="" width="64" height="64"><img class="m" src="/assets/logo-mark.svg" alt="" width="32" height="32"></span><b>加载中…</b></div>';
   for (var i = 0; i < 6; i++) s += '<div class="skel" aria-hidden="true"></div>';
   grid.innerHTML = s; grid.setAttribute('aria-busy', 'true');
 }
@@ -69,16 +70,41 @@ function apply() {
   $('#secT').textContent = S.cat ? catLabel(S.cat) : '全部游戏';
   $('#secC').textContent = D.view.length + ' 款';
   drawTabs(); drawVendors(); drawChips();
-  if (!D.view.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><img src="/assets/empty-search.svg" alt="" width="160" height="120"><b>没有找到相关游戏</b>换个关键词，或调整筛选条件试试</div>'; moreBtn.hidden = true; return; }
+  var filtered = !!(S.cat || S.q || S.vendor || S.tag || S.sub);
+  document.body.classList.toggle('filtered', filtered);
+  $$('.cat', cats).forEach(function (a) { a.setAttribute('aria-pressed', a.getAttribute('data-c') === S.cat ? 'true' : 'false'); });
+  if (!filtered) drawEditorial();
+  if (!D.view.length) { grid.innerHTML = '<div class="empty"><img src="/assets/empty-search.svg" alt="" width="160" height="120"><b>没有找到相关游戏</b>换个关键词，或调整筛选条件试试</div>'; moreBtn.hidden = true; return; }
   renderMore();
 }
 
+/* ---- 编辑式精选（未筛选时显示）：01 今日臻选 = 1 款主推 + 2 款；02 雅集推荐 = 横向 8 款（跨品类）。均取自服务器的混排顺序，真实游戏/封面 ---- */
+var edDone = false;
+function meta(g) { return esc(g.vendor) + ' · ' + esc(SUB[g.subcategory] || catLabel(g.category)); }
+function rtp(g) { var r = parseFloat(g.rtp); return r > 0 && r < 1 ? ' · <b>RTP ' + (Math.round(r * 1000) / 10) + '%</b>' : ''; }
+function cimg(g, w) { var u = coverUrl(g); return u ? '<img src="' + esc(u) + '" alt="" width="' + w + '" height="' + w + '" loading="lazy" decoding="async" draggable="false">' : ''; }
+function drawEditorial() {
+  if (edDone || !D.all.length) return; edDone = true;
+  var used = {}, pick = function (f) { for (var i = 0; i < D.all.length; i++) { var g = D.all[i]; if (!used[g.id] && g.playable && coverUrl(g) && f(g)) { used[g.id] = 1; return g; } } return null; };
+  var byCat = function (c) { return function (g) { return g.category === c; }; };
+  var f = pick(byCat('slots')), a = pick(byCat('slots')), b = pick(byCat('live')) || pick(function () { return true; });
+  if (!f || !a || !b) { ed.hidden = true; return; }
+  $('#feat').innerHTML = '<div class="panel" aria-hidden="true"></div><a class="cv" href="' + href(f) + '" aria-hidden="true" tabindex="-1">' + cimg(f, 300) + '</a>' +
+    '<div class="fi"><span class="k">EDITOR\'S PICK</span><h3>' + esc(f.name) + '</h3><p>' + meta(f) + '</p><a class="btn btn-gold btn-sm" href="' + href(f) + '">开始游戏</a></div>';
+  var gc = function (g, badge) { return '<a class="gc" href="' + href(g) + '" aria-label="' + esc(g.name) + '，' + esc(g.vendor) + '"><span class="cv">' + (badge ? '<span class="bdg hot">' + esc(badge) + '</span>' : '') + cimg(g, 300) + '</span><h4>' + esc(g.name) + '</h4><div class="meta">' + meta(g) + rtp(g) + '</div></a>'; };
+  $('#pair').innerHTML = gc(a, '热门') + gc(b);
+  var st = [], order = ['fishing', 'table', 'live', 'crash', 'sports', 'slots', 'fishing', 'table', 'live', 'slots'];
+  order.forEach(function (c) { if (st.length < 8) { var g = pick(byCat(c)); if (g) st.push(g); } });
+  while (st.length < 8) { var g = pick(function () { return true; }); if (!g) break; st.push(g); }
+  $('#strip').innerHTML = st.map(function (g) { return '<a class="gc" href="' + href(g) + '" aria-label="' + esc(g.name) + '，' + esc(g.vendor) + '"><span class="cv">' + cimg(g, 200) + '</span><h4>' + esc(g.name) + '</h4></a>'; }).join('');
+  ed.hidden = false;
+}
 function drawTabs() {
   var counts = {}; D.all.forEach(function (g) { if (pass(g, 'cat')) counts[g.category] = (counts[g.category] || 0) + 1; });
   var total = Object.keys(counts).reduce(function (a, k) { return a + counts[k]; }, 0);
   var all = [{ id: '', label: '全部', enabled: true, n: total }].concat(D.cats.map(function (c) { return Object.assign({ n: counts[c.id] || 0 }, c); }));
   if (tabs.children.length !== all.length) { // 仅首次构建；之后只更新计数/选中态，保留横向滚动位置
-    tabs.innerHTML = all.map(function (c) { return '<button type="button" role="tab" data-c="' + c.id + '"' + (c.enabled ? '' : ' class="off" title="暂未开放"') + '>' + cicon(CAT_ICON[c.id] || 'all') + '<span class="tl">' + esc(c.label) + '</span><span class="n"></span></button>'; }).join('');
+    tabs.innerHTML = all.map(function (c) { return '<button type="button" role="tab" data-c="' + c.id + '"' + (c.enabled ? '' : ' class="off" title="暂未开放"') + '><span class="tl">' + esc(c.label) + '</span><span class="n"></span></button>'; }).join('');
   }
   all.forEach(function (c, i) {
     var b = tabs.children[i], sel = c.id === S.cat;
@@ -130,12 +156,31 @@ function drawChips() {
   }).join('');
 }
 
+/* 选中品类后把“搜索行”滚到吸顶导航下方（结果紧随其后）；只在当前位置更靠下时才向上滚 */
+function stickyH() { var h = document.querySelector('.hdr'), c = $('#ctl'); return (h ? h.offsetHeight : 0) + (c ? c.offsetHeight : 0); }
+function toResults(force) {
+  var el = $('#srch'); if (!el) return;
+  var top = el.getBoundingClientRect().top + window.scrollY - stickyH() - 8;
+  if (force || window.scrollY > top) window.scrollTo(0, Math.max(0, top));
+}
+function setCat(c, force) {
+  S.cat = c; S.vendor = ''; S.sub = ''; S.tag = '';
+  history.replaceState(null, '', S.cat ? '#' + S.cat : location.pathname); if (D.all.length) { apply(); centerTab(); }
+  toResults(force);
+}
 tabs.addEventListener('click', function (e) {
   var b = e.target.closest('button[data-c]'); if (!b) return;
   if (b.classList.contains('off')) return toast('该品类暂未开放', 'err');
-  S.cat = b.getAttribute('data-c'); S.vendor = ''; S.sub = ''; S.tag = '';
-  history.replaceState(null, '', S.cat ? '#' + S.cat : location.pathname); apply(); centerTab();
-  window.scrollTo(0, Math.min(window.scrollY, $('#ctl').offsetTop));
+  setCat(b.getAttribute('data-c'), false);
+});
+cats.addEventListener('click', function (e) {
+  var a = e.target.closest('.cat'); if (!a) return; e.preventDefault();
+  var c = a.getAttribute('data-c'); setCat(S.cat === c ? '' : c, true);
+});
+ed.addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-c],a[data-scroll]'); if (!a) return; e.preventDefault();
+  if (a.hasAttribute('data-c')) setCat(a.getAttribute('data-c'), true);
+  else { var g = $('.sh-all'); window.scrollTo(0, Math.max(0, g.getBoundingClientRect().top + window.scrollY - stickyH() - 8)); }
 });
 chips.addEventListener('click', function (e) {
   var b = e.target.closest('button'); if (!b) return;
@@ -162,16 +207,14 @@ function load() {
   }).catch(function (e) {
     if (seq !== D.seq) return;
     grid.setAttribute('aria-busy', 'false');
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><img src="/assets/empty-error.svg" alt="" width="160" height="120"><b>加载失败</b>' + esc(errText(e)) + '<br><br><button class="btn btn-foil btn-royal" id="rt" type="button">重试</button></div>';
+    grid.innerHTML = '<div class="empty"><img src="/assets/empty-error.svg" alt="" width="160" height="120"><b>加载失败</b>' + esc(errText(e)) + '<br><button class="btn btn-jade" id="rt" type="button">重试</button></div>';
     var b = $('#rt'); if (b) b.onclick = load;
   });
 }
 window.addEventListener('hashchange', function () { var hsh = location.hash.replace('#', ''); if (hsh === '' || D.cats.some(function (c) { return c.id === hsh; })) { S.cat = hsh; S.vendor = ''; S.sub = ''; S.tag = ''; apply(); centerTab(); } });
 watchCovers(grid);
 initBanners($('#bn'), function (go) {
-  var el = $('#ctl'), top = el ? el.getBoundingClientRect().top + window.scrollY - (window.innerWidth >= 900 ? 68 : 60) : 0;
-  S.cat = D.cats.some(function (c) { return c.id === go; }) ? go : ''; S.vendor = ''; S.sub = ''; S.tag = go === 'hot' || go === 'new' ? go : '';
-  history.replaceState(null, '', S.cat ? '#' + S.cat : location.pathname); if (D.all.length) { apply(); centerTab(); }
-  window.scrollTo(0, Math.max(0, top));
+  var c = D.cats.some(function (x) { return x.id === go; }) ? go : '';
+  if (c) setCat(c, true); else { setCat('', false); var g = ed.hidden ? $('#srch') : ed; window.scrollTo(0, Math.max(0, g.getBoundingClientRect().top + window.scrollY - stickyH() - 8)); }
 });
 mountShell('/').then(load);

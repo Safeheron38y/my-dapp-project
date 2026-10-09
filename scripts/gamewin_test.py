@@ -35,6 +35,7 @@ HIT = "([x,y]) => { const e = document.elementFromPoint(x,y); return e ? (e.tagN
 fails = []; log = []
 def check(ok, msg):
     log.append(("OK   " if ok else "FAIL ") + msg)
+    if os.environ.get("VERBOSE"): print(log[-1], flush=True)
     if not ok: fails.append(msg)
 def near(a, b, t=0.6): return abs(a - b) <= t
 
@@ -80,7 +81,7 @@ def run(pw, eng):
         # 返回钮
         b = m["back"]; c = m["circle"]
         check(b and b["x"] < 20 and b["y"] < 20 and b["w"] >= 44 and b["h"] >= 44 and c["w"] <= 40, f"{tag} back button top-left, hit>=44px, circle {c and c['w']}px")
-        check("0.38" in m["circleBg"] or "rgba(0, 0, 0" in m["circleBg"], f"{tag} back circle semi-transparent {m['circleBg']}")
+        check(m["circleBg"].startswith("rgba(") and 0 < float(m["circleBg"].rstrip(")").split(",")[-1]) < 1, f"{tag} back circle semi-transparent {m['circleBg']}")
         check(m["circleRadius"] in ("50%", "18px") or float(m["circleRadius"].rstrip('px%') or 0) >= 18, f"{tag} back circle round ({m['circleRadius']})")
         # 返回钮之外点击到达游戏
         fr.locator("#spin").click(); p.wait_for_timeout(1200)
