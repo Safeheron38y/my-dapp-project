@@ -148,5 +148,6 @@ body.demo-game .stake .field{background:var(--paper)}
 @media(min-width:900px) and (hover:hover){.nav a:hover,.hdr .acct:hover{color:var(--jade-700)}}
 @media(max-width:359px){.bal small{display:none}.brand b{font-size:22px}.brand small{letter-spacing:.2em}.hdr .wrap{gap:6px}}
 /* 横屏手机：压缩页眉与底栏，给内容留出高度 */
-@media(orientation:landscape) and (max-height:500px){:root{--hdr-h:48px;--tab-h:52px}.tabbar .mid .orbtn{top:-14px;width:50px;height:50px;margin-left:-25px}.tabbar .mid em{bottom:5px}}
+/* 横屏手机：底栏收起（高度太宝贵），记录/我的入口移到页眉；页眉压低 */
+@media(orientation:landscape) and (max-height:500px){:root{--hdr-h:48px;--tab-h:0px}.tabbar{display:none}.hdr .acct{display:inline-flex}.hdr .acct[hidden]{display:none}.toasts{bottom:calc(var(--sab) + 14px)}}
 @media(prefers-reduced-motion:reduce){.gw-rot svg,.spin,.ld .r,.ld .m{animation:none!important}}

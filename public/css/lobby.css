@@ -25,17 +25,18 @@
 .bn-s{position:relative;display:block;width:100%;height:214px;border-radius:120px 24px 24px 24px;overflow:hidden;isolation:isolate;background:var(--paper);box-shadow:var(--sh-2),0 0 0 1px var(--line)}
 .bn-s .art{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:100% 50%;z-index:-2;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
 .bn-s:before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(251,248,241,.96) 0%,rgba(251,248,241,.82) 40%,rgba(251,248,241,0) 64%)}
-.bn-t{position:absolute;z-index:2;left:30px;top:32px;width:58%;display:flex;flex-direction:column;align-items:flex-start}
+.bn-t{position:absolute;z-index:2;left:30px;top:26px;width:58%;display:flex;flex-direction:column;align-items:flex-start}
+.bn-t .eyebrow{margin-left:6px}
 .bn-t h3{font:900 30px/1.12 var(--f-display);color:var(--jade-900);margin:10px 0 6px;letter-spacing:.02em}
 .bn-t h3 em{font-style:normal;color:var(--cinnabar)}
-.bn-t p{font-size:12px;line-height:1.55;color:var(--muted);margin-bottom:12px}
+.bn-t p{font-size:12px;line-height:1.55;color:var(--muted);margin-bottom:10px}
 .bn-dots{position:absolute;right:20px;bottom:6px;z-index:3;display:flex;align-items:center;height:20px;padding:0 6px;border-radius:99px;background:var(--paper);box-shadow:var(--sh-1),0 0 0 1px var(--line)}
 .bn-dots button{position:relative;width:16px;height:32px;margin:-6px 0;flex:0 0 auto;transition:width .25s}
 .bn-dots button:before{content:"";position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:3px;background:var(--sand);transition:transform .25s,background-color .25s}
 .bn-dots button[aria-current=true]{width:26px}
 .bn-dots button[aria-current=true]:before{width:18px;margin-left:-9px;background:var(--g-jade-lin)}
 .bn-arr{display:none}
-@media(max-width:359px){.bn-s{height:200px;border-radius:100px 22px 22px 22px}.bn-t{left:24px;top:28px}.bn-t h3{font-size:26px}}
+@media(max-width:359px){.bn-s{height:204px;border-radius:100px 22px 22px 22px}.bn-t{left:24px;top:24px}.bn-t h3{font-size:26px}}
 @media(min-width:640px){
   .bn-s{height:280px;border-radius:160px 28px 28px 28px}
   .bn-t{left:64px;top:60px;width:44%}.bn-t h3{font-size:38px}.bn-t p{font-size:14px}
@@ -52,7 +53,7 @@
 @media(min-width:900px) and (hover:hover){.bn-arr:hover{color:var(--on-primary);background:var(--g-jade-lin)}}
 @media(prefers-reduced-motion:reduce){.bn-track{scroll-behavior:auto}.bn-dots button,.bn-dots button:before{transition:none}}
 /* 横屏手机：横幅压低 */
-@media(orientation:landscape) and (max-height:500px){.bn-s{height:200px;border-radius:100px 24px 24px 24px}.bn-t{left:48px;top:30px}.bn-t h3{font-size:28px}}
+@media(orientation:landscape) and (max-height:500px){.bn-s{height:200px;border-radius:100px 24px 24px 24px}.bn-t{left:52px;top:22px;width:46%}.bn-t h3{font-size:26px;margin:8px 0 4px}.bn-t p{margin-bottom:8px}}
 
 /* ================= 月门弧形分类（不对称排布） ================= */
 .cats{position:relative;height:262px;margin:6px calc(var(--padr)*-1) 0 calc(var(--pad)*-1);overflow:hidden}
